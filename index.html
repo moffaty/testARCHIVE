@@ -19,9 +19,17 @@
 </head>
 <body>
     <div class="box w3-bar-block w3-collapse w3-large w3-theme-l5" style="height: auto; padding:0vw; display:flex;">
-    <div class="image-container"><a href='/' style="display: inline-block;" title="В корневую директорию"><img src="/images/MNS_logo.png" class=logo  alt="Лого не прогрузилось"></a>
+    <div class="image-container">
+        <a href='/' style="display: inline-block;" title="В корневую директорию"><img src="/images/MNS_logo.png" class=logo  alt="Лого не прогрузилось"></a>
+    </div>
+    <ul class="w3-ul sizeAble" id="dir_tree">
+    </ul>
+    </div>
+    </div>
+    <div class="box" id="center">
     <button id="back">Back</button>
-    <div id="list"></div>
+    </div>
+    <div class="box" id="rightPanel"></div>
     <script>
         let currentPath = '/';
         const fetchData = (path) => {
@@ -33,7 +41,7 @@
             .then(response => response.json())
             .then(data => {
                 // Обработка данных, предполагая, что data - это массив элементов
-                const list = document.getElementById('list');
+                const list = document.getElementById('dir_tree');
                 list.innerHTML = ''; // Очищаем текущее содержимое
                 data.forEach(item => {
                     const listItem = document.createElement('li');

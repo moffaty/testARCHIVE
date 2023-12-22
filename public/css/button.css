@@ -24,7 +24,7 @@
     margin-top: 3%;
     width: 100%;
 }
-form button[type="submit"],
+form button[type="submit"], button,
 .modalButton, #labelFile {
   background-color: rgb(124 172 208);
   color: #fff;
