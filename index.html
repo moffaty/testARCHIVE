@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" type="text/css" href="css/style.css">
+    <link rel="stylesheet" type="text/css" href="css/button.css">
+    <link rel="stylesheet" type="text/css" href="css/listitem.css">
+    <link rel="stylesheet" type="text/css" href="css/headings.css">
+    <link rel="stylesheet" type="text/css" href="css/modal.css">
+    <link rel="stylesheet" type="text/css" href="css/link.css">
+    <link rel="stylesheet" type="text/css" href="css/id.css">
+    <link rel="stylesheet" type="text/css" href="css/table_th_td_tr.css">
+    <link rel="stylesheet" type="text/css" href="css/form.css">
+    <link rel="stylesheet" type="text/css" href="css/search.css">
+    <link rel="stylesheet" type="text/css" href="css/dragging.css">
+    <link rel="stylesheet" type="text/css" href="css/w3style.css">
+    <title>Document</title>
+</head>
+<body>
+    <div class="box w3-bar-block w3-collapse w3-large w3-theme-l5" style="height: auto; padding:0vw; display:flex;">
+    <div class="image-container"><a href='/' style="display: inline-block;" title="В корневую директорию"><img src="/images/MNS_logo.png" class=logo  alt="Лого не прогрузилось"></a>
+    <button id="back">Back</button>
+    <div id="list"></div>
+    <script>
+        let currentPath = '/';
+        const fetchData = (path) => {
+            fetch('/get-dir-info', {
+                method: "POST",
+                headers: { "Content-type": "application/json" },
+                body: JSON.stringify({ path: path })
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Обработка данных, предполагая, что data - это массив элементов
+                const list = document.getElementById('list');
+                list.innerHTML = ''; // Очищаем текущее содержимое
+                data.forEach(item => {
+                    const listItem = document.createElement('li');
+                    listItem.textContent = item.name; // Предположим, что item - это текстовое содержимое элемента
+                    listItem.classList.add(item.type);
+                    list.appendChild(listItem);
+                });
+                document.querySelectorAll('.directory').forEach(el => {
+                    el.addEventListener('click', (e) => {
+                        if (!currentPath.endsWith('/')) {
+                            currentPath += '/';
+                        }
+                        currentPath = currentPath + el.textContent;
+                        console.log(currentPath);
+                        fetchData(currentPath);
+                    })
+                })
+            })
+            .catch(error => console.error('Произошла ошибка:', error));
+        }
+
+        document.getElementById('back').addEventListener('click', (event) => {
+            currentPath = currentPath.substring(0, currentPath.lastIndexOf('/'));
+            console.log(currentPath);
+            fetchData(currentPath);
+        })
+
+        fetchData(currentPath);
+    </script>
+    
+</body>
+</html>

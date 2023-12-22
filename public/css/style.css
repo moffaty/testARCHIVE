@@ -1,0 +1,187 @@
+/* 
+*  CSS TABLE OF CONTENTS
+*   
+*  1.0 - Main Background
+*  2.0 - Headings
+*  3.0 - Links
+*  4.0 - Form
+*  5.0 - Panels
+*  6.0 - Word Wrap
+*  7.0 - Authorization Form
+*  8.0 - Images
+*/
+
+body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  background-color: #f2f2f2;
+  display: flex;
+  align-items: top;
+  justify-content: top;
+  grid-template-columns: 1fr 1fr 2fr;
+  grid-gap: 0.25em;
+  box-sizing: border-box;
+  width: 100%;
+  padding: 0.3125em;
+}
+.centerBottomColour {
+  position: relative;
+  width: 26.25em;
+  color: rgb(124 172 208 / 10%);
+  width: 100%;
+  height: 1.2625em;
+  background-color: rgb(124 172 208 / 10%);
+  bottom: 0em;
+}
+.hidden{
+  display: none;
+}
+.fade-out {
+  animation: fadeOutBackground 2.5s ease-in;
+}
+@keyframes fadeOutBackground {
+  from {
+    background-color: rgba(255, 255, 0, 0.753);
+  }
+  to {
+    background-color: transparent;
+  }
+}
+.trash {
+  display: flex !important;
+}
+.centerDir{
+  margin: 0;
+  font-size:15px; 
+  list-style: none;
+  padding: 0;
+  height: 70%;
+  height: 100%;
+  overflow:auto; 
+  border-color: white;
+  padding: 0.3125em;
+  margin-top: 0.9375em;
+  display: inline-block;
+  margin-bottom: 0em!important;
+  border-top: 0.9375em solid rgb(124 172 208 / 10%);
+  border-bottom: 0.9375em solid rgb(124 172 208 / 10%);
+  border-left: 0.375em solid rgb(124 172 208 / 10%);
+  border-right: 0.375em solid rgb(124 172 208 / 10%);
+}
+.box {
+  /* height: 97vh; */
+  display: inline-block;
+  flex-direction: column;
+  background-color: #fff;
+  border-radius: 0.3125em;
+  box-shadow: 0 0 0.625em rgba(0, 0, 0, 0.3);
+  padding: 1.25em;
+  margin: 0.625em;
+  box-sizing: border-box;
+}
+.propTextarea{
+  max-width:50vh; 
+  min-width:100%; 
+  min-height:6vh; 
+  max-height:10vh;
+}
+.image-container {
+  display:inline-block; 
+  position: relative;
+  border-top-left-radius: 0.3125em;
+  border-top-right-radius: 0.3125em;
+  background-image: url("/images/header-bg.jpg");
+  background-size: cover;
+  background-position: center;
+  display: inline-block;
+  padding-bottom: 2vw;
+  height: 7vw;
+}
+.header-center {
+  display:inline-block; 
+  position: relative;
+  border-top-left-radius: 0.3125em;
+  border-top-right-radius: 0.3125em;
+  background-size: cover;
+  background-position: center;
+  display: inline-block;
+  height: auto;
+  width: 26.25em;
+}
+.logo {
+  max-width: 100%;
+  height: auto;
+  width: calc(15vw - 0.125em);
+  margin-top: 1vw;
+}
+.tree {
+  padding: 0;
+  margin: 0;
+  list-style: none;
+  font-size: 0.875em;
+  line-height: 1.5em;
+}
+.overlay {
+  display: none;
+  position: fixed;
+  z-index: 9998;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0,0,0,0.4);
+}
+.sizeAble {
+  resize : horizontal;
+  overflow : auto;
+  height:100%; 
+  padding:0.3125em; 
+  display: inline-block;
+}
+.delAll{
+  background-color: white;
+  cursor: pointer;
+  float: center;
+  margin-top: 1em;
+}
+.deletedFiles {
+  position: static !important;
+  margin: 0;
+}
+.fullscreen{
+  position: absolute;
+  right: 3%;
+  top: 4%;
+  cursor: pointer;
+  border: none;
+  background: none;
+  float: right;
+}
+@media screen and (min-width: 1900px) {
+  .sizeAble {
+    min-width: 53vh;
+    max-width: 70vh;
+  }
+}
+@media screen and (min-width: 1400px) and (max-width: 1900px) {
+  .sizeAble {
+    min-width: 53vh;
+    max-width: 90vh;
+  }
+}
+@media screen and (max-width: 1400px) {
+  .sizeAble {
+    min-width: 33vh;
+    max-width: 50vh;
+  }
+}
+@media screen and (min-width: 1000px) and (max-width: 1400px) {
+  .sizeAble {
+    min-width: 50vh;
+    max-width: 70vh;
+  }
+}
+.empty-row {
+  width: 4.0625em;
+}

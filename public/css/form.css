@@ -1,0 +1,17 @@
+form label {
+    display: block;
+    margin-bottom: 0.625em;
+    font-size: 1em;
+    font: "Arial"
+}
+form input[type="text"], form select, select, input[type=text], input[type=password],textarea, input[type=date] {
+    display: inline-block;
+    box-sizing: border-box;
+    padding: 0.5em;
+    border: none;
+    border-radius: 0.25em;
+    background-color: #ffffff;
+    margin-bottom: 0.625em;
+    box-shadow: 0 0 3px rgba(0, 0, 0, 0.5);
+    width: 100%;
+}

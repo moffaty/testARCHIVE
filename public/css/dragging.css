@@ -1,0 +1,19 @@
+.highlight {
+    background-color: #ded9d9 !important;
+}
+.activeLi {
+    position: absolute !important;
+    transform: translate(0, 0);
+    z-index: 1000 !important;
+    pointer-events: none;
+    border-left: 0.0625em solid #c8bcbc;
+    border-right: 0.0625em solid #c8bcbc;
+    border-top: 0.0625em solid #ede8e8;
+    background-color: white !important;
+}
+.dragging {
+    position: fixed !important;
+    left: initial;
+    top: initial;
+    z-index: 100;
+}

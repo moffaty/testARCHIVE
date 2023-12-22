@@ -1,0 +1,18 @@
+h1, h2, h3 {
+    font-family: Arial, sans-serif;
+    color: #333;
+    text-align: center;
+    margin-top: 1.875em;
+    word-wrap: break-word;
+}
+h1 {
+    font-size: 1.875em;
+}
+h2 {
+    font-size: 1.5em;
+    font-weight: bold;
+    margin-bottom: 1em;
+}
+h3 {
+    font-size: 1.125em;
+}

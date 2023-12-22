@@ -1,0 +1,112 @@
+.instructionButton{
+    top:0; 
+    left:0;
+    font-size: large;
+    background-position: top; 
+    height: 1.25em; 
+    background-color: #3e698800; 
+    position: absolute; 
+    padding: 0.3125em; 
+    cursor: pointer; 
+    border-radius: 0.25em; 
+    border: none;
+}
+.instructionButton p {
+    position: relative;
+    margin: 0;
+    top: -8; 
+    color: #f0f8ff75;
+}
+.button-wrapper {
+    position: relative;
+    display: flex;
+    justify-content: space-between;
+    margin-top: 3%;
+    width: 100%;
+}
+form button[type="submit"],
+.modalButton, #labelFile {
+  background-color: rgb(124 172 208);
+  color: #fff;
+  border: none;
+  border-radius: 0.25em;
+  margin: 0.3125em;
+  padding: 0.625em 1.25em;
+  font: "Arial";
+  font-size: 1.125em;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.3s ease-in-out;
+}
+form button[type="submit"]:hover,
+.modalButton:hover,
+.backButton:hover {
+  background-color: rgb(80, 130, 168);
+}
+.backButton{
+    background-color: rgb(93, 155, 201);
+    color: #fff;
+    border: none;
+    border-radius: 0.25em;
+    margin: 0.3125em;
+    padding: 0.625em 1.25em;
+    font: "Arial";
+    font-size: 1.125em;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.3s ease-in-out;
+}
+.centerButtons{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+}
+.centerButtons button {
+    height: 50%;
+}
+.delfile{
+    margin-left: auto;
+}
+.menu button {
+    position: relative;
+    cursor: pointer;
+    background-color: #ffffff; /* Цвет фона */
+    border: 0.01rem solid rgb(197, 197, 197); /* Без границ */
+    display: block;
+    font-size: 0.875em;
+    padding: 0.15em 0.15em; /* Отступы */
+    text-align: left;
+    width: 100%; /* Ширина кнопки */
+}
+.menu button:hover {
+    background-color: #ebebeb;
+}
+.pagination-btn{
+    background-color: white;
+    border: outset;
+}
+.clear-trash-btn{
+    background-color: white;
+    border: outset;
+    margin-top: 1em;
+    margin-bottom: 1em;
+}
+.restoreBtn, .delFile{
+    background-color: white;
+    border: none;
+    cursor: pointer;
+    float: right;
+}
+.delfile{
+    margin-left: auto;
+}
+.claster {
+    display: flex;
+    align-items: center;
+    position: relative;
+}
+.openFolder {
+    border: none;
+    background: none;
+}

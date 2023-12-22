@@ -1,0 +1,57 @@
+li {
+    list-style-type: none;
+    word-wrap: break-word;
+}
+.tree li {
+    margin: 0;
+    padding: 0 1em;
+    line-height: 2em;
+    color: #333;
+    font-weight: bold;
+    position: relative;
+}
+.tree li:before,
+.tree li:after {
+    content: "";
+    position: absolute;
+    top: 0;
+    right: 50%;
+    border-top: 0.0625em solid #ccc;
+    width: 50%;
+    height: 1em;
+}
+.tree li:after {
+    right: auto;
+    left: 50%;
+    border-left: 0.0625em solid #ccc;
+}
+.tree li:first-child:before {
+    border: 0;
+} 
+.tree li:last-child:after {
+    border: 0;
+}  
+.tree li.active {
+    color: #000;
+    font-weight: bold;
+}
+li.directory::before {
+    content: url(/images/icons8-folder-16.png) ;
+    outline: none;
+    width: 1.125em;
+    height: 1.125em;
+    padding-right: 0.5em;
+}
+li.file:before {
+    content: url(/images/icons8-file-16.png) ;
+    border: none;
+    outline: none;
+    width: 1.125em;
+    height: 1.125em;
+    padding-right: 0.375em;
+}
+li.file, li.directory {
+    position: relative;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}

@@ -1,0 +1,36 @@
+a {
+    text-decoration: none;
+}
+a:hover {
+    text-decoration: underline;
+}
+.tree a {
+    color: #333;
+    text-decoration: none;
+}
+.tree a:hover,
+.tree a.active {
+    text-decoration: underline;
+}
+a.dir {
+    position: absolute;
+    cursor: pointer;
+    top: 7;
+    left: 40;
+    width: 85%;
+    height: 75%;
+} 
+a.file {
+    font-size: 14px;
+    position: absolute;
+    cursor: pointer;
+    top: 7;
+    left: 35;
+    width: 85%;
+    height: 75%;
+}
+.aDirs {
+    position: relative !important;
+    top: 0 !important;
+    left: 0 !important;
+}

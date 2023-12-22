@@ -1,0 +1,93 @@
+#trashFormModalButton{
+    background-color:rgb(124 172 208 / 10%);
+    margin: 0%;
+    height: 1.7em;
+}
+#dir_tree {
+    font-size: 18px;
+}
+#center {
+    height: auto;
+    padding:0vw;
+    display:flex;
+    width: 26.25em;
+}
+#centerTopH{
+    text-align: center; 
+    position: relative; 
+    padding-top: 0.625em;
+}
+#rightPanel{
+    position: relative;
+    overflow: hidden;
+}
+#headerPreview {
+    text-align: center; 
+    display: block
+}
+#fileList{
+    list-style: none;
+    overflow: auto;
+    padding: 0%;
+    margin: 1em;
+    height: 60vh;
+    border-top: 0.9375em solid rgb(124 172 208 / 10%);
+    border-bottom: 0.9375em solid rgb(124 172 208 / 10%);
+    border-left: 0.9375em solid rgb(124 172 208 / 10%);
+    border-right: 0.9375em solid rgb(124 172 208 / 10%);
+}
+#delElement{
+    text-decoration: none;
+    display: inline-block;
+    padding-left: 10px;
+    width: 50%;
+    text-align: left;
+}
+#createDateBD {
+    display: none;
+}
+#pfdPreview{
+    padding: 0.3125em; 
+    border: none;
+    width: 100%;
+    height: 86vh;
+    margin: 0%;
+}
+#propdecimanlNumberBD{
+    text-transform: uppercase;
+}
+#assembleyUnits{
+    left: 15%;
+    width: 20%;
+    height: auto;
+}
+#listOfOldVersions{
+    left: 85%;
+    width: 20%;
+    height: auto;
+    overflow: hidden;
+}
+#OldVersions{
+    overflow: auto;
+    height: 80%;
+}
+#addUnit{
+    width: 100%
+}
+#propertiesModalContent{
+    top: 2%;
+    transform: translateX(-50%);
+    display: grid;
+    align-content: stretch;
+    justify-content: start;
+    align-items: start;
+    justify-items: start;
+    place-items: center;
+}
+#delModal{
+    max-width: auto;
+}
+#cancel-concat{
+    right: 6px;
+    position: absolute;
+}

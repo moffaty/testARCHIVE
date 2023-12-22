@@ -1,0 +1,40 @@
+.search-results {
+    position: relative;
+    height: 70vh;
+    overflow-y: auto;
+}
+.searchCheckBox{
+    margin-right: 5;
+}
+.searchlink {
+    font-weight: bold;
+    font-size: 1em
+}
+.search-results thead th {
+    position: sticky;
+    top: -0.00625em;
+}
+.search-results th {
+    overflow-y: auto;
+    width: 6.25em;
+}
+.sort-arrow {
+    display: inline-block;
+    width: 0;
+    height: 0;
+    margin-left: 0.25em;
+    vertical-align: middle;
+    border: 0.25em solid transparent;
+}
+.sort-arrow-up {
+    border-bottom-color: black;
+}
+.sort-arrow-down {
+    border-top-color: black;
+}
+.table_filename {
+    white-space: nowrap; /* Не переносить текст строки на новую строку */
+    overflow: hidden; /* Обрезать текст, выходящий за рамки границ ячейки */
+    text-overflow: ellipsis; /* Добавить "..." на конце обрезанного текста */
+    max-width: 250px; /* Установите максимальную ширину ячейки */
+  }

@@ -1,0 +1,21 @@
+table {
+    font-family: Arial, sans-serif;
+    border-collapse: collapse;
+    width: 100%;
+}
+table, th, td {
+    border: 0.0625em solid #00000024;
+}
+th, td {
+    padding: 0.5em;
+}
+th {
+    padding-top: 0.75em;
+    padding-bottom: 0.75em;
+    background-color: #93b3c9;
+    color: white;
+    user-select: none;
+}
+tbody tr:hover {
+    background-color: #ddd;
+}
