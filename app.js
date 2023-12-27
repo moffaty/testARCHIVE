@@ -36,7 +36,6 @@ app.post('/get-dir-info', async (req, res) => {
     }
 });
 
-
 app.listen(3100, () => {
-    console.log('Started localhost:3100')
+    console.log('Started http://localhost:3100')
 })

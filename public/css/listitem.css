@@ -35,7 +35,7 @@ li {
     color: #000;
     font-weight: bold;
 }
-li.directory::before {
+li.directory::before, ul.directory::before {
     content: url(/images/icons8-folder-16.png) ;
     outline: none;
     width: 1.125em;
@@ -50,7 +50,7 @@ li.file:before {
     height: 1.125em;
     padding-right: 0.375em;
 }
-li.file, li.directory {
+li.file, li.directory, ul.directory {
     position: relative;
     overflow: hidden;
     text-overflow: ellipsis;
