@@ -91,3 +91,6 @@
     right: 6px;
     position: absolute;
 }
+#centerTopH {
+    user-select: none;
+}

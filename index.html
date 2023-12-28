@@ -32,6 +32,7 @@
     <ul id="center_list"></ul>
     </div>
     <div class="box" id="rightPanel"></div>
+    <script src="js/localStorage.js"></script>
     <script src="js/main.js"></script>
     <script>
         let mainPath;
@@ -54,7 +55,12 @@
         })
 
         document.getElementById('back').addEventListener('click', (event) => {
+            console.log(currentPath);
+            if (currentPath === mainPath) {
+                return;
+            }
             currentPath = currentPath.substring(0, currentPath.lastIndexOf('/'));
+            
             console.log(currentPath);
             updateFolderName();
             getDirIncludes(currentPath)

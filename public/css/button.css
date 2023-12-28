@@ -24,7 +24,7 @@
     margin-top: 3%;
     width: 100%;
 }
-form button[type="submit"], button,
+form button[type="submit"],
 .modalButton, #labelFile {
   background-color: rgb(124 172 208);
   color: #fff;
@@ -109,4 +109,7 @@ form button[type="submit"]:hover,
 .openFolder {
     border: none;
     background: none;
+}
+.modalButton, .instructionButton, .centerButtons, .fullscreen, .image-container {
+    user-select: none;
 }
