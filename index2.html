@@ -1,0 +1,179 @@
+<html lang="ru">
+  <head>
+    <link rel="icon" type="image/x-icon" href="/images/icons8-folder-64.png">
+    <link rel="stylesheet" type="text/css" href="/css/style.css">
+    <link rel="stylesheet" type="text/css" href="/css/button.css">
+    <link rel="stylesheet" type="text/css" href="/css/listitem.css">
+    <link rel="stylesheet" type="text/css" href="/css/headings.css">
+    <link rel="stylesheet" type="text/css" href="/css/modal.css">
+    <link rel="stylesheet" type="text/css" href="/css/link.css">
+    <link rel="stylesheet" type="text/css" href="/css/id.css">
+    <link rel="stylesheet" type="text/css" href="/css/table_th_td_tr.css">
+    <link rel="stylesheet" type="text/css" href="/css/form.css">
+    <link rel="stylesheet" type="text/css" href="/css/search.css">
+    <link rel="stylesheet" type="text/css" href="/css/dragging.css">
+    <link rel="stylesheet" type="text/css" href="/css/w3style.css">
+    <script src="/js/imask.js"></script>
+    <script src="/js/mx.js"></script>
+    <script src="/js/mymask.js"></script>
+    <meta charset="UTF-8">
+    <title>МНС онлайн-архив</title>
+  </head>
+  <body>
+    <div class="box w3-bar-block w3-collapse w3-large w3-theme-l5" style="height: auto; padding:0vw; display:flex;">
+      <div class="image-container">
+        <a href="/" style="display: inline-block;" title="В корневую директорию">
+          <img src="/images/MNS_logo.png" class="logo" alt="Лого не прогрузилось">
+        </a>
+        <button class="instructionButton" onclick="openInstructionWindow()">
+          <p>Инструкция</p>
+        </button>
+        <script>
+          window.addEventListener('load', () => {
+            var pageLoadTime = window.performance.timing.domContentLoadedEventEnd - window.performance.timing.navigationStart;
+            console.log('Page load time: ' + pageLoadTime + ' milliseconds');
+          });
+          const openInstructionWindow = () => {
+            const url = '/pdf/instructions.pdf';
+            const name = 'Инструкция';
+            const features = 'width=800,height=600';
+            const newWindow = window.open(url, name, features);
+          }
+        </script>
+        <script> const dirPath = "D:\/Archive\/ARCHIVE\/main_dir\/"; </script>
+        <!-- Кнопка для вызова модального окна -->
+        <button id="loginModalButton" class="modalButton" style="width: 4vw; height: 4vw; margin-left: 3%; border-radius: 0.9375em; background-color: aliceblue; background-image: url(/images/newlogin.png); vertical-align: bottom; background-repeat: no-repeat; background-size: 75% auto; background-position: center; position: absolute; top: 20%; right: 25%;" title="Авторизация"></button>
+        <!-- Модальное окно -->
+        <script src="/js/loginForm.js"></script>
+        <button id="emailFeedbackbutton" class="modalButton" title="Обратная связь" style="width: 4vw; height: 4vw; margin-left: 3%; border-radius: 0.9375em; background-color: aliceblue; background-image: url(/images/feedback.png); vertical-align: bottom; background-repeat: no-repeat; background-size: 75% auto; background-position: center; position: absolute; top: 20%; right: 5%;"></button>
+        <script src="/js/emailFeedback.js"></script>
+      </div>
+      <ul class="w3-ul sizeAble" id="dir_tree">
+        <li>
+          <a href="/" title="Корневая директория">
+            <img src="/images/home-50.png" height="25px" width="25px" margin-bottom:="" 0em="">
+             Корневая директория
+          </a>
+        </li>
+      </ul>
+      <script>
+        const tree = document.querySelector('.w3-ul');
+        const treedirs = tree.querySelectorAll('.w3-ul');
+        treedirs.forEach(dir => {
+          if(localStorage.getItem(dir.id) !== 'active' || !localStorage.getItem(dir.id)){
+            localStorage.setItem(dir.id, "hidden");
+          } else {
+            const openFolderButton = dir.parentNode.querySelector('.claster .openFolder');
+            openFolderButton.classList.add('active');
+            openFolderButton.innerHTML = '<img src="/images/free-icon-arrow-down-sign-to-navigate-32195.png">';
+            document.getElementById(dir.id).classList.remove('hidden');
+            document.getElementById(dir.id).classList.add('active');
+            document.getElementById(dir.id).classList.toggle('opened');
+          }
+        });
+      </script>
+      <script src="/js/treeOfDirs.js"></script>
+      <script src="/js/sizeAbleBlocks.js"></script>
+      <button id="trashFormModalButton" type="submit" class="modalButton">
+        <img src="/images/trash.svg" width="20px" height="20px" style="position:relative; bottom:0.3em" alt="Корзина" title="Корзина">
+      </button>
+      <script src="/js/trash.js"></script>
+    </div>
+    <div class="box" id="center">
+      <div class="header-center">
+        <h1 id="centerTopH">&nbsp;</h1>
+        <div class="centerButtons">
+          <a class="modalButton" id="backButton" title="Назад">
+            <img src="/images/back-50.png" width="20px" height="20px" alt="Назад" title="Назад">
+          </a>
+          <button id="addDirModalButton" class="modalButton" title="Создать папку">
+            <img src="/images/createfolder-80.png" width="20px" height="20px" alt="Создать папку" title="Создать папку">
+          </button>
+          <script src="/js/addDirForm.js"></script>
+          <button id="addFileModalButton" class="modalButton" title="Загрузить файл">
+            <img src="/images/upload.png" width="20px" height="20px" alt="Загрузить файл">
+          </button>
+          <script src="/js/addFileForm.js"></script>
+          <button id="searchFormModalButton" type="submit" class="modalButton">
+            <img src="/images/search.png" width="20px" height="20px" alt="Поиск" title="Поиск">
+          </button>
+      </div>
+    </div>
+    <script src="/js/dragLogic.js"></script>   
+    <div class="centerDir">  
+      <div class="centerDir-list">
+        <ul class="centerDir-ul w3-ul" id="centerDir">
+        </ul>
+      </div>
+    </div>
+    <div class="centerBottomColour"></div>
+    <script src="/js/centerDirStatus.js"></script>
+    <script src="/js/properties.js"></script>
+  </div>
+  <div style="width: 100%;" id="rightPanel" class="box">
+    <h1 id="headerPreview" style="display: block;">Инструкция</h1>
+    <button class="fullscreen" title="Открыть на весь экран">
+      <img src="/images/fullscreen.png" width="30px" height="30px" alt="Открыть на весь экран" onclick="openNewWindow()">
+    </button>
+    <script>
+      function openNewWindow() {
+        const url = iframe.src;
+        const name = 'Предпросмотр';
+        const features = `width=${window.outerWidth},height=${window.outerHeight}`;
+        const newWindow = window.open(url, name, features);
+      }
+    </script>
+    <iframe class="box" id="pfdPreview" src="/pdf/instructions.pdf" width="93%" height="96%" style="display: block;"></iframe>
+    <script src="/js/previewFile.js"></script>
+  </div>
+  <script src="/js/resizeCenterUl.js"></script>
+  <script src="js/main.js"></script>
+  <script src="js/localStorage.js"></script>
+        <script>
+            let mainPath;
+            let currentPath = localStorage.getItem('currentPath') || '/';
+            const list = document.getElementById('dir_tree');
+            const center = document.getElementById('centerDir');
+            console.log(currentPath);
+            getMainPath()
+            .then(data => {
+                mainPath = data.path;
+                if (currentPath === '/') {
+                    currentPath = mainPath;
+                }
+                getDirIncludes(mainPath)
+                .then(data => {
+                    updateList(list, data);
+                    updateFolderName();
+                })
+                .catch(error => {
+                    console.error(error);
+                });
+                getDirIncludes(currentPath)
+                .then(data => {
+                    updateList(center, data);
+                    updateFolderName();
+                })
+                .catch(error => {
+                    console.error(error);
+                });
+            })
+
+            document.getElementById('backButton').addEventListener('click', (event) => {
+                console.log(currentPath);
+                if (currentPath === mainPath) {
+                    return;
+                }
+                currentPath = currentPath.substring(0, currentPath.lastIndexOf('/'));
+                console.log(currentPath);
+                updateFolderName();
+                updateLocalStorage();
+                getDirIncludes(currentPath)
+                .then(data => {
+                    updateFolderName();
+                    updateList(center, data);
+                })
+            })
+        </script>
+  </body>
+</html>
