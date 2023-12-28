@@ -27,164 +27,42 @@
     </div>
     </div>
     <div class="box" id="center">
+    <h1 id="currentPath">123</h1>
     <button id="back">Back</button>
     <ul id="center_list"></ul>
     </div>
     <div class="box" id="rightPanel"></div>
+    <script src="js/main.js"></script>
     <script>
+        let mainPath;
         let currentPath = '/';
         const list = document.getElementById('dir_tree');
         const center = document.getElementById('center_list');
 
-        const liToUl = (liElement) => {
-            if (liElement.tagName === 'LI') {
-                const ulElement = document.createElement('ul');
-                ulElement.textContent = liElement.textContent;
-                liElement.insertAdjacentElement('afterend', ulElement);
-                return ulElement;
-            }
-        };
-        
-        const getAddictivePath = (element, addictivePath = '') => {
-            if (element.parentNode && element.parentNode.classList.contains('directory')) {
-                addictivePath += element.parentNode.innerHTML.substring(0, element.parentNode.innerHTML.indexOf('<')) + '/';
-                getAddictivePath(element.parentNode, addictivePath);
-                console.log(element.parentNode, addictivePath);
-            } 
-            return addictivePath;
-        }
-
-
-        const listOnContextMenu = (el, e) => {
-            e.preventDefault();
-            if (!currentPath.endsWith('/')) {
-                currentPath += '/';
-            }
-            currentPath = currentPath + el.textContent;
-            console.log(currentPath);
-            try {
-                fetchData(currentPath)
-                .then(data => {
-                    // Используйте данные
-                    updateList(list, data);
-                })
-                .catch(error => {
-                    // Обработка ошибки
-                    console.error(error);
-                });
-                // Дальнейшая обработка newData, если необходимо
-            } catch (error) {
-                console.error('Произошла ошибка при fetchData:', error);
-            }
-        }
-
-        const listOnMouseDown = (el, e) => {
-            if (!currentPath.endsWith('/')) {
-                currentPath += '/';
-            }
-            const addictivePath = getAddictivePath(el);
-            console.log(addictivePath);
-            fetchData(currentPath + addictivePath + el.textContent)
+        getMainPath()
+        .then(data => {
+            mainPath = data.path;
+            currentPath = mainPath;
+            getDirIncludes(mainPath)
             .then(data => {
-                // Используйте данные
-                clearList(center);
-                const newlist = addList(el);
-                if (newlist) {
-                    const ul = liToUl(el);
-                    if (ul) {
-                        ul.classList.add('directory');
-                        fillList(ul, data);
-                        linkElements(ul);
-                        el.remove();
-                    }
-                }
-                currentPath = currentPath.substring(0, currentPath.lastIndexOf('/')); // обрезаем добавленный слеш
+                updateList(list, data);
+                updateFolderName();
             })
-        } 
-
-        const clearList = (list) => {
-            list.innerHTML = ''; // Очищаем текущее содержимое
-        }
-
-        const fillList = (list, data) => {
-            data.forEach(item => {
-                const listItem = document.createElement('li');
-                listItem.textContent = item.name; // Предположим, что item - это текстовое содержимое элемента
-                listItem.classList.add(item.type);
-                list.appendChild(listItem);
+            .catch(error => {
+                console.error(error);
             });
-        }
-
-        const addList = (parent) => {
-            if (parent.nextElementSibling && parent.nextElementSibling.tagName === 'UL') {
-                return;
-            }
-            const ul = document.createElement('ul');
-            parent.appendChild(ul);
-            return ul;
-        }
-
-        const linkElements = (list) => {
-            list.querySelectorAll('.directory').forEach(el => {
-                el.addEventListener('contextmenu', async (e) => {
-                    listOnContextMenu(el, e);
-                });
-
-                el.addEventListener('mousedown', (e) => {
-                    listOnMouseDown(el, e);
-                });
-            });
-        }
-
-        const updateList = (list, data) => {
-            clearList(list);
-            fillList(list, data);
-            linkElements(list);
-        }
-
-        const fetchData = (path) => {
-            return new Promise((resolve, reject) => {
-                fetch('/get-dir-info', {
-                    method: "POST",
-                    headers: { "Content-type": "application/json" },
-                    body: JSON.stringify({ path: path })
-                })
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error('Ошибка запроса');
-                    }
-                    return response.json();
-                })
-                .then(async data => {
-                    resolve(data); // Возвращаем данные через resolve
-                })
-                .catch(error => {
-                    console.error('Произошла ошибка:', error);
-                    reject(error); // Возвращаем ошибку через reject
-                });
-            });
-        };
+        })
 
         document.getElementById('back').addEventListener('click', (event) => {
             currentPath = currentPath.substring(0, currentPath.lastIndexOf('/'));
             console.log(currentPath);
-            fetchData(currentPath)
+            updateFolderName();
+            getDirIncludes(currentPath)
             .then(data => {
+                updateFolderName();
                 updateList(list, data);
             })
         })
-
-        // Пример использования
-        fetchData('/')
-            .then(data => {
-                // Используйте данные
-                updateList(list, data);
-            })
-            .catch(error => {
-                // Обработка ошибки
-                console.error(error);
-            });
     </script>
-    
 </body>
 </html>
