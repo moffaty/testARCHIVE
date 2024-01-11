@@ -134,7 +134,6 @@
             let currentPath = localStorage.getItem('currentPath') || '/';
             const list = document.getElementById('dir_tree');
             const center = document.getElementById('centerDir');
-            console.log(currentPath);
             getMainPath()
             .then(data => {
                 mainPath = data.path;
@@ -143,15 +142,14 @@
                 }
                 getDirIncludes(mainPath)
                 .then(data => {
-                    updateList(list, data);
-                    updateFolderName();
+                    updateList(list, data, mainPath);
                 })
                 .catch(error => {
                     console.error(error);
                 });
                 getDirIncludes(currentPath)
                 .then(data => {
-                    updateList(center, data);
+                    updateList(center, data, currentPath);
                     updateFolderName();
                 })
                 .catch(error => {

@@ -75,7 +75,7 @@ const listOnContextMenu = (el, e, path = currentPath) => {
         getDirIncludes(currentPath)
         .then(data => {
             console.log("PATH", currentPath);
-            updateList(center, data, currentPath);
+            updateList(center, data, path);
         })
         .catch(error => {
             console.error(error);
