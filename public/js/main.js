@@ -1,8 +1,12 @@
 const changeTag = (liElement, tag) => {
     const newElement = document.createElement(tag);
-    newElement.textContent = liElement.textContent;
+    const anchorElement = liElement.querySelector('a');
+    newElement.appendChild(anchorElement)
     newElement.classList.add(...liElement.classList);
-    liElement.insertAdjacentElement('afterend', newElement);
+
+    liElement.parentNode.replaceChild(newElement, liElement);
+    // newElement.classList.add(...liElement.classList);
+    // liElement.insertAdjacentElement('afterend', newElement);
     return newElement;
 };
 
@@ -127,8 +131,11 @@ const clearList = (list) => {
 const fillList = (list, data) => {
     data.forEach(item => {
         const listItem = document.createElement('li');
-        listItem.textContent = item.name; // Предположим, что item - это текстовое содержимое элемента
         listItem.classList.add(item.type);
+        const listName = document.createElement('a');
+        listName.classList.add(`${item.type === 'file' ? 'file' : 'dir'}`);
+        listName.textContent = item.name; // Предположим, что item - это текстовое содержимое элемента
+        listItem.appendChild(listName);
         list.appendChild(listItem);
     });
 }
@@ -161,8 +168,14 @@ const updateList = (list, data, path = currentPath) => {
     linkElements(list, path);
 }
 
+function updateLeftList(list, data, path = currentPath) {
+    fillList(list, data);
+    linkElements(list, path);
+}
+
 const getDirIncludes = (path) => {
     return new Promise((resolve, reject) => {
+        console.log(path);
         fetch('/get-dir-info', {
             method: "POST",
             headers: { "Content-type": "application/json" },
