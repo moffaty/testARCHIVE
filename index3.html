@@ -21,7 +21,7 @@
 </head>
 <body>
     <main class="main">
-        <div class="box" style="height: auto; padding:0vw; display:flex;">
+        <div class="box w3-bar-block w3-collapse w3-large w3-theme-l5" style="height: auto; padding:0vw; display:flex;">
             <div class="image-container">
                 <a href="/" style="display: inline-block;" title="В корневую директорию">
                     <img src="/images/MNS_logo.png" class="logo" alt="Лого не прогрузилось">
@@ -30,20 +30,20 @@
                     <p>Инструкция</p>
                 </button>
                 <!-- Кнопка для вызова модального окна -->
-                <button id="loginModalButton" class="modalButton newlogin" title="Авторизация"></button>
+                <button id="loginModalButton" class="modalButton" style="width: 4vw; height: 4vw; margin-left: 3%; border-radius: 0.9375em; background-color: aliceblue; background-image: url(/images/newlogin.png); vertical-align: bottom; background-repeat: no-repeat; background-size: 75% auto; background-position: center; position: absolute; top: 20%; right: 25%;" title="Авторизация"></button>
                 <!-- Модальное окно -->
-                <button id="emailFeedbackbutton" class="modalButton feedback" title="Обратная связь"></button>
+                <button id="emailFeedbackbutton" class="modalButton" title="Обратная связь" style="width: 4vw; height: 4vw; margin-left: 3%; border-radius: 0.9375em; background-color: aliceblue; background-image: url(/images/feedback.png); vertical-align: bottom; background-repeat: no-repeat; background-size: 75% auto; background-position: center; position: absolute; top: 20%; right: 5%;"></button>
             </div>
             <ul class="w3-ul sizeAble" id="dir_tree">
                 <li>
                     <a href="/" title="Корневая директория">
                         <img src="/images/home-50.png" height="25px" width="25px" margin-bottom:="" 0em="">
-                        <span>Корневая директория</span>
+                        <p>Корневая директория</p>
                     </a>
                 </li>
             </ul>
             <button id="trashFormModalButton" type="submit" class="modalButton">
-                <img src="/images/trash.svg" width="20px" height="20px" alt="Корзина" title="Корзина">
+                <img src="/images/trash.svg" width="20px" height="20px" style="position:relative; bottom:0.3em" alt="Корзина" title="Корзина">
             </button>
         </div>
 

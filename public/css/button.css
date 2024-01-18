@@ -38,6 +38,31 @@ form button[type="submit"],
   cursor: pointer;
   transition: background-color 0.3s ease-in-out;
 }
+
+.newlogin, .feedback {
+    width: 4vw;
+    height: 4vw;
+    margin-left: 3%;
+    border-radius: 0.9375em;
+    background-color: aliceblue;
+    vertical-align: bottom; background-repeat: no-repeat; background-size: 75% auto; background-position: center; position: absolute; top: 20%; 
+}
+
+.newlogin {
+    background-image: url(/images/newlogin.png);
+    right: 25%;
+}
+
+.feedback {
+    background-image: url(/images/feedback.png);
+    right: 5%;
+}
+
+#trashFormModalButton > img {
+    position:relative;
+    bottom:0.3em
+}
+
 form button[type="submit"]:hover,
 .modalButton:hover,
 .backButton:hover {
