@@ -1,0 +1,53 @@
+<html lang="ru">
+  <head>
+    <link rel="icon" type="image/x-icon" href="/images/icons8-folder-64.png">
+    <link rel="stylesheet" type="text/css" href="/css/style.css">
+    <link rel="stylesheet" type="text/css" href="/css/button.css">
+    <link rel="stylesheet" type="text/css" href="/css/listitem.css">
+    <link rel="stylesheet" type="text/css" href="/css/headings.css">
+    <link rel="stylesheet" type="text/css" href="/css/modal.css">
+    <link rel="stylesheet" type="text/css" href="/css/link.css">
+    <link rel="stylesheet" type="text/css" href="/css/id.css">
+    <link rel="stylesheet" type="text/css" href="/css/table_th_td_tr.css">
+    <link rel="stylesheet" type="text/css" href="/css/form.css">
+    <link rel="stylesheet" type="text/css" href="/css/search.css">
+    <link rel="stylesheet" type="text/css" href="/css/dragging.css">
+    <link rel="stylesheet" type="text/css" href="/css/w3style.css">
+    <meta charset="UTF-8">
+    <title>Админ панель архива</title>
+    <style>
+        .adminButtons{
+            width: 100%;
+            margin: 2;
+            padding: 10;
+        }
+    </style>
+  </head>
+  <body>
+    <div class="box w3-bar-block w3-collapse w3-large w3-theme-l5" style="height: auto; padding:0vw; display:flex;">
+      <div class="image-container">
+        <a href="/" style="display: inline-block;" title="В корневую директорию">
+          <img src="/images/MNS_logo.png" class="logo" alt="Лого не прогрузилось">
+        </a>
+      </div>
+      <div id="leftPanel" style="width:10em; position: relative; display: flex; justify-content: space-around; flex-wrap: wrap; width: 100%">
+        <button class="adminButtons modalButton" id="serv" onclick="getServData()">Сервер</button>
+        <button class="adminButtons modalButton" id="logs" onclick="getLogsData()">Логи</button>
+        <button class="adminButtons modalButton" id="user" onclick="getUserData()">Пользователи</button>
+        <button class="adminButtons modalButton" id="docs" onclick="getDocsData()">Документы</button>
+      </div>
+    </div>
+    <div class="box sizeAble" id="center">
+    </div>
+  </div>
+  <div style="width: 100%;" id="rightPanel" class="box">
+  </div>
+  <script src="/js/sizeAbleBlocks.js"></script>
+  <script src="/js/admin/data.js"></script>
+  <script src="/js/admin/users.js"></script>
+  <script src="/js/admin/server.js"></script>
+  <script src="/js/admin/logs.js"></script>
+  <script src="/js/admin/docs.js"></script>
+  <script src="/js/admin/localStorage.js"></script>
+  </body>
+</html>

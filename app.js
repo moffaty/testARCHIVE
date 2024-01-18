@@ -7,17 +7,37 @@ const path = require('path');
 const app = express();
 const jwt = require('jsonwebtoken');
 
-// middleware
-const checkHeadersMiddleware = (req, res, next) => {
-    const requiredHeaders = ['authorization', 'Content-Type'];
-    console.log(req.headers);
+// middlewares
+function checkHeadersMiddleware(req, res, next) {
+    const requiredHeaders = ['authorization'];
+    // console.log(req.headers);
     for (const header of requiredHeaders) {
       if (!req.headers[header]) {
-        return res.status(400).json({ error: `Missing: ${header}` });
+        return res.status(400).json({ response: `Access denied` });
       }
     }
     next();
-  };
+};
+
+async function checkToken(req, res, next) {
+    try {
+        const userToken = req.headers['authorization'];
+        console.log(jwt.verify(userToken.replace(/^Bearer\s+/, ''), token));
+    } catch (err) {
+        return res.status(400).json({ response: `Access denied` });
+    }
+    next();
+}
+
+// list of personals positions in bd 
+const personalPositions = ['admin', 'editor', 'user'];
+
+// PORT
+const PORT = 3100;
+
+// SERVER (look into startServer)
+// need to stop server
+let server;
 
 // token
 const token = "zxc";
@@ -27,9 +47,19 @@ const main_dir = '/main_dir';
 const hashLenght = 10;
 
 // db
-const hostDB = 'srv-archive';
-const userDB = 'agp';
-const passwordDB = 'Lmx00R@FMPaA';
+const dataDB = fs.readFileSync('db.json', 'utf8');
+// Parse the JSON data
+const jsonData = JSON.parse(dataDB);
+
+// Set values for your parameters
+const hostDB = jsonData.host;
+const userDB = jsonData.user;
+const passwordDB = jsonData.password;
+const portDB = jsonData.port;
+
+console.log('HostDB:', hostDB);
+console.log('UserDB:', userDB);
+console.log('PasswordDB:', passwordDB);
 
 /**
  * Connects to a MySQL database.
@@ -38,25 +68,48 @@ const passwordDB = 'Lmx00R@FMPaA';
  * @returns {Object} The MySQL connection object.
  */
 function connectToMySQL(dbNAME, res) {
-    const connection = mysql.createConnection({
-        host: hostDB,
-        user: userDB,
-        password: passwordDB,
-        database: dbNAME,
-        port: 3306
-    });
-    connection.connect((err) => {
-        if (err) { 
-            console.dir(err); 
-            res.json({  error:'Error connection to DB' }); 
+    try {
+        const connection = mysql.createConnection({
+            host: hostDB,
+            user: userDB,
+            password: passwordDB,
+            database: dbNAME,
+            port: portDB
+        });
+        connection.connect((err) => {
+            if (err) { 
+                console.dir(err); 
+                if (res) {
+                    res.json({  response:'Error connection to DB' }); 
+                    return null;
+                }
+            }
+        });
+        return connection;
+    } catch(err) {
+        if (res) {
+            res.json({  response:'Error connection to DB' }); 
         }
-    });
-    return connection;
+        return null;
+    }
+}
+
+async function startServer() {
+    server = app.listen(PORT, () => {
+        console.log(`Started http://localhost:${PORT}`)
+    })
+}
+
+async function stopServer() {
+    if (server) {
+        server.close();
+    }
+    console.log('Server stopped');
 }
 
 function getUserData(req, res) {
     if (!req.body.password && req.body.username) {
-        res.json({ error:`Error: haven't login or password` });
+        res.json({ response:`response: haven't login or password` });
     } 
     const username = req.body.username;
     const password = req.body.password;
@@ -66,8 +119,7 @@ function getUserData(req, res) {
 
 function isSQLResponseHaveError(error, res) {
     if (error) {
-        console.log(error);
-        res.json({ error: error.sqlMessage });
+        res.json({ response: `Error` });
         return true;
     }
     return false;
@@ -108,14 +160,51 @@ app.post('/get-dir-info', async (req, res) => {
         res.json(data);
     } catch (error) {
         console.error('Произошла ошибка:', error);
-        res.status(500).json({ error: 'Ошибка чтения директории' });
+        res.status(500).json({ response: 'Ошибка чтения директории' });
     }
 });
 
+
+// BD settings
+
+app.post('/change-connect-db', checkHeadersMiddleware, checkToken, async (req, res) => {
+    const host = req.body.host || hostDB;
+    const user = req.body.user || userDB;
+    const password = req.body.password || passwordDB;
+    const port = req.body.port || portDB;
+    const data = {
+        host: host,
+        user: user,
+        password: password,
+        port: port
+    };
+    const jsonData = JSON.stringify(data, null, 2);``
+    fs.writeFileSync('db.json', jsonData);
+    console.log(host, user, password, port);
+    await stopServer();
+    await startServer();
+    res.send('Data base connection changed. Server rebooted.');
+})
+
+// BD user-queries
+
+app.post('/get-user-info', (req, res) => {
+    const data = [req.body.username];
+    const connection = connectToMySQL('personals', res);
+    const query = 'SELECT * FROM auth WHERE username = ?';
+    connection.query(query, data, (error, result) => {
+        if (!isSQLResponseHaveError(error, res)) {
+            console.log(result);
+            res.json({ response: result })
+        }
+    })
+})
+
 app.post('/register-user', async (req, res) => {
     const data = getUserData(req, res);
+    data.push(req.body.position);
     const connection = connectToMySQL('personals', res);
-    const query = 'INSERT INTO auth(username, password) VALUES(?, ?)';
+    const query = 'INSERT INTO auth(username, password, position) VALUES(?, ?, ?)';
     connection.query(query, data, (error, result) => {
         if (!isSQLResponseHaveError(error, res)) {
             res.json({ response: `Registered new user: ${data[0]}!` })
@@ -124,16 +213,30 @@ app.post('/register-user', async (req, res) => {
 })
 
 app.post('/delete-user', (req, res) => {
-    const data = getUserData(req, res);
+    const data = [req.body.username];
     const connection = connectToMySQL('personals', res);
-    const query = 'DELETE FROM auth WHERE username = ? AND password = ?';
+    const query = 'DELETE FROM auth WHERE username = ?';
     connection.query(query, data, (error, result) => {
         if (!isSQLResponseHaveError(error, res)) {
             if (result.affectedRows > 0) {
-                res.json({ response: `Deleted user: "${username}"!` });
+                res.json({ response: `Deleted user: "${data[0]}"!` });
             } else {
                 res.json({ response: "User doesn't exist" });
             }
+        }
+    })
+})
+
+app.post('/edit-user', (req, res) => {
+    const data = getUserData(req, res);
+    data.push(req.body.position);
+    data.push(req.body.old_username); // where condition
+    console.log(data);
+    const connection = connectToMySQL('personals', res);
+    const query = 'UPDATE auth SET username = ?, password = ?, position = ? WHERE username = ?';
+    connection.query(query, data, (error, result) => {
+        if (!isSQLResponseHaveError(error, res)) {
+            res.json({ response: `Data is updated!` })
         }
     })
 })
@@ -142,6 +245,9 @@ app.post('/login', (req, res) => {
     const data = getUserData(req, res);
     const connection = connectToMySQL('personals', res);
     const query = 'SELECT * FROM auth WHERE username = ? AND password = ?';
+    if (!connection) {
+        return;
+    }
     connection.query(query, data, (error, result) => {
         if (!isSQLResponseHaveError(error, res)) {
             const username = data[0];
@@ -151,13 +257,26 @@ app.post('/login', (req, res) => {
     })
 })
 
-app.post('/secret', checkHeadersMiddleware, (req, res) => {
+app.post('/secret', checkHeadersMiddleware, checkToken, (req, res) => {
     res.send('hola)');
 })
 
-app.listen(3100, () => {
-    console.log('Started http://localhost:3100')
+app.post('/admin', (req, res) => {
+    const username = 'admin';
+    res.send(jwt.sign({ username }, token, { expiresIn: '0.5h' }));
 })
+
+app.get('/admin-panel', (req, res) => {
+    res.sendFile(path.join(__dirname, 'admin-panel.html'));
+})
+
+app.get('/get-positions', (req, res) => {
+    console.log(personalPositions);
+    res.json(personalPositions);
+})
+
+
+startServer();
 
 async function test()  {
     const userP = '1234';
@@ -167,4 +286,6 @@ async function test()  {
     console.log("LOGIN:",loginP);
 }
 test();
+
+console.log(connectToMySQL('study'));
 // console.dir(bcrypt.compare(rawPassword, user.password));
