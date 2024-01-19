@@ -9,20 +9,9 @@ async function getPositions() {
     return await response.json();
 }
 
-function createaDataResponse(data, tag = "p") {
-    const dataElement = document.createElement(tag);
-    dataElement.textContent = data;
-    return dataElement;    
-}
-
-function addToPanel (child, panel) {
-    panel.appendChild(child);
-    return child;
-}
-
 async function createUser() {
     let positions = await getPositions();
-    const rightPanel = document.getElementById('rightPanel');
+    const rightPanel = panels._getRightPanel();
     clearElement(rightPanel);
     const form = createForm("create_user", "Создать пользователя", "login", "password");
     rightPanel.appendChild(form);
@@ -52,12 +41,12 @@ async function createUser() {
             body: JSON.stringify({ username, password, position })
         })
         .then(response => response.json())
-        .then(data => { addToPanel(createaDataResponse(data.response), rightPanel); });
+        .then(data => { dataResponse(data.response, rightPanel); });
     })
 }
 
 function deleteUser() {
-    const rightPanel = document.getElementById('rightPanel');
+    const rightPanel = panels._getRightPanel();
     const htmlData = `
         <form id="detele_user">
         <input type="text" name="login" placeholder="login" required>
@@ -77,13 +66,13 @@ function deleteUser() {
         })
         .then(response => response.json())
         .then(data => {
-            addToPanel(createaDataResponse(data.response), rightPanel);
+            dataResponse(data.response, rightPanel);
         })
     })
 }
 
 async function editUser() {
-    const rightPanel = document.getElementById('rightPanel');
+    const rightPanel = panels._getRightPanel();
     let positions = await getPositions();
     let elements = [];
     const htmlData = `
@@ -165,14 +154,14 @@ async function editUser() {
                     .then(response => response.json())
                     .then(data => {
                         console.log('shit');
-                        const dataElement = addToPanel(createaDataResponse(data.response), rightPanel);
+                        const dataElement = dataResponse(data.response, rightPanel);
                         elements.forEach(el => el.remove());
                         elements.push(dataElement);
                     })
                 })
             } 
             else {
-                const dataElement = addToPanel(createaDataResponse('Такого пользователя не существует'), rightPanel);
+                const dataElement = dataResponse('Такого пользователя не существует', rightPanel);
                 elements.push(dataElement);
             } 
         })

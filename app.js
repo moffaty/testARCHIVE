@@ -119,7 +119,7 @@ function getUserData(req, res) {
 
 function isSQLResponseHaveError(error, res) {
     if (error) {
-        res.json({ response: `Error` });
+        res.json({ status: 'error', response: `Error` });
         return true;
     }
     return false;
@@ -186,6 +186,18 @@ app.post('/change-connect-db', checkHeadersMiddleware, checkToken, async (req, r
     res.send('Data base connection changed. Server rebooted.');
 })
 
+// BD status
+
+app.get('/get-database-status', async (req, res) => {
+    try {
+        await db.query('SELECT 1');
+        res.status(200).json({ status: 'success', response: 'Database connection is active' });
+    } catch (error) {
+        console.error('Database connection error:', error.message);
+        res.status(500).json({ status: 'error', response: 'Failed to connect to the database' });
+    }
+})
+
 // BD user-queries
 
 app.post('/get-user-info', (req, res) => {
@@ -195,7 +207,7 @@ app.post('/get-user-info', (req, res) => {
     connection.query(query, data, (error, result) => {
         if (!isSQLResponseHaveError(error, res)) {
             console.log(result);
-            res.json({ response: result })
+            res.json({ status: 'success', response: result })
         }
     })
 })
@@ -207,7 +219,7 @@ app.post('/register-user', async (req, res) => {
     const query = 'INSERT INTO auth(username, password, position) VALUES(?, ?, ?)';
     connection.query(query, data, (error, result) => {
         if (!isSQLResponseHaveError(error, res)) {
-            res.json({ response: `Registered new user: ${data[0]}!` })
+            res.json({ status: 'success', response: `Registered new user: ${data[0]}!` })
         }
     })
 })
@@ -219,9 +231,9 @@ app.post('/delete-user', (req, res) => {
     connection.query(query, data, (error, result) => {
         if (!isSQLResponseHaveError(error, res)) {
             if (result.affectedRows > 0) {
-                res.json({ response: `Deleted user: "${data[0]}"!` });
+                res.json({ status: 'success', response: `Deleted user: "${data[0]}"!` });
             } else {
-                res.json({ response: "User doesn't exist" });
+                res.json({ status: 'error', response: "User doesn't exist" });
             }
         }
     })
@@ -236,7 +248,7 @@ app.post('/edit-user', (req, res) => {
     const query = 'UPDATE auth SET username = ?, password = ?, position = ? WHERE username = ?';
     connection.query(query, data, (error, result) => {
         if (!isSQLResponseHaveError(error, res)) {
-            res.json({ response: `Data is updated!` })
+            res.json({ status: 'success', response: `Data is updated!` })
         }
     })
 })
@@ -286,6 +298,4 @@ async function test()  {
     console.log("LOGIN:",loginP);
 }
 test();
-
-console.log(connectToMySQL('study'));
 // console.dir(bcrypt.compare(rawPassword, user.password));

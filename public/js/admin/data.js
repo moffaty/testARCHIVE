@@ -1,18 +1,18 @@
 /**
  * en and ru lits same length
- * @param {Array} en - array
- * @param {Array} ru - array
+ * @param {Array} operations - array
+ * @param {Array} operationsRU - array
  * @param {String} optionName -
  */
-function getData(en, ru, optionName) {
-    const center = document.getElementById('center');
+function getData(operations, operationsRU, optionName) {
+    const centerPanel = panels._getCenterPanel();
     let data = '';
-    for (let i = 0; i < ru.length; i++) {
-        const el = ru[i];
-        const funcname = en[i] + optionName + '()';
-        data += `<button id=${el} onclick=${funcname} class="adminButton modalButton">${el}</button>`;
+    for (let i = 0; i < operationsRU.length; i++) {
+        const el = operationsRU[i];
+        const funcname = operations[i] + optionName + '()';
+        data += `<button id=${el} onclick=${funcname} class="adminButtons modalButton">${el}</button>`;
     }
-    center.innerHTML = data;
+    centerPanel.innerHTML = data;
     localStorage.setItem('option', optionName);
     changeOption(localStorage.getItem('option'));
 }
@@ -37,6 +37,9 @@ function changeOption(option) {
     });
 }
 
+function getRightPanel() {
+    return document.qu
+}
 
 function clearElement (el) {
     el.innerHTML = '';
@@ -62,3 +65,18 @@ function createForm (formId, submitString, ...inputNames) {
     return form;
 }
 
+
+function createaDataResponse(data, tag = "p") {
+    const dataElement = document.createElement(tag);
+    dataElement.textContent = data;
+    return dataElement;    
+}
+
+function addToPanel (child, panel) {
+    panel.appendChild(child);
+    return child;
+}
+
+function dataResponse (data, panel) {
+    return addToPanel(createaDataResponse(data), panel);
+}
