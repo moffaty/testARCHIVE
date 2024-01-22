@@ -6,6 +6,7 @@ const fs = require('fs');
 const path = require('path');
 const app = express();
 const jwt = require('jsonwebtoken');
+const { Session } = require('inspector');
 
 // middlewares
 function checkHeadersMiddleware(req, res, next) {
@@ -125,6 +126,11 @@ function isSQLResponseHaveError(error, res) {
     return false;
 }
 
+app.use(session({
+    secret: '123',
+    resave: false,
+    saveUninitialized: true
+}))
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true })); // для обработки URL-кодированных данных
 app.use(express.static(path.join(__dirname, 'public')));
@@ -254,7 +260,7 @@ app.post('/edit-user', (req, res) => {
 })
 
 app.post('/get-info-of-registration', (req, res) => {
-    
+
 })
 
 app.post('/login', (req, res) => {
