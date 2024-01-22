@@ -253,6 +253,10 @@ app.post('/edit-user', (req, res) => {
     })
 })
 
+app.post('/get-info-of-registration', (req, res) => {
+    
+})
+
 app.post('/login', (req, res) => {
     const data = getUserData(req, res);
     const connection = connectToMySQL('personals', res);

@@ -22,11 +22,10 @@
     <div class="image-container">
         <a href='/' style="display: inline-block;" title="В корневую директорию"><img src="/images/MNS_logo.png" class=logo  alt="Лого не прогрузилось"></a>
     </div>
-    <ul class="w3-ul sizeAble" id="dir_tree">
+    <ul class="w3-ul sizeAble" id="leftPanel">
     </ul>
     </div>
-    </div>
-    <div class="box" id="center">
+    <div class="box" id="centerPanel">
     <h1 id="currentPath">123</h1>
     <button id="back">Back</button>
     <ul id="center_list"></ul>
@@ -34,6 +33,7 @@
     <div class="box" id="rightPanel"></div>
     <script src="js/localStorage.js"></script>
     <script src="js/main.js"></script>
+    <script src="js/panels.js"></script>
     <script>
         let mainPath;
         let currentPath = '/';
