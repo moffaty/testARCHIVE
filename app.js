@@ -6,12 +6,12 @@ const fs = require('fs');
 const path = require('path');
 const app = express();
 const jwt = require('jsonwebtoken');
+const session = require('express-session');
 const { Session } = require('inspector');
 
 // middlewares
 function checkHeadersMiddleware(req, res, next) {
     const requiredHeaders = ['authorization'];
-    // console.log(req.headers);
     for (const header of requiredHeaders) {
       if (!req.headers[header]) {
         return res.status(400).json({ response: `Access denied` });
@@ -23,7 +23,7 @@ function checkHeadersMiddleware(req, res, next) {
 async function checkToken(req, res, next) {
     try {
         const userToken = req.headers['authorization'];
-        console.log(jwt.verify(userToken.replace(/^Bearer\s+/, ''), token));
+        console.log(jwt.verify(userToken.replace(/^Bearer\s+/, ''), secret));
     } catch (err) {
         return res.status(400).json({ response: `Access denied` });
     }
@@ -41,7 +41,7 @@ const PORT = 3100;
 let server;
 
 // token
-const token = "zxc";
+const secret = "zxc";
 
 // hash
 const main_dir = '/main_dir';
@@ -127,7 +127,8 @@ function isSQLResponseHaveError(error, res) {
 }
 
 app.use(session({
-    secret: '123',
+    username: '',
+    secret: secret,
     resave: false,
     saveUninitialized: true
 }))
@@ -136,7 +137,11 @@ app.use(bodyParser.urlencoded({ extended: true })); // для обработки
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'index2.html'));
+    if (req.session.username) {
+        res.sendFile(path.join(__dirname, 'index2.html'));
+    } else {
+        res.sendFile(path.join(__dirname, 'views/login.html'));
+    }
 })
 
 app.get('/get-main-dir', (req, res) => {
@@ -170,8 +175,85 @@ app.post('/get-dir-info', async (req, res) => {
     }
 });
 
+// login
+
+app.get('/login', (req, res) => {
+    res.sendFile(path.join(__dirname, 'views/login.html'));
+})
+
+app.post('/login',(req,res)=>{
+    const username = req.body.username;
+    const password = req.body.password;
+    const connection = connectToMySQL('personals');
+
+    connection.query(`SELECT * FROM auth WHERE username="${username}" AND password="${password}"`,
+        (err, results, fields) => {
+            try {
+                const authData = results[0];
+                // const authData = { username: "123", password: "123"};
+                if (authData.username === username && authData.password === password){
+                    // Если пользователь аутентифицирован, генерируем токен
+                    const token = jwt.sign({ username }, motherfuckersccck, { expiresIn: '0.5h' });
+                    // Сохраняем токен в куках браузера
+                    res.cookie('token', token, { httpOnly: true, maxAge: 3600000, secure: true, sameSite: 'none'});
+                    accName = username;
+                    addToLog("authlogs.csv", [  ]);
+                    res.setHeader('Set-Cookie', [
+                        `token=${token}; HttpOnly; Max-Age=3600; Path=/`,
+                        `name=${username}; HttpOnly; Max-Age=3600; Path=/`
+                    ]);
+                    req.session.user = {
+                        username: username
+                    };
+                    res.redirect('/');
+                } else {
+                    // Ошибка: неверные данные для авторизации
+                    res.send(`<script>alert('Неправильное имя пользователя или пароль'); window.location='/auth';</script>`);
+                }
+            } catch(err){
+                res.send(`<script>alert('Неправильное имя пользователя или пароль'); window.location='/auth';</script>`);
+            }});
+            
+    connection.end((err) => {
+      if (err) { return console.dir(`Ошибка закрытия подключение к БД: ${err.message}`); }
+    });
+})
+
+// logout
+
+app.get('/logout', (req, res) => {
+    req.session.user = {};
+    const clearCookie = (...names) => { // Используем rest параметр для получения всех аргументов в виде массива
+      const cookies = names.map(name => `${name}=; HttpOnly; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`);
+      res.setHeader('Set-Cookie', cookies);
+    }
+  
+    clearCookie('name', 'token'); // Можно передавать любое количество аргументов
+  
+    res.redirect('/');
+});
 
 // BD settings
+
+app.get('/get-db-connection-info', (req, res) => {
+    const filePath = path.join(__dirname, 'db.json');
+
+    fs.readFile(filePath, 'utf8', (err, data) => {
+        if (err) {
+            console.error(err);
+            res.status(500).json({ error: 'Internal Server Error' });
+            return;
+        }
+
+        try {
+            const dbinfo = JSON.parse(data);
+            res.json(dbinfo);
+        } catch (parseError) {
+            console.error(parseError);
+            res.status(500).json({ error: 'Error parsing JSON' });
+        }
+    });
+});
 
 app.post('/change-connect-db', checkHeadersMiddleware, checkToken, async (req, res) => {
     const host = req.body.host || hostDB;
@@ -186,7 +268,6 @@ app.post('/change-connect-db', checkHeadersMiddleware, checkToken, async (req, r
     };
     const jsonData = JSON.stringify(data, null, 2);``
     fs.writeFileSync('db.json', jsonData);
-    console.log(host, user, password, port);
     await stopServer();
     await startServer();
     res.send('Data base connection changed. Server rebooted.');
@@ -196,8 +277,15 @@ app.post('/change-connect-db', checkHeadersMiddleware, checkToken, async (req, r
 
 app.get('/get-database-status', async (req, res) => {
     try {
-        await db.query('SELECT 1');
-        res.status(200).json({ status: 'success', response: 'Database connection is active' });
+        const connection = mysql.createConnection({
+            host: hostDB,
+            user: userDB,
+            password: passwordDB,
+            port: portDB
+        });
+        connection.connect((err) => {
+            res.status(200).json({ status: 'success', response: 'Database connection is active' });
+        })
     } catch (error) {
         console.error('Database connection error:', error.message);
         res.status(500).json({ status: 'error', response: 'Failed to connect to the database' });
@@ -212,7 +300,6 @@ app.post('/get-user-info', (req, res) => {
     const query = 'SELECT * FROM auth WHERE username = ?';
     connection.query(query, data, (error, result) => {
         if (!isSQLResponseHaveError(error, res)) {
-            console.log(result);
             res.json({ status: 'success', response: result })
         }
     })
@@ -249,7 +336,6 @@ app.post('/edit-user', (req, res) => {
     const data = getUserData(req, res);
     data.push(req.body.position);
     data.push(req.body.old_username); // where condition
-    console.log(data);
     const connection = connectToMySQL('personals', res);
     const query = 'UPDATE auth SET username = ?, password = ?, position = ? WHERE username = ?';
     connection.query(query, data, (error, result) => {
@@ -260,7 +346,7 @@ app.post('/edit-user', (req, res) => {
 })
 
 app.post('/get-info-of-registration', (req, res) => {
-
+    
 })
 
 app.post('/login', (req, res) => {
@@ -273,7 +359,7 @@ app.post('/login', (req, res) => {
     connection.query(query, data, (error, result) => {
         if (!isSQLResponseHaveError(error, res)) {
             const username = data[0];
-            const userToken = jwt.sign({ username }, token, { expiresIn: '0.5h' });
+            const userToken = jwt.sign({ username }, secret, { expiresIn: '0.5h' });
             res.status(200).send(`\nToken: ${userToken}\nUse token in header to get acces. Like this: "Authorization: Bearer token"`);
         }
     })
@@ -285,7 +371,7 @@ app.post('/secret', checkHeadersMiddleware, checkToken, (req, res) => {
 
 app.post('/admin', (req, res) => {
     const username = 'admin';
-    res.send(jwt.sign({ username }, token, { expiresIn: '0.5h' }));
+    res.send(jwt.sign({ username }, secret, { expiresIn: '0.5h' }));
 })
 
 app.get('/admin-panel', (req, res) => {
@@ -293,7 +379,6 @@ app.get('/admin-panel', (req, res) => {
 })
 
 app.get('/get-positions', (req, res) => {
-    console.log(personalPositions);
     res.json(personalPositions);
 })
 

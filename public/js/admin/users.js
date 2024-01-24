@@ -13,7 +13,7 @@ async function createUser() {
     let positions = await getPositions();
     const rightPanel = panels._getRightPanel();
     clearElement(rightPanel);
-    const form = createForm("create_user", "Создать пользователя", "login", "password");
+    const form = createForm("create_user", "Создать пользователя", {}, "login", "password");
     rightPanel.appendChild(form);
 
     const select = document.createElement('select');

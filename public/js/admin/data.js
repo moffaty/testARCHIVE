@@ -2,7 +2,7 @@
  * en and ru lits same length
  * @param {Array} operations - array
  * @param {Array} operationsRU - array
- * @param {String} optionName -
+ * @param {String} optionName - string
  */
 function getData(operations, operationsRU, optionName) {
     const centerPanel = panels._getCenterPanel();
@@ -45,7 +45,7 @@ function clearElement (el) {
     el.innerHTML = '';
 }
 
-function createForm (formId, submitString, ...inputNames) {
+function createForm (formId, submitString, dataToValues, ...inputNames) {
     const form = document.createElement('form');
     form.id = formId;
 
@@ -53,6 +53,9 @@ function createForm (formId, submitString, ...inputNames) {
         const input = document.createElement('input');
         input.name = inputName;
         input.type = 'text';
+        if (Object.keys(dataToValues).length !== 0) {
+            input.value = dataToValues[input.name];
+        }
         input.placeholder = inputName;
         form.appendChild(input);
     })

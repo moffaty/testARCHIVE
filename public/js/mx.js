@@ -111,8 +111,15 @@ class mxModalView {
         return this.element.styles;
     }
 
+    appendChild(obj) {
+        const divmodal = document.createElement('div');
+        divmodal.classList.add('modal-content');
+        divmodal.appendChild(obj);
+        this.element.appendChild(divmodal);
+    }
+    
     SetContent (html) {
-        this.element.innerHTML = html;
+        this.element.innerHTML = `<div class="modal-content">` + html + '</div>';
         this.htmlContent = html;
     }
 

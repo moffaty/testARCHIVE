@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <link rel="icon" href="/images/icons8-folder-64.png" type="image/x-icon">
+  <meta charset="UTF-8">
+  <title>Авторизация</title>
+  <style>
+    body {
+      background-color: #f2f2f2;
+      font-family: Arial, sans-serif;
+    }
+    
+    .login-form {
+      position: absolute;
+      top: 45%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 25em;
+      background-color: #fff;
+      border-radius: 0.625em;
+      box-shadow: 0 0 1.25em rgba(0, 0, 0, 0.3);
+      padding: 2.5em;
+    }
+    
+    h1 {
+      text-align: center;
+      margin-top: 0;
+      margin-bottom: 10%;
+    }
+    
+    input[type="text"], input[type="password"] {
+      display: block;
+      width: 95%;
+      padding: 0.625em;
+      margin-bottom: 1.25em;
+      margin-top: 1.25em;
+      border: none;
+      border-radius: 0.3125em;
+      box-shadow: inset 0 0 0.3125em rgba(0, 0, 0, 0.2);
+      font-size: 1em;
+    }
+
+    input[type="submit"],button {
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 0.3125em;
+      padding: 0.625em 1.25em;
+      font-size: 1em;
+      cursor: pointer;
+      transition: background-color 0.2s ease-in-out;
+    }
+
+    input[type="submit"]:hover, button:hover {
+      background-color: #3e8e41;
+    }
+  </style>
+</head>
+<body>
+  <div class="login-form">
+    <h1>Авторизация</h1>
+    <form action="/login" method="post">
+      <label for="username">Имя пользователя:</label>
+      <input type="text" id="username" name="username" autocomplete="current-username " required>
+
+      <label for="password">Пароль:</label>
+      <input type="password" id="password" name="password" autocomplete="current-password" required>
+
+      <input id="sub" type="submit" value="Вход" title="Вход в аккаунт">
+    </form>
+    <form method="post" action="/guest">
+      <input id="guest" type="submit" value="Гость" style="background-color:rgb(26, 126, 188); right: 2.5em; bottom: 2.5em; position: absolute;" title="Гостевой вход. Нет возможности редактирование информации.">
+    </form>
+  </div>
+  
+  <script>
+    document.getElementById("username").focus();
+    // Сохраняем предыдущий URL-адрес при каждом перенаправлении на страницу /auth
+    localStorage.clear();
+    sessionStorage.setItem('login',true);
+    let formSubmitted = false;
+    const form = document.getElementById('sub');
+      form.addEventListener('click', ()=>{
+          formSubmitted = true; // устанавливаем переменную в true
+      })
+    // Проверяем, является ли текущий URL-адрес /auth и совпадает ли он с предыдущим URL-адресом
+    if (!formSubmitted && window.location.pathname === '/login') {
+        formSubmitted = false;
+    }
+  </script>
+</body>
+</html>
