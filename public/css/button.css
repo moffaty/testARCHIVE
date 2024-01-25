@@ -24,8 +24,7 @@
     margin-top: 3%;
     width: 100%;
 }
-form button[type="submit"],
-.modalButton, #labelFile {
+form button[type="submit"], #labelFile {
   background-color: rgb(124 172 208);
   color: #fff;
   border: none;
@@ -81,15 +80,7 @@ form button[type="submit"]:hover,
     cursor: pointer;
     transition: background-color 0.3s ease-in-out;
 }
-.centerButtons{
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 100%;
-}
-.centerButtons button {
-    height: 50%;
-}
+
 .delfile{
     margin-left: auto;
 }

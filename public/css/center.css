@@ -1,0 +1,89 @@
+.header-center {
+    display:inline-block; 
+    position: relative;
+    border-top-left-radius: 0.3125em;
+    border-top-right-radius: 0.3125em;
+    background-size: cover;
+    background-position: center;
+    display: inline-block;
+    height: auto;
+    width: 26.25em;
+}
+
+.centerButtons{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+}
+
+.centerButtons button {
+    height: 50%;
+}
+
+.modalButton {
+    background-color: rgb(124 172 208);
+    color: #fff;
+    border: none;
+    border-radius: 0.25em;
+    margin: 0.3125em;
+    padding: 0.625em 1.25em;
+    font: "Arial";
+    font-size: 1.125em;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.3s ease-in-out;
+}
+
+.centerDir {
+    margin: 0;
+    font-size:15px; 
+    list-style: none;
+    padding: 0;
+    height: 70%;
+    height: 100%;
+    overflow:auto; 
+    border-color: white;
+    padding: 0.3125em;
+    margin-top: 0.9375em;
+    display: inline-block;
+    margin-bottom: 0em!important;
+    border-top: 0.9375em solid rgb(124 172 208 / 10%);
+    border-bottom: 0.9375em solid rgb(124 172 208 / 10%);
+    border-left: 0.375em solid rgb(124 172 208 / 10%);
+    border-right: 0.375em solid rgb(124 172 208 / 10%);
+}
+
+.centerDir-list {
+
+}
+  
+.centerDir-ul {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+}
+
+.centerDir-ul li {
+    padding: 8px 16px;
+    border-bottom: 1px solid #ddd;
+}
+
+
+.centerDir ul {
+    border-bottom: 1px solid #ddd;
+}
+
+.centerDir ul:last-child {
+    border-bottom: none;
+}
+
+.centerBottomColor {
+    position: relative;
+    width: 26.25em;
+    color: rgb(124 172 208 / 10%);
+    width: 100%;
+    height: 1.2625em;
+    background-color: rgb(124 172 208 / 10%);
+    bottom: 0em;
+}
