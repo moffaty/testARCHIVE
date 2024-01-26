@@ -15,7 +15,7 @@ const dirPath = "D:\/Archive\/ARCHIVE\/main_dir\/";
 const tree = document.querySelector('.w3-ul');
 const treedirs = tree.querySelectorAll('.w3-ul');
 treedirs.forEach(dir => {
-    if(localStorage.getItem(dir.id) !== 'active' || !localStorage.getItem(dir.id)){
+    if (localStorage.getItem(dir.id) !== 'active' || !localStorage.getItem(dir.id)) {
         localStorage.setItem(dir.id, "hidden");
     } else {
         const openFolderButton = dir.parentNode.querySelector('.claster .openFolder');
