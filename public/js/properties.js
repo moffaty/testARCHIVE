@@ -1,26 +1,121 @@
-let fetchDel;
+function prop() {
+    let fetchDel;
+function getCurrentPath() {
+    return '/main_dir';
+}
+
+function createInputRow(label, inputId, value, type = 'text') {
+    return `
+        <tr>
+            <td>${label}:</td>
+            <td><input type="${type}" id="${inputId}" value="${value}"${type === 'date' ? ' class="w3-input"' : ''} required autocomplete="off"></td>
+        </tr>
+    `;
+}
+
+function createTextAreaRow(label, textareaId, value) {
+    return `
+        <tr>
+            <td>${label}:</td>
+            <td><textarea id="${textareaId}" class="propTextarea">${value}</textarea></td>
+        </tr>
+    `;
+}
+
+function createHiddenInput(inputId, value) {
+    return `<input type="hidden" id="${inputId}" value="${value}">`;
+}
+
+function createLabel(text) {
+    const label = document.createElement('label');
+    label.textContent = text;
+    label.style.textAlign = 'center';
+    return label;
+}
+
+function createInput(value, id, type, required, title) {
+    const input = document.createElement('input');
+    input.value = value;
+    input.id = id;
+    input.type = type;
+    input.required = required;
+    input.title = title;
+    return input;
+}
+
+function createButton(className, id, textContent) {
+    const button = document.createElement('button');
+    button.className = className;
+    button.id = id;
+    button.textContent = textContent;
+    return button;
+}
+
+function renameFunction(filePath, fileName, fileSitePath, renameFileButton) {
+    const renameFileModal = new mxModalView({id:'renameFileModal',className:'modal'});
+    const label = createLabel('Введите новое имя для папки:');
+    const input = createInput(fileName, 'new-file-name', 'text', true, 'Запрещено использовать: слеши (/ и \\)');
+    const buttonconfirm = createButton('modalButton', 'confirm-rename', 'Переименовать');
+    const buttoncancel = createButton('modalButton', 'cancel-rename', 'Отмена');
+    const buttonwrapper = Object.assign(document.createElement('div'), {
+        className: 'button-wrapper'
+    });
+    buttonwrapper.appendChild(buttonconfirm);
+    buttonwrapper.appendChild(buttoncancel);
+    renameFileModal.appendChilds(label, input, buttonwrapper);
+    input.addEventListener('keydown', function(event) {
+        if (disallowedChars.includes(event.key) || disallowedChars.includes(event.code)) {
+            event.preventDefault();
+            alert('Введен запрещенный символ')
+        }
+    });
+
+    const confirm = () => {
+        const newFileName = input.value;
+        fetch(renameFileButton.getAttribute('fetch'), {
+            method: 'POST',
+            body: JSON.stringify({ oldName: fileSitePath + '/' + fileName, newName: newFileName }),
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log(data.status);
+            console.log('HERE!');
+            const test = new mxNotify();
+            const text = document.createElement('h3');
+            text.textContent = 'Директория переименована!';
+            test.AddPopupContent(text);
+            renameFileModal.DoCloseModal();
+        });
+    }
+    // Переименование
+    renameFileModal.SetListenerOnClick(confirm,'confirm-rename');
+    renameFileModal.SetListenerOnClick( () => { renameFileModal.remove(); }  ,'cancel-rename');
+    renameFileModal.SetListenerOnEnter(confirm);
+}
 
 const centerDir = document.querySelector('.centerDir');
-const allFiles = centerDir.querySelectorAll('.file a,.directory a');
-
+const allFiles = centerDir.querySelectorAll('li');
+console.log(allFiles);
 allFiles.forEach(button => {
     button.addEventListener('contextmenu', (event) => {
         event.preventDefault();
+        console.log(button)
 
         const menu = new mxContextMenu({id:'menu',className:'menu','tag':'div'});
         if (button.classList.contains('file')){
-            menu.SetContent(`
-            <div style="position: absolute;" class="menu-context-item" id="menu-context-item">
-                <button id="properties" class="properties">Свойства</button>
-                <button id="concat" class="concat">Редактирование документа</button>
-                <button id="moveToTrash" class="moveToTrash" data-fetch="/moveToTrash">Удалить</button>
-            </div>`);
+            const buttonlist = ['properties', 'concat', 'moveToTrash'];
+            const buttontext = ['Свойства', 'Редактирование документа', 'Удалить'];
+            const elements = menu.SetItems(buttonlist, buttontext);
+            elements['moveToTrash'].setAttribute('fetch', '/moveToTrash');
         } else {
-            menu.SetContent(`
-            <div style="position: absolute;" class="menu-context-item" id="menu-context-item">
-                <button id="renameFile" class="renameFile" data-fetch="/renameDir" style="border-bottom: #fff;">Переименовать</button>
-                <button id="delFile" class="delFile" data-fetch="/delDir">Удалить</button>
-            </div>`);
+            const buttonlist = ['renameFile', 'delFile'];
+            const buttontext = ['Переименовать', 'Удалить']
+            const elements = menu.SetItems(buttonlist, buttontext);
+            elements['delFile'].setAttribute('fetch', '/delDir');
+            elements['renameFile'].setAttribute('fetch', '/renameDir');
         }
         menu.SetListenerOnContextMenu ( () => {}, 'menu-context-item');
         const { x, y } = event;
@@ -33,58 +128,15 @@ allFiles.forEach(button => {
         });
 
         let filePath = button.dataset.filerenamepath;
-        let fileName = button.dataset.filename;
-        let fileSitePath = button.dataset.filepath;
+        let fileName = button.textContent;
+        let fileSitePath = getCurrentPath();
 
         const renameFileButton = menu.querySelector('.renameFile');
         if (renameFileButton) {
             renameFileButton.addEventListener('click', () => {
-
-                const renameFileModal = new mxModalView({id:'renameFileModal',className:'modal',tag:'div'});
-                renameFileModal.SetContent(`<div class="modal-content" style="overflow:inherite">
-                                                <p style="text-align: center;">Введите новое имя для папки:</p>
-                                                <input type="text" id="new-file-name" value="${fileName}" title="Запрещено использовать: слеши (/ и \\)" required>
-                                                <div class="button-wrapper">
-                                                <button class="modalButton" id="confirm-rename">Переименовать</button>
-                                                <button class="modalButton" id="cancel-rename">Отмена</button>
-                                                </div>
-                                            </div>`
-                );
-                const newFileNameInput = renameFileModal.getElementById('new-file-name');
-                newFileNameInput.addEventListener('keydown', function(event) {
-                    if (disallowedChars.includes(event.key) || disallowedChars.includes(event.code)) {
-                        event.preventDefault();
-                        alert('Введен запрещенный символ')
-                    }
-                });
-
-                const confirm = () => {
-                    const newFileName = renameFileModal.getElementById('new-file-name').value;
-                    fetch(renameFileButton.dataset.fetch, {
-                        method: 'POST',
-                        body: JSON.stringify({ filePath, newFileName, fileSitePath }),
-                        headers: {
-                            'Content-Type': 'application/json'
-                        }
-                    })
-                    .then(response => {
-                        if (response.ok) {
-                            location.reload();
-                        } else {
-                            console.error('Error renaming file');
-                        }
-                    })
-                    .catch(error => {
-                        console.error(error);
-                    });
-                }
-                // Переименование
-                renameFileModal.SetListenerOnClick(confirm,'confirm-rename');
-                renameFileModal.SetListenerOnClick( () => { renameFileModal.remove(); }  ,'cancel-rename');
-                renameFileModal.SetListenerOnEnter(confirm);
+                renameFunction(filePath, fileName, fileSitePath, renameFileButton);
             });
         }
-//
         const concatFileButton = menu.querySelector('.concat');
         if (concatFileButton) {
             concatFileButton.addEventListener('click', () => {
@@ -488,60 +540,19 @@ allFiles.forEach(button => {
                             const propertiesModal = new mxModalView({id:'propertiesModal',className:'modal',tag:'div'});
                             propertiesModal.SetContent(`<div class="modal-content" id="propertiesModalContent" style="max-height:95%; padding-top: 10;">
                                     <table>
-                                        <tr>
-                                            <td style="width: 30%">Имя докумета:</td>
-                                            <td><textarea id='propfileNameBD' class="propTextarea">${fileNameBD}</textarea></td>
-                                            <input type="hidden" id='proppathToDel' value='${filePath}'>
-                                        </tr>
-                                        <tr>
-                                            <td>Статус проверки:</td>
-                                            <td>
-                                                ${generateStatusSelect(statusBD)}
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td>Категория документа:</td>
-                                            <td>
-                                                ${generateCategorySelect(documentCategoryBD)} 
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td>Децимальный номер:</td>
-                                            <td><input type="text" id='propdecimalNumberBD' value='${decimalNumberBD}' required autocomplete="off"></td>
-                                        </tr>
-                                        <tr>
-                                            <td>Название проекта:</td>
-                                            <td><input type="text" id='propnameProjectBD' value="${nameProjectBD}"></td>
-                                        </tr>
-                                        <tr>
-                                            <td>Название организации:</td>
-                                            <td><input type="text" id='proporganisationBD' value='${organisationBD}'></td>
-                                        </tr>
-                                        <input type="hidden" class="w3-input" id='propuploadDateTimeBD' value='${(`${uploadDateTimeBD}`)}' min="1900-01-01">
-                                        <tr>
-                                            <td>Номер издания:</td>
-                                            <td><input type="text" id='propeditionNumberBD' value='${editionNumberBD}'></td>
-                                        </tr>
-                                        <tr>
-                                            <td>Автор:</td>
-                                            <td><input type="text" id='propauthorBD' value='${authorBD}'></td>
-                                        </tr>
-                                        <tr>
-                                            <td>Место хранения:</td>
-                                            <td><input type="text" id='propstorageBD' value='${storageBD}'></td>
-                                        </tr>
-                                        <tr>
-                                            <td>Номер папки:</td>
-                                            <td><input type="text" id='propdirNumberBD' value='${dirNumberBD}'></td>
-                                        </tr>
-                                        <tr>
-                                            <td>Дата издания:</td>
-                                            <td><input class="w3-input" type="date" id='proppublishDateBD' value='${toDate(`${publishDateBD}`)}' min="1900-01-01"></td>
-                                        </tr>
-                                        <tr>
-                                            <td>Примечание:</td>
-                                            <td><textarea id='propnotesBD' class="propTextarea">${notesBD}</textarea></td>
-                                        </tr>
+                                    ${createInputRow('Имя документа', 'propfileNameBD', fileNameBD)}
+                                    ${createInputRow('Статус проверки', 'propstatusBD', statusBD, 'select')}
+                                    ${createInputRow('Категория документа', 'propdocumentCategoryBD', documentCategoryBD, 'select')}
+                                    ${createInputRow('Децимальный номер', 'propdecimalNumberBD', decimalNumberBD)}
+                                    ${createInputRow('Название проекта', 'propnameProjectBD', nameProjectBD)}
+                                    ${createInputRow('Название организации', 'proporganisationBD', organisationBD)}
+                                    ${createHiddenInput('propuploadDateTimeBD', uploadDateTimeBD)}
+                                    ${createInputRow('Номер издания', 'propeditionNumberBD', editionNumberBD)}
+                                    ${createInputRow('Автор', 'propauthorBD', authorBD)}
+                                    ${createInputRow('Место хранения', 'propstorageBD', storageBD)}
+                                    ${createInputRow('Номер папки', 'propdirNumberBD', dirNumberBD)}
+                                    ${createInputRow('Дата издания', 'proppublishDateBD', toDate(publishDateBD), 'date')}
+                                    ${createTextAreaRow('Примечание', 'propnotesBD', notesBD)}
                                     </table>
                                     <div class="button-wrapper">
                                     <button class="modalButton" id="update-properties">Применить</button>
@@ -795,3 +806,4 @@ allFiles.forEach(button => {
         }
     });
 });
+}

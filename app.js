@@ -95,6 +95,11 @@ function connectToMySQL(dbNAME, res) {
     }
 }
 
+function defineFileType(filePath) {
+    const splitted = filePath.split('.');
+    return splitted[splitted.length - 1];
+}
+
 async function startServer() {
     server = app.listen(PORT, () => {
         console.log(`Started http://localhost:${PORT}`)
@@ -147,6 +152,7 @@ app.get('/admin-pane1', (req, res) => {
 // })
 
 app.get('/', (req, res) => {
+    req.session.username = 'red';
     if (req.session.username) {
         res.sendFile(path.join(__dirname, 'index2.html'));
     } else {
@@ -172,10 +178,14 @@ app.post('/get-dir-info', async (req, res) => {
             const stats = fs.statSync(filePath);
             const isDirectory = stats.isDirectory();
 
-            data.push({
-                name: file,
-                type: isDirectory ? 'directory' : 'file',
-            });
+            const obj = {};
+            const type = isDirectory ? 'directory' : 'file';
+            obj['name'] = file;
+            obj['type'] = type;
+            if (type === 'file') {
+                obj['filetype'] = defineFileType(file);
+            }
+            data.push(obj);
         }
 
         res.json(data);
@@ -382,6 +392,26 @@ app.get('/get-positions', (req, res) => {
     res.json(personalPositions);
 })
 
+
+// files
+async function renameDir(oldPath, newName) {
+    const newPath = path.join(path.dirname(oldPath), newName);
+    try {
+        await fs.access(newPath, fs.constants.F_OK);
+        return 'error'; 
+    } catch (error) {
+        await fs.renameSync(oldPath, newPath, (err) => { console.log(err) });
+        return 'success'; 
+    }
+}
+
+app.post('/renameDir', async (req,res) => {
+   const oldName = req.body.oldName;
+   const newName = req.body.newName;
+   const result = await renameDir(path.join(__dirname, oldName), newName);
+   console.log(result);
+   res.json({ status: result });
+})
 
 startServer();
 

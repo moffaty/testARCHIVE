@@ -129,6 +129,7 @@ const fillList = (list, data) => {
         const listItem = document.createElement('li');
         listItem.textContent = item.name; // Предположим, что item - это текстовое содержимое элемента
         listItem.classList.add(item.type);
+        listItem.classList.add(item.filetype);
         list.appendChild(listItem);
     });
 }

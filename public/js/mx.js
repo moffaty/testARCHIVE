@@ -117,6 +117,15 @@ class mxModalView {
         divmodal.appendChild(obj);
         this.element.appendChild(divmodal);
     }
+
+    appendChilds(...objs) {
+        const divmodal = document.createElement('div');
+        divmodal.classList.add('modal-content');
+        objs.forEach(obj => {
+            divmodal.appendChild(obj);
+        })
+        this.element.appendChild(divmodal);
+    }
     
     SetContent (html) {
         this.element.innerHTML = `<div class="modal-content">` + html + '</div>';
@@ -297,5 +306,75 @@ class mxContextMenu extends mxModalView {
             })
         })
     }
+
+    SetContent (html) {
+        this.element.innerHTML = html;
+        this.htmlContent = html;
+    }
+
+    SetItems(items, textContets) {
+        let elements = {}; // [name,.element]
+        const div = document.createElement('div');
+        div.classList.add('menu-context-item');
+        div.id = 'menu-context-item';
+        for (let i = 0; i < items.length; i++) {
+            const item = items[i];
+            const textContent = textContets[i];
+            const button = document.createElement('button');
+            button.classList.add(item);
+            button.id = item;
+            button.name = item;
+            button.textContent = textContent;
+            elements[item] = button;
+            div.appendChild(button);
+        }
+        this.element.appendChild(div);
+        return elements;
+    }
 }
 
+class mxNotify extends mxModalView {
+    constructor(args = { id: 'popup', className: 'popup', tag: 'div', parentID: '' }) {
+        super(args);
+        this.popupcontent = document.createElement('popup-content');
+        this.popupcontent.classList.add('popup-content');
+        this.closeButton = document.createElement('span');
+        this.closeButton.classList.add('popup-close');
+        this.closeButton.id = 'closePupop';
+        this.closeButton.textContent = 'x';
+
+        this.closeButton.addEventListener('click', (e) => {
+            this.DoCloseModal();
+        })
+        this.element.appendChild(this.popupcontent);
+        this.element.appendChild(this.closeButton);
+        this.AddElement();
+    }
+
+    AddPopupContent(html) {
+        this.popupcontent.appendChild(html);
+    }
+
+    SmoothExit() {
+        const popup = document.getElementById('popup');
+        popup.style.transition = 'transform 0.3s ease-in-out';
+        popup.style.transform = 'translate(100%, 100%)';
+
+        // Remove the transition property after the animation is complete
+        setTimeout(() => {
+            popup.style.transition = '';
+            this.DoCloseModal();
+        }, 300);
+    }
+    
+    AddElement() {
+        const popup = document.getElementById('popup');
+        setTimeout(() => {
+        popup.style.transform = 'translate(0, 0)';
+        }, 150); 
+        setTimeout(() => {
+            popup.style.transform = 'translate(0, 0)';
+            this.SmoothExit();
+        }, 2000);
+    }
+}
