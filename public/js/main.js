@@ -1,13 +1,27 @@
-const changeTag = (liElement, tag) => {
+/**
+ * Заменяет тег элемента на указанный тег, сохраняя содержимое и классы.
+ * @param {HTMLElement} liElement - Элемент списка, который требуется изменить.
+ * @param {string} tag - Новый тег, на который необходимо заменить текущий тег элемента.
+ * @returns {HTMLElement} - Новый элемент с указанным тегом, содержимым и классами.
+ */
+function changeTag(liElement, tag) {
     const newElement = document.createElement(tag);
-    newElement.textContent = liElement.textContent;
+    const anchorElement = liElement.querySelector('a');
+    newElement.appendChild(anchorElement)
     newElement.classList.add(...liElement.classList);
-    liElement.insertAdjacentElement('afterend', newElement);
+
+    liElement.parentNode.replaceChild(newElement, liElement);
     return newElement;
 };
 
-const clearListItems = (list) => {
+/**
+ * Очищает все дочерние элементы переданного списка.
+ * @param {HTMLElement} list - Список, который требуется очистить.
+ */
+function clearListItems(list) {
+    // Проверяем, является ли переданный объект элементом DOM
     if (list instanceof Element) {
+        // Получаем коллекцию дочерних элементов списка
         let children = list.children;
         if (children) {
             // Копируем коллекцию в массив для предотвращения изменений в процессе удаления
@@ -19,23 +33,53 @@ const clearListItems = (list) => {
     } 
 }
 
-const updateFolderName = () => {
+/**
+ * Обновляет текстовое содержимое элемента с ID = 'centerTopH'
+ * значением последнего компонента пути текущего пути.
+ */
+function updateFolderName() {
     document.getElementById('centerTopH').textContent = getLastDir(currentPath);
 }
 
-const checkNextElementSibling = (parent, tag) => {
+/**
+ * Проверяет, является ли следующий соседний элемент родителя элементом с указанным тегом.
+ * @param {HTMLElement} parent - Родительский элемент.
+ * @param {string} tag - Тег, с которым сравнивается тег следующего соседнего элемента.
+ * @returns {boolean} - Возвращает true, если следующий соседний элемент имеет указанный тег, в противном случае - false.
+ */
+function checkNextElementSibling(parent, tag) {
     return (parent.nextElementSibling && parent.nextElementSibling.tagName === tag.toUpperCase());
 }
 
-const getPath = (string, startIndex = 0, endElement = '<') => {
+/**
+ * Возвращает подстроку из переданной строки, начиная с указанного индекса и заканчивая указанным элементом.
+ * @param {string} string - Исходная строка.
+ * @param {number} startIndex - Начальный индекс для выделения подстроки (по умолчанию 0).
+ * @param {string} endElement - Заключающий элемент подстроки (по умолчанию '<').
+ * @returns {string} - Выделенная подстрока.
+ */
+function getPath(string, startIndex = 0, endElement = '<') {
     return string.substring(startIndex, string.indexOf(endElement));
 }
 
-const ulString = (string, startElement = '>', endElement = 'li') => {
+/**
+ * Возвращает подстроку между указанными элементами в строке.
+ * @param {string} string - Исходная строка.
+ * @param {string} startElement - Начальный элемент подстроки (по умолчанию '>').
+ * @param {string} endElement - Заключающий элемент подстроки (по умолчанию 'li').
+ * @returns {string} - Выделенная подстрока.
+ */
+function ulString(string, startElement = '>', endElement = 'li') {
     return string.substring(string.indexOf(startElement) + 1, string.indexOf(endElement) - 1);
 }
 
-const getAddictivePath = (element, addictivePath = '') => {
+/**
+ * Возвращает "зависимый" путь, добавляя к нему части пути родительских элементов с классом 'directory'.
+ * @param {HTMLElement} element - Элемент DOM.
+ * @param {string} addictivePath - Накопленный "зависимый" путь (по умолчанию пустая строка).
+ * @returns {string} - "Зависимый" путь, содержащий части пути родительских элементов с классом 'directory'.
+ */
+function getAddictivePath(element, addictivePath = '') {
     if (element.parentNode && element.parentNode.classList.contains('directory')) {
         addictivePath += addSlashIfInStrSlashNotAtTheEnd(getPath(element.parentNode.innerHTML, '<'));
         return getAddictivePath(element.parentNode, addictivePath);
@@ -43,26 +87,41 @@ const getAddictivePath = (element, addictivePath = '') => {
     return addictivePath;
 }
 
-const getLastDir = (path) => {
+/**
+ * Возвращает последний компонент пути из переданной строки.
+ * @param {string} path - Заданный путь.
+ * @returns {string} - Последний компонент пути - актуальная папка.
+ */
+function getLastDir(path) {
     const array = path.split('/');
     return array[array.length - 1];
 }
 
-const reversePath = (path) => {
+/**
+ * Разворачивает порядок компонентов пути в переданной строке.
+ * @param {string} path - Заданный путь.
+ * @returns {string} - Перевернутый путь.
+ */
+function reversePath(path) {
     const ar = path.split('/');
     ar.reverse();
     let newPath = ar.join('/');
     return newPath;
 }
 
-const addSlashIfInStrSlashNotAtTheEnd = (str) => {
+/**
+ * Добавляет слеш к строке, если он отсутствует в её конце.
+ * @param {string} str - Входная строка.
+ * @returns {string} - Строка с добавленным слешем в конце.
+ */
+function addSlashIfInStrSlashNotAtTheEnd(str) {
     if (!str.endsWith('/')) {
         str += '/';
     }
     return str;
 }
 
-const listOnContextMenu = (el, e, path = currentPath) => {
+function listOnContextMenu(el, e, path = currentPath) {
     let addictivePath = reversePath(getAddictivePath(el));
     addictivePath = addSlashIfInStrSlashNotAtTheEnd(addictivePath);
     console.log('addictive', addictivePath);
@@ -85,7 +144,13 @@ const listOnContextMenu = (el, e, path = currentPath) => {
     }
 }
 
-const listOnMouseDown = (el, e) => {
+/**
+ * Обработчик события контекстного меню для элемента списка.
+ * @param {HTMLElement} el - Элемент списка, на котором было вызвано контекстное меню.
+ * @param {Event} event - Объект события контекстного меню.
+ * @param {string} path - Путь к текущему элементу списка (по умолчанию - текущий путь страницы).
+ */
+function listOnMouseDown(el, event) {
     currentPath = mainPath;
     let addictivePath = addSlashIfInStrSlashNotAtTheEnd(reversePath(getAddictivePath(el)));
     getDirIncludes(currentPath + addictivePath + el.textContent)
@@ -95,18 +160,18 @@ const listOnMouseDown = (el, e) => {
             const ul = changeTag(el, 'ul');
             ul.style.padding = '8px 16px 0px 16px';
             if (ul) {
-                ul.addEventListener('mousedown', (e) => {
-                    if (e.target.tagName === 'UL' && e.target.classList.contains('directory')) {
-                        e.stopPropagation();
+                ul.addEventListener('mousedown', (event) => {
+                    if (e.target.tagName === 'UL' && event.target.classList.contains('directory')) {
+                        event.stopPropagation();
                         clearListItems(ul);
                         const newItem = changeTag(ul, 'li');
-                        newItem.addEventListener('mousedown', e => {
-                            e.preventDefault();
-                            listOnMouseDown(newItem, e);
+                        newItem.addEventListener('mousedown', event => {
+                            event.preventDefault();
+                            listOnMouseDown(newItem, event);
                         })
-                        newItem.addEventListener('mousedown', e => {
-                            e.preventDefault();
-                            listOnContextMenu(newItem, e, currentPath);
+                        newItem.addEventListener('mousedown', event => {
+                            event.preventDefault();
+                            listOnContextMenu(newItem, event, currentPath);
                         })
                         ul.remove();
                     }
@@ -120,29 +185,52 @@ const listOnMouseDown = (el, e) => {
     })
 } 
 
-const clearList = (list) => {
+/**
+ * Очищает все дочерние элементы переданного списка.
+ * @param {HTMLElement} list - Список, который требуется очистить.
+ */
+function clearList(list) {
     list.innerHTML = '';
 }
 
-const fillList = (list, data) => {
+/**
+ * Заполняет переданный список элементами на основе данных.
+ * @param {HTMLElement} list - Список, который требуется заполнить.
+ * @param {Array} data - Массив данных, используемых для создания элементов списка.
+ */
+function fillList(list, data) {
     data.forEach(item => {
         const listItem = document.createElement('li');
-        listItem.textContent = item.name; // Предположим, что item - это текстовое содержимое элемента
         listItem.classList.add(item.type);
-        listItem.classList.add(item.filetype);
+        const listName = document.createElement('a');
+        // Добавляем класс в зависимости от типа элемента ('file' или 'dir')
+        listName.classList.add(`${item.type === 'file' ? 'file' : 'dir'}`);
+        // Устанавливаем текст элемента 'a' на основе имени из данных
+        listName.textContent = item.name;
+        listItem.appendChild(listName);
         list.appendChild(listItem);
     });
 }
 
-const addList = (parent) => {
-    if (!checkNextElementSibling('UL')) {
+/**
+ * Добавляет новый дочерний элемент 'ul' к родительскому элементу, если его еще нет.
+ * @param {HTMLElement} parent - Родительский элемент, к которому добавляется новый список.
+ * @returns {HTMLElement} - Возвращает новый элемент 'ul' или null, если он уже существует.
+ */
+function addList(parent) {
+    if (!checkNextElementSibling('ul')) {
         const ul = document.createElement('ul');
         parent.appendChild(ul);
         return ul;
     }
 }
 
-const linkElements = (list, path) => {
+/**
+ * Создает связи для элементов списка с классом 'directory' для обработки событий контекстного меню и клика.
+ * @param {HTMLElement} list - Список, в котором нужно создать связи для элементов с классом 'directory'.
+ * @param {string} path - Текущий путь, используемый при обработке событий.
+ */
+function linkElements(list, path) {
     list.querySelectorAll('.directory').forEach(el => {
         el.addEventListener('contextmenu', (e) => {
             e.preventDefault();
@@ -156,14 +244,37 @@ const linkElements = (list, path) => {
     });
 }
 
-const updateList = (list, data, path = currentPath) => {
+/**
+ * Обновляет список на странице с новыми данными и создает связи для элементов 'directory'.
+ * @param {HTMLElement} list - Список, который требуется обновить.
+ * @param {Array} data - Массив данных для заполнения списка.
+ * @param {string} path - Текущий путь, используемый при создании связей для элементов 'directory' (по умолчанию - текущий путь страницы).
+ */
+function updateList(list, data, path = currentPath) {
     clearList(list);
     fillList(list, data);
     linkElements(list, path);
 }
 
-const getDirIncludes = (path) => {
+/**
+ * Заполняет переданный список новыми данными и создает связи для элементов 'directory'.
+ * @param {HTMLElement} list - Список, который требуется заполнить и обновить.
+ * @param {Array} data - Массив данных для заполнения списка.
+ * @param {string} path - Текущий путь, используемый при создании связей для элементов 'directory' (по умолчанию - текущий путь страницы).
+ */
+function updateLeftList(list, data, path = currentPath) {
+    fillList(list, data);
+    linkElements(list, path);
+}
+
+/**
+ * Получает информацию о содержимом указанного пути с сервера.
+ * @param {string} path - Путь к директории, информация о которой должна быть получена.
+ * @returns {Promise} - Промис в виде данных о директории или ошибки.
+ */
+function getDirIncludes(path) {
     return new Promise((resolve, reject) => {
+        console.log(path);
         fetch('/get-dir-info', {
             method: "POST",
             headers: { "Content-type": "application/json" },
@@ -185,7 +296,11 @@ const getDirIncludes = (path) => {
     });
 };
 
-const getMainPath = () => {
+/**
+ * Получает основной путь к директории с сервера.
+ * @returns {Promise} - Промис в виде пути к корневой директории или ошибки.
+ */
+function getMainPath() {
     return new Promise((resolve, reject) => {
         fetch('/get-main-dir', {
             method: "GET",

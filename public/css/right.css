@@ -1,0 +1,9 @@
+.fullscreen{
+    position: absolute;
+    right: 3%;
+    top: 4%;
+    cursor: pointer;
+    border: none;
+    background: none;
+    float: right;
+}

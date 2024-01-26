@@ -24,8 +24,7 @@
     margin-top: 3%;
     width: 100%;
 }
-form button[type="submit"],
-.modalButton, #labelFile {
+form button[type="submit"], #labelFile {
   background-color: rgb(124 172 208);
   color: #fff;
   border: none;
@@ -38,6 +37,31 @@ form button[type="submit"],
   cursor: pointer;
   transition: background-color 0.3s ease-in-out;
 }
+
+.newlogin, .feedback {
+    width: 4vw;
+    height: 4vw;
+    margin-left: 3%;
+    border-radius: 0.9375em;
+    background-color: aliceblue;
+    vertical-align: bottom; background-repeat: no-repeat; background-size: 75% auto; background-position: center; position: absolute; top: 20%; 
+}
+
+.newlogin {
+    background-image: url(/images/newlogin.png);
+    right: 25%;
+}
+
+.feedback {
+    background-image: url(/images/feedback.png);
+    right: 5%;
+}
+
+#trashFormModalButton > img {
+    position:relative;
+    bottom:0.3em
+}
+
 form button[type="submit"]:hover,
 .modalButton:hover,
 .backButton:hover {
@@ -56,15 +80,7 @@ form button[type="submit"]:hover,
     cursor: pointer;
     transition: background-color 0.3s ease-in-out;
 }
-.centerButtons{
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 100%;
-}
-.centerButtons button {
-    height: 50%;
-}
+
 .delfile{
     margin-left: auto;
 }

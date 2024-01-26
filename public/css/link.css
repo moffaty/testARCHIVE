@@ -21,11 +21,12 @@ a.dir {
     height: 75%;
 } 
 a.file {
-    font-size: 14px;
+    /* font-size: 14px; */
     position: absolute;
     cursor: pointer;
     top: 7;
-    left: 35;
+    /* left: 35; */
+    left: 40;
     width: 85%;
     height: 75%;
 }
