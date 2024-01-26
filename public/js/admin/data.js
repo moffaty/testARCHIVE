@@ -62,6 +62,7 @@ function createForm (formId, submitString, dataToValues, ...inputNames) {
 
     const submit = document.createElement('button');
     submit.type = 'submit';
+    submit.name = 'submit';
     submit.textContent = submitString;
     form.appendChild(submit);
 

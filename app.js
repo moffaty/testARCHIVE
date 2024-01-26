@@ -136,6 +136,16 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true })); // для обработки URL-кодированных данных
 app.use(express.static(path.join(__dirname, 'public')));
 
+app.get('/admin-pane1', (req, res) => {
+    res.sendFile(path.join(__dirname, 'admin-panel.html'));
+})
+
+// app.get('*', (req, res) => {
+//     if (req.session.username === undefined) {
+//         res.sendFile(path.join(__dirname, 'views/login.html'));
+//     }
+// })
+
 app.get('/', (req, res) => {
     if (req.session.username) {
         res.sendFile(path.join(__dirname, 'index2.html'));
@@ -176,16 +186,10 @@ app.post('/get-dir-info', async (req, res) => {
 });
 
 // login
-
-app.get('/login', (req, res) => {
-    res.sendFile(path.join(__dirname, 'views/login.html'));
-})
-
 app.post('/login',(req,res)=>{
     const username = req.body.username;
     const password = req.body.password;
     const connection = connectToMySQL('personals');
-
     connection.query(`SELECT * FROM auth WHERE username="${username}" AND password="${password}"`,
         (err, results, fields) => {
             try {
@@ -193,25 +197,25 @@ app.post('/login',(req,res)=>{
                 // const authData = { username: "123", password: "123"};
                 if (authData.username === username && authData.password === password){
                     // Если пользователь аутентифицирован, генерируем токен
-                    const token = jwt.sign({ username }, motherfuckersccck, { expiresIn: '0.5h' });
+                    const token = jwt.sign({ username }, secret, { expiresIn: '0.5h' });
                     // Сохраняем токен в куках браузера
-                    res.cookie('token', token, { httpOnly: true, maxAge: 3600000, secure: true, sameSite: 'none'});
-                    accName = username;
-                    addToLog("authlogs.csv", [  ]);
+                    
+                    res.cookie('token', secret, { httpOnly: true, maxAge: 3600000, secure: true, sameSite: 'none'});
+                    // addToLog("authlogs.csv", [  ]);
                     res.setHeader('Set-Cookie', [
                         `token=${token}; HttpOnly; Max-Age=3600; Path=/`,
                         `name=${username}; HttpOnly; Max-Age=3600; Path=/`
                     ]);
-                    req.session.user = {
+                    req.session.username = {
                         username: username
                     };
-                    res.redirect('/');
+                    res.json({ status: 'succes' });
                 } else {
                     // Ошибка: неверные данные для авторизации
-                    res.send(`<script>alert('Неправильное имя пользователя или пароль'); window.location='/auth';</script>`);
+                    res.json({ status: 'error' });
                 }
             } catch(err){
-                res.send(`<script>alert('Неправильное имя пользователя или пароль'); window.location='/auth';</script>`);
+                res.json({ status: 'error' });
             }});
             
     connection.end((err) => {
@@ -222,7 +226,7 @@ app.post('/login',(req,res)=>{
 // logout
 
 app.get('/logout', (req, res) => {
-    req.session.user = {};
+    req.session.username = '';
     const clearCookie = (...names) => { // Используем rest параметр для получения всех аргументов в виде массива
       const cookies = names.map(name => `${name}=; HttpOnly; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`);
       res.setHeader('Set-Cookie', cookies);
@@ -255,7 +259,7 @@ app.get('/get-db-connection-info', (req, res) => {
     });
 });
 
-app.post('/change-connect-db', checkHeadersMiddleware, checkToken, async (req, res) => {
+app.post('/change-connect-db', async (req, res) => {
     const host = req.body.host || hostDB;
     const user = req.body.user || userDB;
     const password = req.body.password || passwordDB;
@@ -270,7 +274,7 @@ app.post('/change-connect-db', checkHeadersMiddleware, checkToken, async (req, r
     fs.writeFileSync('db.json', jsonData);
     await stopServer();
     await startServer();
-    res.send('Data base connection changed. Server rebooted.');
+    res.json({status: 'succes', response: 'Data base connection changed. Server rebooted.'});
 })
 
 // BD status
@@ -345,8 +349,8 @@ app.post('/edit-user', (req, res) => {
     })
 })
 
-app.post('/get-info-of-registration', (req, res) => {
-    
+app.get('/get-info-of-registration', (req, res) => {
+    res.json( req.session.username );
 })
 
 app.post('/login', (req, res) => {
@@ -365,18 +369,14 @@ app.post('/login', (req, res) => {
     })
 })
 
-app.post('/secret', checkHeadersMiddleware, checkToken, (req, res) => {
-    res.send('hola)');
-})
-
 app.post('/admin', (req, res) => {
     const username = 'admin';
     res.send(jwt.sign({ username }, secret, { expiresIn: '0.5h' }));
 })
 
-app.get('/admin-panel', (req, res) => {
-    res.sendFile(path.join(__dirname, 'admin-panel.html'));
-})
+// app.get('/admin-panel', (req, res) => {
+//     res.sendFile(path.join(__dirname, 'admin-panel.html'));
+// })
 
 app.get('/get-positions', (req, res) => {
     res.json(personalPositions);

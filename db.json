@@ -1,6 +1,6 @@
 {
-  "host": "localhost",
-  "user": "moffaty",
-  "password": "1234",
-  "port": 3306
+  "host": "srv-archive",
+  "user": "agp",
+  "password": "Lmx00R@FMPaA",
+  "port": "3306"
 }

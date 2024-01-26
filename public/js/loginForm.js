@@ -5,18 +5,19 @@ loginOpenModalBtn.addEventListener('click', (event) => {
     fetch('/get-info-of-registration', {})
         .then((response) => response.json())
         .then((data) => {
-            const userName = data && data['name'] ? data['name'] : 'гость';
+            console.log(data);
+            const userName = data && data['username'] ? data['username'] : 'гость';
             const buttonText = userName === 'гость' ? 'Войти в аккаунт' : 'Выйти из аккаунта';
 
             loginFormModal.SetContent(`
-                <div id="exitForm" class="modal-content">
+                <div id="exitForm">
                     <span style="display:flex;justify-content:space-around">Привет ${userName}!</span><br>
                     <button id="exitFromAccount" class="modalButton">${buttonText}</button>
                 </div>`);
                 
             const exitFromAccount = loginFormModal.querySelector('#exitFromAccount');
             exitFromAccount.addEventListener('click', (event) => {
-                fetch('/loggout').then((response) => (window.location.href = '/auth'));
+                fetch('/logout').then((response) => (window.location.href = '/'));
             });
         });
 })

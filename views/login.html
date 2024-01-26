@@ -2,6 +2,7 @@
 <html lang="ru">
 <head>
   <link rel="icon" href="/images/icons8-folder-64.png" type="image/x-icon">
+  <link rel="stylesheet" href="css/modal.css">
   <meta charset="UTF-8">
   <title>Авторизация</title>
   <style>
@@ -59,7 +60,7 @@
 <body>
   <div class="login-form">
     <h1>Авторизация</h1>
-    <form action="/login" method="post">
+    <form action="/login" method="post" id="form">
       <label for="username">Имя пользователя:</label>
       <input type="text" id="username" name="username" autocomplete="current-username " required>
 
@@ -72,21 +73,47 @@
       <input id="guest" type="submit" value="Гость" style="background-color:rgb(26, 126, 188); right: 2.5em; bottom: 2.5em; position: absolute;" title="Гостевой вход. Нет возможности редактирование информации.">
     </form>
   </div>
-  
+  <script src="js/mx.js"></script>
   <script>
-    document.getElementById("username").focus();
-    // Сохраняем предыдущий URL-адрес при каждом перенаправлении на страницу /auth
-    localStorage.clear();
-    sessionStorage.setItem('login',true);
-    let formSubmitted = false;
-    const form = document.getElementById('sub');
-      form.addEventListener('click', ()=>{
-          formSubmitted = true; // устанавливаем переменную в true
+    const form = document.getElementById('form');
+    form.addEventListener('submit', e => {
+      e.preventDefault();
+      const username = form.elements['username'].value;
+      const password = form.elements['password'].value;
+      console.log(username, password);
+      fetch('/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ username, password })
       })
-    // Проверяем, является ли текущий URL-адрес /auth и совпадает ли он с предыдущим URL-адресом
-    if (!formSubmitted && window.location.pathname === '/login') {
-        formSubmitted = false;
-    }
+      .then(response => response.json())
+      .then(data => {
+        if (data.status === 'succes') {
+          location.reload();
+        } else {
+          const modal = new mxModalView({id: 'error', className: 'modal', tag: 'div'});
+          const div = document.createElement('div');
+          div.style.display = 'flex';
+          div.style.flexWrap = 'nowrap';
+          div.style.flexDirection = 'column';
+          div.style.justifyContent = 'flex-end';
+          const p = document.createElement('p');
+          p.style.marginTop = '0';
+          p.textContent = 'Неправильное имя пользователя или пароль';
+          const b = document.createElement('button');
+          b.id = 'ok';
+          b.textContent = 'OK';
+          b.addEventListener('click', e => {
+            modal.DoCloseModal();
+          })
+          div.appendChild(p);
+          div.appendChild(b);
+          modal.appendChild(div);
+        }
+      })
+    })
   </script>
 </body>
 </html>
