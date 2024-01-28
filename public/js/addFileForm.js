@@ -14,7 +14,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Добавляем обработчик события на кнопку
     addFileOpenModalBtn.addEventListener("click", () => {
         const form = new mxModalView({id: 'addFileModal', className: 'modal', tag: 'div' });
-        form.SetContent(`<div class="modal-content" style="width: 40%;">
+        form.SetContent(`
         <form id="addNewContent" action="/upload" method="post" enctype="multipart/form-data">
             <input type="hidden" id="path" name="path">
             <input type="hidden" id="id" name="id">
@@ -54,8 +54,8 @@ document.addEventListener('DOMContentLoaded', () => {
             <button class="modalButton" id="cancel-addfile">Отмена</button>
             </div>
         </form>
-    </div>`);
-
+    `);
+    form.SetStyles({ width: '40%' });
     const decimalNumberBDInput = form.querySelector('#decimalNumberBD');
     const documentCategoryBDInput = form.querySelector('#documentCategoryBD');
 

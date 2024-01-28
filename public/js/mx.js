@@ -11,6 +11,7 @@ class mxModalView {
         this.style = this.element.style;
         this.htmlContent = this.element.innerHTML;
         this.modalOpen = true;
+        this.contentClass = 'modal-content'
 
         if (args.parentID) {
             const parentElement = document.querySelector(`#${args.parentID}`);
@@ -104,7 +105,8 @@ class mxModalView {
     }
 
     SetStyles (styles) {
-        Object.assign(this.element.style, styles);
+        const element = this.element.querySelector(`.${this.contentClass}`)
+        Object.assign(element.style, styles);
     }
 
     GetStyles () {
@@ -129,7 +131,9 @@ class mxModalView {
     
     SetContent (html) {
         this.element.innerHTML = `<div class="modal-content">` + html + '</div>';
-        this.htmlContent = html;
+        const parser = new DOMParser();
+        const htmlContent = parser.parseFromString(this.element.innerHTML, 'text/html');
+        this.htmlContent = htmlContent.querySelector('.modal-content');
     }
 
     GetContent () {
@@ -281,6 +285,7 @@ class mxContextMenu extends mxModalView {
                 this.remove();
             }
         })
+        this.contentClass = 'menu-context-item';
     }
 
     SetListenerOnContextMenu (func=this.Example, id=this.id) {
@@ -334,10 +339,21 @@ class mxContextMenu extends mxModalView {
 }
 
 class mxNotify extends mxModalView {
-    constructor(args = { id: 'popup', className: 'popup', tag: 'div', parentID: '' }) {
-        super(args);
-        this.popupcontent = document.createElement('popup-content');
+    static #MAX_INSTANCES = 1;
+    static #instances = 0;
+
+    constructor(status = 'success') {
+        super({ id: 'popup', className: 'popup', tag: 'div', parentID: '', status: 'success' });
+        if (mxNotify.#instances < mxNotify.#MAX_INSTANCES) {
+            mxNotify.#instances++;
+            mxNotify.currentInstance = this;
+        } else {
+            mxNotify.currentInstance.remove();
+            mxNotify.currentInstance = this; 
+        }
+        this.popupcontent = document.createElement('div');
         this.popupcontent.classList.add('popup-content');
+        this.popupcontent.classList.add(status);
         this.closeButton = document.createElement('span');
         this.closeButton.classList.add('popup-close');
         this.closeButton.id = 'closePupop';
@@ -348,6 +364,7 @@ class mxNotify extends mxModalView {
         })
         this.element.appendChild(this.popupcontent);
         this.element.appendChild(this.closeButton);
+        console.log(this.popupcontent)
         this.AddElement();
     }
 
@@ -375,6 +392,6 @@ class mxNotify extends mxModalView {
         setTimeout(() => {
             popup.style.transform = 'translate(0, 0)';
             this.SmoothExit();
-        }, 2000);
+        }, 12000);
     }
 }

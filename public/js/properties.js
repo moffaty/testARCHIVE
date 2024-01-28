@@ -119,7 +119,7 @@ allFiles.forEach(button => {
         }
         menu.SetListenerOnContextMenu ( () => {}, 'menu-context-item');
         const { x, y } = event;
-
+        console.log(menu.element)
         menu.SetStyles({
             zIndex: "9999",
             position: "absolute",
@@ -161,7 +161,7 @@ allFiles.forEach(button => {
                     return result;
                 };
                 const concatFileModal = new mxModalView({id:'concatFileModal', className:'modal', tag:'div'});
-                concatFileModal.SetContent(`<div class="modal-content" style="display:flex">
+                concatFileModal.SetContent(`
                                         <div>
                                             <p>Добавление страниц другого документа к ${fileName}</p>
                                             <form>
@@ -187,7 +187,7 @@ allFiles.forEach(button => {
                                             До (включительно): <input type="number" id="numberOfPageDelEnd" min=1 max=0><br>
                                             <button class="modalButton" id="confirm-delpages">Удалить</button>
                                         </div>
-                                        </div>`);
+                                        `);
                 const mainPage = concatFileModal.querySelector('#numberOfPageStart');
 
                 const startDelPage = concatFileModal.querySelector('#numberOfPageDelStart');
@@ -410,6 +410,13 @@ allFiles.forEach(button => {
             })
                 .then(response => response.json()) // Преобразуем ответ в JSON
                 .then(data => {
+                    if (data.status === 'error') {
+                        const test = new mxNotify('error');
+                        const text = document.createElement('h3');
+                        text.textContent = 'Файл не найден!';
+                        test.AddPopupContent(text);
+                        return;
+                    }
                     // Получаем значения переменных из ответа
                     function ZeroIsEmpty(data){
                         return data === undefined ? '' : data; 

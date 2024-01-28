@@ -1,6 +1,5 @@
 const express = require('express');
 const bcrypt = require('bcrypt');
-const mysql = require('mysql2');
 const bodyParser = require('body-parser');
 const fs = require('fs');
 const path = require('path');
@@ -8,6 +7,11 @@ const app = express();
 const jwt = require('jsonwebtoken');
 const session = require('express-session');
 const { Session } = require('inspector');
+const multer = require('multer');
+const files = require('./files.js');
+
+// bd
+const db = require('./db.js');
 
 // middlewares
 function checkHeadersMiddleware(req, res, next) {
@@ -48,52 +52,10 @@ const main_dir = '/main_dir';
 const hashLenght = 10;
 
 // db
-const dataDB = fs.readFileSync('db.json', 'utf8');
-// Parse the JSON data
-const jsonData = JSON.parse(dataDB);
+const dbFile = 'db1.json';
+const database = new db.classDB(dbFile);
 
-// Set values for your parameters
-const hostDB = jsonData.host;
-const userDB = jsonData.user;
-const passwordDB = jsonData.password;
-const portDB = jsonData.port;
-
-console.log('HostDB:', hostDB);
-console.log('UserDB:', userDB);
-console.log('PasswordDB:', passwordDB);
-
-/**
- * Connects to a MySQL database.
- * @param {string} dbNAME The name of the database to connect to.
- * @param {Object} res The *response* from server query. Need for response error 
- * @returns {Object} The MySQL connection object.
- */
-function connectToMySQL(dbNAME, res) {
-    try {
-        const connection = mysql.createConnection({
-            host: hostDB,
-            user: userDB,
-            password: passwordDB,
-            database: dbNAME,
-            port: portDB
-        });
-        connection.connect((err) => {
-            if (err) { 
-                console.dir(err); 
-                if (res) {
-                    res.json({  response:'Error connection to DB' }); 
-                    return null;
-                }
-            }
-        });
-        return connection;
-    } catch(err) {
-        if (res) {
-            res.json({  response:'Error connection to DB' }); 
-        }
-        return null;
-    }
-}
+console.log(database.getConnectInfo());
 
 function defineFileType(filePath) {
     const splitted = filePath.split('.');
@@ -114,7 +76,7 @@ async function stopServer() {
 }
 
 function getUserData(req, res) {
-    if (!req.body.password && req.body.username) {
+    if (!(req.body.password) || !(req.body.username)) {
         res.json({ response:`response: haven't login or password` });
     } 
     const username = req.body.username;
@@ -199,7 +161,7 @@ app.post('/get-dir-info', async (req, res) => {
 app.post('/login',(req,res)=>{
     const username = req.body.username;
     const password = req.body.password;
-    const connection = connectToMySQL('personals');
+    const connection = database.connectToMySQL('personals');
     connection.query(`SELECT * FROM auth WHERE username="${username}" AND password="${password}"`,
         (err, results, fields) => {
             try {
@@ -219,7 +181,7 @@ app.post('/login',(req,res)=>{
                     req.session.username = {
                         username: username
                     };
-                    res.json({ status: 'succes' });
+                    res.json({ status: 'success' });
                 } else {
                     // Ошибка: неверные данные для авторизации
                     res.json({ status: 'error' });
@@ -250,23 +212,7 @@ app.get('/logout', (req, res) => {
 // BD settings
 
 app.get('/get-db-connection-info', (req, res) => {
-    const filePath = path.join(__dirname, 'db.json');
-
-    fs.readFile(filePath, 'utf8', (err, data) => {
-        if (err) {
-            console.error(err);
-            res.status(500).json({ error: 'Internal Server Error' });
-            return;
-        }
-
-        try {
-            const dbinfo = JSON.parse(data);
-            res.json(dbinfo);
-        } catch (parseError) {
-            console.error(parseError);
-            res.status(500).json({ error: 'Error parsing JSON' });
-        }
-    });
+    res.json(database.getConnectInfo());
 });
 
 app.post('/change-connect-db', async (req, res) => {
@@ -281,36 +227,29 @@ app.post('/change-connect-db', async (req, res) => {
         port: port
     };
     const jsonData = JSON.stringify(data, null, 2);``
-    fs.writeFileSync('db.json', jsonData);
+    fs.writeFileSync(dbFile, jsonData);
     await stopServer();
     await startServer();
-    res.json({status: 'succes', response: 'Data base connection changed. Server rebooted.'});
+    res.json({status: 'success', response: 'Data base connection changed. Server rebooted.'});
 })
 
 // BD status
 
 app.get('/get-database-status', async (req, res) => {
-    try {
-        const connection = mysql.createConnection({
-            host: hostDB,
-            user: userDB,
-            password: passwordDB,
-            port: portDB
-        });
-        connection.connect((err) => {
-            res.status(200).json({ status: 'success', response: 'Database connection is active' });
-        })
-    } catch (error) {
-        console.error('Database connection error:', error.message);
-        res.status(500).json({ status: 'error', response: 'Failed to connect to the database' });
-    }
+    database.connection.connect(err => {
+        if (err) {
+            res.status(500).json({ status: 'error', response: 'Failed to connect to the database' });
+            return;
+        }
+        res.status(200).json({ status: 'success', response: 'Database connection is active' });
+    })
 })
 
 // BD user-queries
 
 app.post('/get-user-info', (req, res) => {
     const data = [req.body.username];
-    const connection = connectToMySQL('personals', res);
+    const connection = database.connectToMySQL('personals', res);
     const query = 'SELECT * FROM auth WHERE username = ?';
     connection.query(query, data, (error, result) => {
         if (!isSQLResponseHaveError(error, res)) {
@@ -322,18 +261,21 @@ app.post('/get-user-info', (req, res) => {
 app.post('/register-user', async (req, res) => {
     const data = getUserData(req, res);
     data.push(req.body.position);
-    const connection = connectToMySQL('personals', res);
+    const connection = database.connectToMySQL('personals', res);
+    if (res.getHeader('content-type')) {
+        return;
+    }
     const query = 'INSERT INTO auth(username, password, position) VALUES(?, ?, ?)';
     connection.query(query, data, (error, result) => {
-        if (!isSQLResponseHaveError(error, res)) {
+    //     if (!isSQLResponseHaveError(error, res)) {
             res.json({ status: 'success', response: `Registered new user: ${data[0]}!` })
-        }
+    //     }
     })
 })
 
 app.post('/delete-user', (req, res) => {
     const data = [req.body.username];
-    const connection = connectToMySQL('personals', res);
+    const connection = database.connectToMySQL('personals', res);
     const query = 'DELETE FROM auth WHERE username = ?';
     connection.query(query, data, (error, result) => {
         if (!isSQLResponseHaveError(error, res)) {
@@ -350,7 +292,7 @@ app.post('/edit-user', (req, res) => {
     const data = getUserData(req, res);
     data.push(req.body.position);
     data.push(req.body.old_username); // where condition
-    const connection = connectToMySQL('personals', res);
+    const connection = database.connectToMySQL('personals', res);
     const query = 'UPDATE auth SET username = ?, password = ?, position = ? WHERE username = ?';
     connection.query(query, data, (error, result) => {
         if (!isSQLResponseHaveError(error, res)) {
@@ -365,7 +307,7 @@ app.get('/get-info-of-registration', (req, res) => {
 
 app.post('/login', (req, res) => {
     const data = getUserData(req, res);
-    const connection = connectToMySQL('personals', res);
+    const connection = database.connectToMySQL('personals', res);
     const query = 'SELECT * FROM auth WHERE username = ? AND password = ?';
     if (!connection) {
         return;
@@ -384,14 +326,34 @@ app.post('/admin', (req, res) => {
     res.send(jwt.sign({ username }, secret, { expiresIn: '0.5h' }));
 })
 
-// app.get('/admin-panel', (req, res) => {
-//     res.sendFile(path.join(__dirname, 'admin-panel.html'));
-// })
+
+app.get('/create-table-:tableName', async (req, res) => {
+    const tableName = req.params.tableName;
+    try {
+        let result;
+
+        if (tableName === 'users') {
+            result = await database.createUsersTable();
+        } else if (tableName === 'files') {
+            result = await database.createFilesTable();
+        } else {
+            return res.status(400).json({ success: false, response: 'Invalid table name' });
+        }
+
+        res.json({
+            status: 'success',
+            response: `${tableName} table created successfully`,
+            result
+        });
+    } catch (error) {
+        console.error(`Error creating ${tableName} table:`, error);
+        res.status(500).json({ success: false, response: `Error creating ${tableName} table` });
+    }
+})
 
 app.get('/get-positions', (req, res) => {
     res.json(personalPositions);
 })
-
 
 // files
 async function renameDir(oldPath, newName) {
@@ -413,6 +375,32 @@ app.post('/renameDir', async (req,res) => {
    res.json({ status: result });
 })
 
+app.post('/get-properties', (req, res) => {
+    res.json(db.getPropertiesByPath(req.body.path));
+})
+
+// настройка multer для сохранения загруженных файлов
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+      // указываем путь к директории, куда будут сохраняться файлы
+      const pathNew = url.parse(req.headers.referer).path.slice(1);
+      cb(null, 'main_dir/' + pathNew)
+    },
+    filename: (req, file, cb) => {
+      // генерируем имя для файла - берем из формы и добавляем расширение из оригинального имени файла
+      const fileName = req.body.fileName;
+      const ext = path.extname(file.originalname);
+      cb(null, fileName + ext);
+    }
+});
+
+const upload = multer({ storage: storage });
+
+app.post('/upload', upload.single('file'), (req, res) => {
+    res.json(files.upload(req.body));
+});
+
+// main
 startServer();
 
 async function test()  {

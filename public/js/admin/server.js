@@ -1,24 +1,31 @@
 function getServData() {
     const usersOperations = ['database'];
     const usersOperationsRU = ['База данных'];
-    getData(usersOperations, usersOperationsRU, 'Serv');
+    adminPanel.getData(usersOperations, usersOperationsRU, 'Serv');
 } 
 
 function databaseServ() {
     const rightPanel = panels._getRightPanel();
+    if (document.getElementById('databaseServ')) {
+        return;
+    }
+    console.log(document.getElementById('databaseServ'));
+    const dataDiv = document.createElement('div');
+    dataDiv.id = 'databaseServ';
+    adminPanel.clearElement(rightPanel);
     fetch('/get-database-status')
     .then(response => response.json())
     .then(data => {
-        const changeButton = document.createElement('button');
-        changeButton.classList.add('adminButtons'); 
-        changeButton.classList.add('modalButton'); 
-        changeButton.textContent = 'Изменить подключение к бд';
+        const changeButton = adminPanel.createButton('Изменить подключение к бд');
+        dataDiv.appendChild(changeButton);
         changeButton.addEventListener('click', e => {
             fetch('/get-db-connection-info')
             .then(response => response.json())
             .then(data => {
+                data = JSON.parse(data);
+                console.log(data);
                 const changeConnectionForm = new mxModalView({id: 'changeConnection', className: 'modal', tag: 'div'});
-                const form = createForm('changeConnection', 'Изменить подключение', data, 'host', 'user', 'password', 'port');
+                const form = adminPanel.createForm('changeConnection', 'Изменить подключение', data, 'host', 'user', 'password', 'port');
                 form.addEventListener('submit', (e) => {
                     e.preventDefault();
                     const host = form.elements['host'].value;
@@ -34,13 +41,29 @@ function databaseServ() {
                     })
                     .then(response => response.json())
                     .then(data => { 
-                        dataResponse(data.response, form);
+                        adminPanel.dataResponse(data.response, form);
                     })
                 })
                 changeConnectionForm.appendChild(form);
             })
         })
+        const notify = new mxNotify(data.status);
+        const text = document.createElement('h2');
+        text.textContent = data.response;
+        notify.AddPopupContent(text);
         rightPanel.appendChild(changeButton);
-        dataResponse(data.response, rightPanel);
+        if (data.status === 'success') {
+            const fileTable = adminPanel.createButton('Создать таблицу файлов', 'files');
+            const userTable = adminPanel.createButton('Создать таблицу пользователей', 'users');
+            const buttons = [fileTable, userTable];
+            buttons.forEach(button => {
+                dataDiv.appendChild(button);
+                button.addEventListener('click', e => {
+                    adminPanel.createTable(button.id);
+                })
+                rightPanel.appendChild(button);
+            })
+        }
+        rightPanel.appendChild(dataDiv);
     })
 }
