@@ -11,9 +11,23 @@ addDirOpenModalBtn.addEventListener("click", function() {
 
     folderNameInput.addEventListener('keydown', function(event) {
         if (disallowedChars.includes(event.key) || disallowedChars.includes(event.code)) {
-        event.preventDefault();
+            event.preventDefault();
         }
     });
+
+    form.addEventListener('submit', e => {
+        const dirName = folderNameInput.value;
+        e.preventDefault();
+        fetch('/add', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ dirName, path: '/main_dir' })
+        })
+        .then(response => response.json())
+        .then(data => console.log(data))
+    })
 
     // Устанавливаем фокус на первый инпут формы
     addDirModalForm.querySelector('input[type="text"]').focus();
