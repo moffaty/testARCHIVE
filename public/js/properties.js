@@ -395,18 +395,18 @@ allFiles.forEach(button => {
 
         const propertiesButton = menu.querySelector('.properties');
         if (propertiesButton) {
-            propertiesButton.addEventListener('click', () => {
+            propertiesButton.addEventListener('click', (e) => {
             
             // Получаем значение переменной path
             let path = fileSitePath;
-            
+
             // Отправляем запрос на сервер
             fetch('/get-properties', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ path })
+                body: JSON.stringify({ path, fileName })
             })
                 .then(response => response.json()) // Преобразуем ответ в JSON
                 .then(data => {

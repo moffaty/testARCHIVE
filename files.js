@@ -1,6 +1,4 @@
-const db = require('./db');
-
-function upload (upload, data) {
+function upload (data) {
     const checkIsEmpty = (value) => {
         return value === '' ? 0 : value;
     }
@@ -14,8 +12,6 @@ function upload (upload, data) {
         return date === '' ? formattedDate : date;
     }
 
-    let query = '';
-    let values = [];
     const id = data.id;
     const fileName = data.fullName;
     const decimalNumberBD = data.decimalNumberBD;
@@ -30,8 +26,7 @@ function upload (upload, data) {
     const notesBD = data.notesBD;
     const path = data.path;
 
-    const connection = connectToMySQL('files');
-
+    
     const now = new Date();
     const moscowOffset = 3 * 60;
 
@@ -41,76 +36,16 @@ function upload (upload, data) {
 
     const uploadDateTime = `${moscowTime.getUTCFullYear()}-${formatNumber(moscowTime.getUTCMonth() + 1)}-${formatNumber(moscowTime.getUTCDate())} ${formatNumber(moscowTime.getUTCHours())}:${formatNumber(moscowTime.getUTCMinutes())}:${formatNumber(moscowTime.getUTCSeconds())}`;
 
-    if (id) {
-        query = `
-        UPDATE filesInfo SET
-            fileName = ?,
-            decimalNumber = ?,
-            nameProject = ?,
-            organisation = ?,
-            editionNumber = ?,
-            author = ?,
-            storage = ?,
-            documentCategory = ?,
-            dirNumber = ?,
-            publish_date = ?,
-            notes = ?,
-            path = ?,
-            uploadDateTime = ?
-        WHERE id = ?;
-        `;
-        values = [
-            fileName,
-            decimalNumberBD,
-            nameProjectBD,
-            organisationBD,
-            editionNumberBD,
-            authorBD,
-            storageBD,
-            documentCategoryBD,
-            dirNumberBD,
-            publishDateBD,
-            notesBD,
-            path,
-            uploadDateTime,
-            id,
-        ];
-    }
-    else {
-        query = `
-        INSERT INTO filesInfo (
-            fileName, decimalNumber, nameProject, organisation, editionNumber, author, storage,
-            documentCategory, dirNumber, publish_date, notes, path, uploadDateTime
-        ) 
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
-        `;
-        values = [
-            fileName,
-            decimalNumberBD,
-            nameProjectBD,
-            organisationBD,
-            editionNumberBD,
-            authorBD,
-            storageBD,
-            documentCategoryBD,
-            dirNumberBD,
-            publishDateBD,
-            notesBD,
-            path,
-            uploadDateTime,
-        ];
-    }
+    const result = { id: id, data:[
+        fileName, decimalNumberBD, 
+        nameProjectBD, organisationBD, 
+        editionNumberBD, authorBD, 
+        storageBD, documentCategoryBD, 
+        dirNumberBD, publishDateBD, 
+        notesBD, path, uploadDateTime
+    ]};
 
-    connection.query(query, values,
-        (error) => {
-            if(error) {
-                console.log('Ошибка при выполнении запроса: ', error.message);
-            } 
-            else {
-                console.log('Данные успешно добавлены в таблицу filesInfo');
-            }
-        });
-    connection.end((err) => { if (err) { return console.dir(`Ошибка закрытия подключение к БД: ${err.message}`); }});
+    return result;
 }
 
 module.exports = {

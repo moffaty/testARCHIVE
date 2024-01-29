@@ -9,6 +9,7 @@ const session = require('express-session');
 const { Session } = require('inspector');
 const multer = require('multer');
 const files = require('./files.js');
+const url = require('url');
 
 // bd
 const db = require('./db.js');
@@ -52,7 +53,7 @@ const main_dir = '/main_dir';
 const hashLenght = 10;
 
 // db
-const dbFile = 'db1.json';
+const dbFile = 'db.json';
 const database = new db.classDB(dbFile);
 
 console.log(database.getConnectInfo());
@@ -375,8 +376,16 @@ app.post('/renameDir', async (req,res) => {
    res.json({ status: result });
 })
 
-app.post('/get-properties', (req, res) => {
-    res.json(db.getPropertiesByPath(req.body.path));
+app.post('/get-properties', async (req, res) => {
+    const filePath = (path.join(req.body.path, req.body.fileName));
+    try {
+        const result = await database.getPropertiesByPath(filePath);
+        res.json(result);
+    } 
+    catch (error) {
+        res.json(error);
+    }
+    // res.json(database.getPropertiesByPath(req.body.path));
 })
 
 // настройка multer для сохранения загруженных файлов
@@ -394,10 +403,22 @@ const storage = multer.diskStorage({
     }
 });
 
-const upload = multer({ storage: storage });
+const upload = multer({ storage: storage, encoding: 'utf-8' });
 
-app.post('/upload', upload.single('file'), (req, res) => {
-    res.json(files.upload(req.body));
+app.post('/upload', upload.single('file'), async (req, res) => {
+    console.log(req.file.filename);
+    console.log(req.file.path);
+    // try {
+    //     const fileData = files.upload(req.body);
+    //     console.log(req.body);
+    //     const result = await database.uploadFile(fileData);
+    //     console.log(result);
+    //     res.json(result);
+    // } 
+    // catch (error) {
+    //     console.log(error);
+    //     res.json(error);
+    // }
 });
 
 // main
