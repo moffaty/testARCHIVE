@@ -3,17 +3,11 @@ const addDirOpenModalBtn = document.getElementById("addDirModalButton");
 
 // Добавляем обработчик события на кнопку
 addDirOpenModalBtn.addEventListener("click", function() {
+    const form = createForm('createDir', 'Создать папку', [], { name:'dirName', required: true, value: 'Название новой директории' })
     const addDirModalForm = new mxModalView({id: 'addDirModal', className: 'modal', tag: 'div'})
-    addDirModalForm.SetContent(`
-        <form method="POST" action="/add" style="text-align: center; margin:0" autocomplete="off">
-            <input type="hidden" id="pathInput" name="path" value="${dirPath}">
-            <label for="dirName">Введите название новой папки:</label>
-            <input type="text" id="dirNameInput" name="dirName" required>
-            <button type="submit">Создать папку</button>
-        </form>
-    `);
+    addDirModalForm.appendChild(form);
 
-    const folderNameInput = addDirModalForm.getElementById("dirNameInput");
+    const folderNameInput = form.elements['dirName'];
 
     folderNameInput.addEventListener('keydown', function(event) {
         if (disallowedChars.includes(event.key) || disallowedChars.includes(event.code)) {

@@ -421,6 +421,26 @@ app.post('/upload', upload.single('file'), async (req, res) => {
     // }
 });
 
+app.post('/add', (req, res) => {
+    const dirName = req.body.dirName;
+    const dirPath = req.body.path;
+    if (!dirName) {
+        res.status(400).send('Bad Request: Dir name is missing');
+        return;
+    }
+
+    const newDirPath = path.join(__dirname, dirPath, dirName);
+
+    fs.mkdir(newDirPath, (err) => {
+        if (err) {
+            console.error(err);
+            res.json({ status: 'error', response: 'Error creating directory' });
+        } else {
+            res.json({ status: 'success', response: 'Directory created!' });
+        }
+    });
+});
+
 // main
 startServer();
 

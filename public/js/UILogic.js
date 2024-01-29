@@ -48,6 +48,9 @@ function createForm (formId, submitString, dataToValues, ...inputNames) {
                     input = insertObject(input);
                     form.appendChild(input);
                 })
+            } else {
+                input = insertObject(inputName);
+                form.appendChild(input);
             }
         }
         else {
