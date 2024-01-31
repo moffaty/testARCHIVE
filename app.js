@@ -53,7 +53,7 @@ const main_dir = '/main_dir';
 const hashLenght = 10;
 
 // db
-const dbFile = 'db.json';
+const dbFile = 'db1.json';
 const database = new db.classDB(dbFile);
 
 console.log(database.getConnectInfo());
@@ -406,7 +406,7 @@ const storage = multer.diskStorage({
 const upload = multer({ storage: storage, encoding: 'utf-8' });
 
 app.post('/upload', upload.single('file'), async (req, res) => {
-    console.log(req.file.filename);
+    console.log(req.file);
     console.log(req.file.path);
     // try {
     //     const fileData = files.upload(req.body);

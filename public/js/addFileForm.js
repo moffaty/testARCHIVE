@@ -18,7 +18,7 @@ document.addEventListener('DOMContentLoaded', () => {
             { name: 'file', type: 'file', value: 'Выберите файл', styles: 'display:none;', classNames: 'modalButton' },
             { name: 'fileName', value: 'Имя документа', styles: "margin-top: 0.625em", required: true  }, 
             { name: 'documentCategoryBD', element: 'select',  options: ['Спецификация', 'Документация', 'Эскиз', 'Не указано'] },
-            { name: 'decimalNumberBD', value: 'Децимальный номер', required: true  }, 
+            { name: 'decimalNumberBD', value: 'Децимальный номер', required: false  }, 
             { name: 'nameProjectBD', value: 'Название проекта' }, 
             { name: 'organisationBD', value: 'Название организации' }, 
             { name: 'editionNumberBD', value: 'Номер издания' }, 
@@ -91,19 +91,17 @@ document.addEventListener('DOMContentLoaded', () => {
         function updateFileName() {
             const fileNameInput = form.querySelector("#file");
             let fileName = fileNameInput.value.split("\\").pop(); // получаем имя файла из абсолютного пути
-            let nameWithoutExtension = fileName.replace(/\.[^/.]+$/, ""); // удаляем расширение из имени файла
 
             const fileNameAdd = form.querySelector("#fileName");
 
             if (form.querySelector("#fileName").value === "") {
-                fileNameAdd.value = nameWithoutExtension.replace(/' '/gi, '_'); // устанавливаем имя файла без расширения в поле "Имя документа"
+                fileNameAdd.value = fileName; // устанавливаем имя файла без расширения в поле "Имя документа"
             }
         } 
 
         const uploadLabel = form.querySelector('#file');
         uploadLabel.onchange = updateFileName;
         updateFileName();
-        let pathToFile = window.location.pathname;
 
         form.element.addEventListener("submit",async (event) => {
             if(decimalNumberBDInput.value.replace(decimalNumberBDregex,'').length < 13 && documentCategoryBDInput.value !== 'Не указано' && documentCategoryBDInput.value !== 'Эскиз'){
@@ -111,14 +109,18 @@ document.addEventListener('DOMContentLoaded', () => {
                 alert('Децимальный номер введен неверно');
             }
             decimalNumberBDInput.value = decimalNumberBDInput.value.toUpperCase();
-            let fileName = form.querySelector("#file").value.split("\\").pop(); // получаем имя файла из абсолютного пути
 
-            // Собираем полное имя файла с расширением
-            const createDateTimeInput = form.querySelector('#createDateTime');
-            const currentDate = new Date();
-            createDateTimeInput.value = currentDate.toISOString();
-        
-            const nameInput = form.querySelector('#fileName');
+            const formdata = new FormData(form1);
+            console.log(formdata); 
+
+            fetch('/upload', {
+                method: 'POST',
+                body: formdata
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log(data);
+            })
         })
         cancelButton.addEventListener("click", function(event) {
             event.preventDefault();

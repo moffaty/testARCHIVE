@@ -26,7 +26,15 @@ addDirOpenModalBtn.addEventListener("click", function() {
             body: JSON.stringify({ dirName, path: '/main_dir' })
         })
         .then(response => response.json())
-        .then(data => console.log(data))
+        .then(data => {
+            console.log(data);
+            const notify = new mxNotify(data.status);
+            const text = document.createElement('h3');
+            text.textContent = 'Директория создана!';
+            notify.AddPopupContent(text);
+            addDirModalForm.DoCloseModal();
+            // TODO: update center list
+        })
     })
 
     // Устанавливаем фокус на первый инпут формы
