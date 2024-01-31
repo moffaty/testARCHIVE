@@ -397,9 +397,8 @@ const storage = multer.diskStorage({
     },
     filename: (req, file, cb) => {
       // генерируем имя для файла - берем из формы и добавляем расширение из оригинального имени файла
-      const fileName = req.body.fileName;
-      const ext = path.extname(file.originalname);
-      cb(null, fileName + ext);
+      const fileName = file.originalname;
+      cb(null, fileName);
     }
 });
 
