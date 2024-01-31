@@ -407,17 +407,16 @@ const upload = multer({ storage: storage, encoding: 'utf-8' });
 app.post('/upload', upload.single('file'), async (req, res) => {
     console.log(req.file);
     console.log(req.file.path);
-    // try {
-    //     const fileData = files.upload(req.body);
-    //     console.log(req.body);
-    //     const result = await database.uploadFile(fileData);
-    //     console.log(result);
-    //     res.json(result);
-    // } 
-    // catch (error) {
-    //     console.log(error);
-    //     res.json(error);
-    // }
+    try {
+        const fileData = files.upload(req.body);
+        const result = await database.uploadFile(fileData);
+        console.log(result);
+        res.json(result);
+    } 
+    catch (error) {
+        console.log(error);
+        res.json(error);
+    }
 });
 
 app.post('/add', (req, res) => {

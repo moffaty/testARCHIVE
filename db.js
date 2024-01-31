@@ -183,7 +183,7 @@ class classDB {
                 assembley_units json DEFAULT NULL,
                 uploadDateTime datetime DEFAULT NULL,
                 PRIMARY KEY (id)
-              ) ENGINE=InnoDB AUTO_INCREMENT=103 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+              );
             `;
             connection.execute(sql);
             return { status: 'success', response: 'Created!' };
@@ -198,6 +198,7 @@ class classDB {
         return new Promise((resolve, reject) => {
             let query = '';
             let values = data.data;
+            console.log(values);
             const connection = this.connectToMySQL('files');
         
             if (data.id) {

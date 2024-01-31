@@ -11,9 +11,9 @@ function upload (data) {
         const formattedDate = `${year}-${month}-${day}`;
         return date === '' ? formattedDate : date;
     }
-
+    console.log(data);
     const id = data.id;
-    const fileName = data.fullName;
+    const fileName = data.fileName;
     const decimalNumberBD = data.decimalNumberBD;
     const nameProjectBD = data.nameProjectBD;
     const organisationBD = data.organisationBD;
