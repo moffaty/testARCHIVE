@@ -232,10 +232,10 @@ class classDB {
             connection.query(query, values,
                 (error, results) => {
                     if(error) {
-                        return reject ({ status: 'error', response: error });
+                        return reject ({ status: 'error', response: 'Не удалось добавить файл!' });
                     } 
                     else {
-                        return reject ({ status: 'success', response: results });
+                        return reject ({ status: 'success', response: 'Файл добавлен!' });
                     }
                 });
             connection.end((err) => { if (err) { return reject ({ status: 'error' }); }});

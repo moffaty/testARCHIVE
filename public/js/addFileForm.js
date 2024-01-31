@@ -120,6 +120,8 @@ document.addEventListener('DOMContentLoaded', () => {
             .then(response => response.json())
             .then(data => {
                 console.log(data);
+                const notify = new mxNotify(data.status, data.response);
+                form.DoCloseModal();
             })
         })
         cancelButton.addEventListener("click", function(event) {

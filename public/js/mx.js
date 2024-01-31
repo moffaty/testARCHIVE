@@ -342,7 +342,7 @@ class mxNotify extends mxModalView {
     static #MAX_INSTANCES = 1;
     static #instances = 0;
 
-    constructor(status = 'success') {
+    constructor(status = 'success', text = '') {
         super({ id: 'popup', className: 'popup', tag: 'div', parentID: '', status: 'success' });
         if (mxNotify.#instances < mxNotify.#MAX_INSTANCES) {
             mxNotify.#instances++;
@@ -364,7 +364,12 @@ class mxNotify extends mxModalView {
         })
         this.element.appendChild(this.popupcontent);
         this.element.appendChild(this.closeButton);
-        console.log(this.popupcontent)
+        
+        if (text) {
+            const h2 = document.createElement('h2');
+            h2.textContent = text;
+            this.popupcontent.appendChild(h2);
+        }
         this.AddElement();
     }
 
