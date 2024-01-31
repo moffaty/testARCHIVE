@@ -364,21 +364,23 @@ allFiles.forEach(button => {
                           return fileName.substring(0, maxLength) + '...';
                         }
                         return fileName;
-                      }
-
-                    const mvToTrashModal = new mxModalView({id:'moveToTrashModal',className:'modal',tag:'div'});
-                    mvToTrashModal.SetContent(`<div class="modal-content" id="delModal">
-                                            <p>Вы уверены, что хотите удалить<br>${truncateFileName(fileName, 30)}?</p>
-                                            <div class="button-wrapper">
-                                            <button class="modalButton" id="confirm-delete">Да</button>
-                                            <button class="modalButton" id="cancel-delete">Нет</button>
-                                            </div>
-                                            </div>`
-                    );
+                    }
+                    
+                    const mvToTrashModal = new mxModalView({id:'moveToTrashModal', className:'modal'});
+                    const label = createLabel(`Вы уверены, что хотите удалить`);
+                    const labelName = createLabel(`${truncateFileName(fileName, 30)}`);
+                    const buttonconfirm = createButton('modalButton', 'confirm-delete', 'Да');
+                    const buttoncancel = createButton('modalButton', 'cancel-delete', 'Нет');
+                    const buttonwrapper = Object.assign(document.createElement('div'), {
+                        className: 'button-wrapper'
+                    });
+                    labelName.style.display = 'block';
+                    buttonwrapper.appendChild(buttonconfirm);
+                    buttonwrapper.appendChild(buttoncancel);
+                    mvToTrashModal.appendChilds(label, labelName, buttonwrapper);
 
                     const confirmDel = () => {
-                        element = menu.querySelector('.moveToTrash') || menu.querySelector('.delFile');
-                        addresDel = element.dataset.fetch;
+                        addresDel = '/delete-file';
                         bodyDel = JSON.stringify({ filePath, fileSitePath });
                         methodDel = 'POST';
                         result = mvToTrashModal.fetchData(addresDel, true, {
