@@ -81,6 +81,7 @@ function ulString(string, startElement = '>', endElement = 'li') {
  */
 function getAddictivePath(element, addictivePath = '') {
     if (element.parentNode && element.parentNode.classList.contains('directory')) {
+        console.log(`check path of the parent Node: ${getPath(element.parentNode.innerHTML, '<')}`)
         addictivePath += addSlashIfInStrSlashNotAtTheEnd(getPath(element.parentNode.innerHTML, '<'));
         return getAddictivePath(element.parentNode, addictivePath);
     } 
@@ -120,7 +121,17 @@ function addSlashIfInStrSlashNotAtTheEnd(str) {
     }
     return str;
 }
-
+/**
+ * Обрабатывает событие контекстного меню для элемента списка, обновляя отображаемое содержимое каталога
+ * на основе выбранного элемента и пути к нему.
+ * Также обновляет текущий путь, локальное хранилище, и отображение имени папки.
+ * Вызывает функцию 'getDirIncludes' для получения содержимого каталога
+ * и обновляет список элементов в указанном контейнере.
+ * 
+ * @param {HTMLElement} el - HTML-элемент, вызывающий событие контекстного меню.
+ * @param {Event} e - Объект события контекстного меню.
+ * @param {string} [path=currentPath] - Необязательный базовый путь для каталога, по умолчанию - текущий путь (CurrentPath). 
+ */
 function listOnContextMenu(el, e, path = currentPath) {
     let addictivePath = reversePath(getAddictivePath(el));
     addictivePath = addSlashIfInStrSlashNotAtTheEnd(addictivePath);
@@ -153,7 +164,9 @@ function listOnContextMenu(el, e, path = currentPath) {
 function listOnMouseDown(el, event) {
     currentPath = mainPath;
     let addictivePath = addSlashIfInStrSlashNotAtTheEnd(reversePath(getAddictivePath(el)));
-    getDirIncludes(currentPath + addictivePath + el.textContent)
+    console.log('Проверка!!!');
+    currentPath = currentPath + addictivePath + el.textContent;
+    getDirIncludes(currentPath)
     .then(data => {
         const newlist = addList(el);
         if (newlist) {
@@ -161,7 +174,7 @@ function listOnMouseDown(el, event) {
             ul.style.padding = '8px 16px 0px 16px';
             if (ul) {
                 ul.addEventListener('mousedown', (event) => {
-                    if (e.target.tagName === 'UL' && event.target.classList.contains('directory')) {
+                    if (event.target.tagName === 'UL' && event.target.classList.contains('directory')) {
                         event.stopPropagation();
                         clearListItems(ul);
                         const newItem = changeTag(ul, 'li');
@@ -180,6 +193,9 @@ function listOnMouseDown(el, event) {
                 linkElements(ul);
                 el.remove();
             }
+        }
+        if (!currentPath.endsWith('/')) {
+            currentPath += '/';
         }
         currentPath = currentPath.substring(0, currentPath.lastIndexOf('/')); // обрезаем добавленный слеш
     })
