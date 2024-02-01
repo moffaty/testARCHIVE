@@ -80,12 +80,38 @@ function ulString(string, startElement = '>', endElement = 'li') {
  * @returns {string} - "Зависимый" путь, содержащий части пути родительских элементов с классом 'directory'.
  */
 function getAddictivePath(element, addictivePath = '') {
-    if (element.parentNode && element.parentNode.classList.contains('directory')) {
-        console.log(`check path of the parent Node: ${getPath(element.parentNode.innerHTML, '<')}`)
-        addictivePath += addSlashIfInStrSlashNotAtTheEnd(getPath(element.parentNode.innerHTML, '<'));
+    if (element.parentNode && element.parentNode.tagName === 'LI' && element.parentNode.classList.contains('directory')) {
+        const parentUl = findParentUl(element.parentNode);
+        if (parentUl) {
+            console.log(`check path of the parent Node: ${getPath(parentUl.innerHTML, '<')}`);
+            addictivePath = addSlashIfInStrSlashNotAtTheEnd(getPath(parentUl.innerHTML, '<')) + addictivePath;
+        }
         return getAddictivePath(element.parentNode, addictivePath);
-    } 
+    }
     return addictivePath;
+    // if (element.parentNode && element.parentNode.classList.contains('directory')) {
+    //     console.log(`parentNode: ${element.parentNode.innerHTML}`);
+    //     const parentLink = element.parentNode.querySelector('a.dir');
+    //     console.log(`parentLink: ${parentLink}`);
+        
+    //     if (parentLink) {
+    //         console.log(`check path of the parent Node: ${getPath(parentLink.textContent, '<')}`);
+    //         addictivePath += addSlashIfInStrSlashNotAtTheEnd(getPath(parentLink.textContent, '<'));
+    //     }
+    //     return getAddictivePath(element.parentNode, addictivePath);
+    // } 
+    // return addictivePath;
+}
+
+// Вспомогательная функция для поиска родительского элемента <ul> с классом 'directory'
+function findParentUl(element) {
+    while (element) {
+        if (element.tagName === 'UL' && element.classList.contains('directory')) {
+            return element;
+        }
+        element = element.parentNode;
+    }
+    return null;
 }
 
 /**
@@ -162,43 +188,59 @@ function listOnContextMenu(el, e, path = currentPath) {
  * @param {string} path - Путь к текущему элементу списка (по умолчанию - текущий путь страницы).
  */
 function listOnMouseDown(el, event) {
-    currentPath = mainPath;
     let addictivePath = addSlashIfInStrSlashNotAtTheEnd(reversePath(getAddictivePath(el)));
+    
     console.log('Проверка!!!');
+    console.log('currentPath:', currentPath);
+    console.log('addictivePath:', addictivePath);
+    console.log('element text content:', el.textContent);
+    console.log('Конец проверки');
+
+    // Обновляем текущий путь на основе предыдущего состояния
     currentPath = currentPath + addictivePath + el.textContent;
+
     getDirIncludes(currentPath)
-    .then(data => {
-        const newlist = addList(el);
-        if (newlist) {
-            const ul = changeTag(el, 'ul');
-            ul.style.padding = '8px 16px 0px 16px';
-            if (ul) {
-                ul.addEventListener('mousedown', (event) => {
-                    if (event.target.tagName === 'UL' && event.target.classList.contains('directory')) {
-                        event.stopPropagation();
-                        clearListItems(ul);
-                        const newItem = changeTag(ul, 'li');
-                        newItem.addEventListener('mousedown', event => {
-                            event.preventDefault();
-                            listOnMouseDown(newItem, event);
-                        })
-                        newItem.addEventListener('mousedown', event => {
-                            event.preventDefault();
-                            listOnContextMenu(newItem, event, currentPath);
-                        })
-                        ul.remove();
-                    }
-                })
-                fillList(ul, data);
-                linkElements(ul);
-                el.remove();
+        .then(data => {
+            const newlist = addList(el);
+            if (newlist) {
+                const ul = changeTag(el, 'ul');
+                ul.style.padding = '8px 16px 0px 16px';
+                if (ul) {
+                    ul.addEventListener('mousedown', (event) => {
+                        if (event.target.tagName === 'UL' && event.target.classList.contains('directory')) {
+                            event.stopPropagation();
+                            clearListItems(ul);
+                            const newItem = changeTag(ul, 'li');
+                            newItem.addEventListener('mousedown', event => {
+                                event.preventDefault();
+                                listOnMouseDown(newItem, event);
+                            })
+                            newItem.addEventListener('mousedown', event => {
+                                event.preventDefault();
+                                listOnContextMenu(newItem, event, currentPath);
+                            })
+                            ul.remove();
+                        }
+                    })
+                    fillList(ul, data);
+                    linkElements(ul);
+                    el.remove();
+                }
             }
-        }
-        if (!currentPath.endsWith('/')) {
-            currentPath += '/';
-        }
-        currentPath = currentPath.substring(0, currentPath.lastIndexOf('/')); // обрезаем добавленный слеш
-    })
+            console.log('Результат проверки:', currentPath);
+
+            // Обновляем текущий путь с учетом слеша в конце
+            if (!currentPath.endsWith('/')) {
+                currentPath += '/';
+            }
+            // Сохраняем предыдущий путь перед обрезкой слеша
+            let previousPath = currentPath;
+            // Обрезаем добавленный слеш
+            currentPath = currentPath.substring(0, currentPath.lastIndexOf('/'));
+        })
+        .catch(error => {
+            console.error(error);
+        });
 } 
 
 /**
