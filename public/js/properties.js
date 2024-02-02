@@ -381,10 +381,9 @@ allFiles.forEach(button => {
 
                     const confirmDel = () => {
                         addresDel = '/delete-file';
-                        bodyDel = JSON.stringify({ filePath, fileSitePath });
+                        bodyDel = JSON.stringify({ fileName, fileSitePath });
                         methodDel = 'POST';
                         result = mvToTrashModal.fetchData(addresDel, true, {
-                            reload: true,
                             method: methodDel, 
                             body: bodyDel
                         });

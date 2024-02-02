@@ -440,6 +440,18 @@ app.post('/add', (req, res) => {
     });
 });
 
+app.post('/delete-file', (req, res) => {
+    try {
+        // phys delete file
+        // database delete file
+        // response
+    }
+    catch (error) {
+        console.log(error);
+        res.json({status:'error'});
+    }
+})
+
 // main
 startServer();
 

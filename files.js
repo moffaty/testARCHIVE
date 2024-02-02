@@ -48,6 +48,11 @@ function upload (data) {
     return result;
 }
 
+function remove (fileData) {
+    const fileName = fileData.fileName;
+    const filePath = fileData.fileSitePath;
+}
+
 module.exports = {
     upload
 };
