@@ -1,6 +1,5 @@
 const express = require('express');
 const bcrypt = require('bcrypt');
-const bodyParser = require('body-parser');
 const fs = require('fs');
 const path = require('path');
 const app = express();
@@ -8,6 +7,7 @@ const jwt = require('jsonwebtoken');
 const session = require('express-session');
 const { Session } = require('inspector');
 const multer = require('multer');
+const bodyParser = require('body-parser');
 const files = require('./files.js');
 const url = require('url');
 
@@ -33,6 +33,18 @@ async function checkToken(req, res, next) {
         return res.status(400).json({ response: `Access denied` });
     }
     next();
+}
+
+async function uploadFile(req, res, next) {
+    try {
+        const fileData = files.upload(req.body);
+        const result = await database.uploadFile(fileData);
+        console.log(result);
+        next();
+    }
+    catch (error) {
+        res.json(error);
+    }
 }
 
 // list of personals positions in bd 
@@ -329,23 +341,11 @@ app.post('/admin', (req, res) => {
 
 app.get('/init', async (req, res) => {
     try {
-        const init = await database.init();
-        console.log(init);
-    }
-    catch (error) {
-        console.log(error);
-    }
-})
-
-app.get('/test-:tableName', async (req, res) => {
-    try {
-        const tableName = req.params.tableName;
-        const result = await database.createDatabase(tableName);
-        console.log(result);
+        const result = await database.init();
         res.json(result);
     }
     catch (error) {
-        res.json(error);
+        res.send(error);
     }
 })
 
@@ -406,23 +406,18 @@ const storage = multer.diskStorage({
     filename: (req, file, cb) => {
       // генерируем имя для файла - берем из формы и добавляем расширение из оригинального имени файла
       const fileName = file.originalname;
-      console.log(req.body.fileName);
       cb(null, fileName);
     }
 });
 
 const upload = multer({ storage: storage, encoding: 'utf-8' });
 
-app.post('/upload', upload.single('file'), async (req, res) => {
-    console.log(req.body.fileName);
+app.post('/upload', uploadFile, upload.single('file'), async (req, res) => {
     try {
-        const fileData = files.upload(req.body);
-        const result = await database.uploadFile(fileData);
-        console.log(result);
-        res.json(result);
+        // files.renameDir(fs, )
+        res.json('okey)');
     } 
     catch (error) {
-        console.log(error);
         res.json(error);
     }
 });

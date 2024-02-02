@@ -147,7 +147,7 @@ class classDB {
         })
     }
     
-    createUsersTable() {
+    async createUsersTable() {
         try {
             const connection = this.connectToMySQL(this.databaseUsers);
             const sql = `
@@ -167,7 +167,7 @@ class classDB {
         }
     }
 
-    createFilesTable() {
+    async createFilesTable() {
         try {
             const connection = this.connectToMySQL(this.databaseFiles);
             const sql = `
@@ -204,7 +204,6 @@ class classDB {
         return new Promise((resolve, reject) => {
             let query = '';
             let values = data.data;
-            console.log(values);
             const connection = this.connectToMySQL(this.databaseFiles);
         
             if (data.id) {
@@ -240,9 +239,7 @@ class classDB {
                     if(error) {
                         return reject ({ status: 'error', response: 'Не удалось добавить файл!' });
                     } 
-                    else {
-                        return resolve ({ status: 'success', response: 'Файл добавлен!' });
-                    }
+                    return resolve ({ status: 'success', response: 'Файл добавлен!' });
                 });
             connection.end((err) => { if (err) { return reject ({ status: 'error' }); }});
         })
@@ -266,10 +263,9 @@ class classDB {
     createDatabase(databaseName) {
         return new Promise((resolve, reject) => {
             try {
-                if (this.isDatabaseExists(databaseName)) {
-                    return reject ('База данных уже существует');
-                }
-                const sql = `CREATE DATABASE ${databaseName}`;
+                const sql = `
+                CREATE DATABASE IF NOT EXISTS ${databaseName}
+                `;
                 this.connection.query(sql, (error, result) => {
                     if (error) {
                         return reject (error);
