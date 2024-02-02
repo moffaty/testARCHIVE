@@ -235,12 +235,26 @@ class classDB {
                         return reject ({ status: 'error', response: 'Не удалось добавить файл!' });
                     } 
                     else {
-                        return reject ({ status: 'success', response: 'Файл добавлен!' });
+                        return resolve ({ status: 'success', response: 'Файл добавлен!' });
                     }
                 });
             connection.end((err) => { if (err) { return reject ({ status: 'error' }); }});
         })
-        
+    }
+
+    removeFile(path) {
+        return new Promise((resolve, reject) => {
+            const sql = `
+                DELETE FROM filesInfo WHERE path = ?;
+            `;
+            const connection = this.connectToMySQL('files');
+            connection.query(sql, [path], (error, results) => {
+                if (error) {
+                    return reject ({ status: 'error', response: 'Не удалось удалить файл' });
+                }
+                return resolve ({ status: 'success', response: 'Файл успешно удален из базы данных' });
+            })
+        })
     }
 }
 

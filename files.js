@@ -48,11 +48,18 @@ function upload (data) {
     return result;
 }
 
-function remove (fileData) {
-    const fileName = fileData.fileName;
-    const filePath = fileData.fileSitePath;
+function remove (fs, filePath) {
+    return new Promise((response, reject) => {
+        fs.unlink(filePath, (err) => {
+            if (err) {
+                return reject ({ status: 'error', response: 'Файл не найден' });
+            }
+            return response ({ status: 'success', response: 'Файл удален из директории' });
+        })
+    })
 }
 
 module.exports = {
-    upload
+    upload,
+    remove
 };

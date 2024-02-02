@@ -398,6 +398,7 @@ const storage = multer.diskStorage({
     filename: (req, file, cb) => {
       // генерируем имя для файла - берем из формы и добавляем расширение из оригинального имени файла
       const fileName = file.originalname;
+      console.log(req.body.fileName);
       cb(null, fileName);
     }
 });
@@ -405,8 +406,7 @@ const storage = multer.diskStorage({
 const upload = multer({ storage: storage, encoding: 'utf-8' });
 
 app.post('/upload', upload.single('file'), async (req, res) => {
-    console.log(req.file);
-    console.log(req.file.path);
+    console.log(req.body.fileName);
     try {
         const fileData = files.upload(req.body);
         const result = await database.uploadFile(fileData);
@@ -440,11 +440,17 @@ app.post('/add', (req, res) => {
     });
 });
 
-app.post('/delete-file', (req, res) => {
+app.post('/delete-file', async (req, res) => {
     try {
+        const filePath = path.join(__dirname, req.body.fileSitePath, req.body.fileName);
+        const fileSitePath = path.join(req.body.fileSitePath, req.body.fileName);
+        const delFileDB = await database.removeFile(fileSitePath);
+        const delFile = await files.remove(fs, filePath);
+        delFile['responseDB'] = delFileDB.response;
+        console.log(delFile);
+        res.send(delFile);
         // phys delete file
         // database delete file
-        // response
     }
     catch (error) {
         console.log(error);

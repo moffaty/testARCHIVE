@@ -379,14 +379,16 @@ allFiles.forEach(button => {
                     buttonwrapper.appendChild(buttoncancel);
                     mvToTrashModal.appendChilds(label, labelName, buttonwrapper);
 
-                    const confirmDel = () => {
+                    const confirmDel = async () => {
                         addresDel = '/delete-file';
                         bodyDel = JSON.stringify({ fileName, fileSitePath });
                         methodDel = 'POST';
-                        result = mvToTrashModal.fetchData(addresDel, true, {
+                        result = await mvToTrashModal.fetchData(addresDel, false, {
+                            reload: false,
                             method: methodDel, 
                             body: bodyDel
                         });
+                        const notify = new mxNotify(result.status, result.response);
                     };
 
                     mvToTrashModal.SetListenerOnClick(confirmDel, 'confirm-delete');
