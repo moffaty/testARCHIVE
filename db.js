@@ -12,6 +12,9 @@ class classDB {
         this.passwordDB = jsonData.password;
         this.portDB = jsonData.port;
 
+        this.databaseFiles = 'files';
+        this.databaseUsers = 'users';
+
         this.connection = this.connectToMySQL();
     }
 
@@ -65,7 +68,7 @@ class classDB {
     
     async getPropertiesByPath(path) {
         return new Promise((resolve, reject) => {
-            const connection = this.connectToMySQL('files');
+            const connection = this.connectToMySQL(this.databaseFiles);
 
             if (!connection) {
                 return { status: "error" };
@@ -143,7 +146,7 @@ class classDB {
     
     createUsersTable() {
         try {
-            const connection = this.connectToMySQL('personals');
+            const connection = this.connectToMySQL(this.databaseUsers);
             const sql = `
             CREATE TABLE IF NOT EXISTS auth (
                 username varchar(255) NOT NULL,
@@ -163,7 +166,7 @@ class classDB {
 
     createFilesTable() {
         try {
-            const connection = this.connectToMySQL('files');
+            const connection = this.connectToMySQL(this.databaseFiles);
             const sql = `
             CREATE TABLE IF NOT EXISTS filesInfo (
                 id bigint NOT NULL AUTO_INCREMENT,
@@ -199,7 +202,7 @@ class classDB {
             let query = '';
             let values = data.data;
             console.log(values);
-            const connection = this.connectToMySQL('files');
+            const connection = this.connectToMySQL(this.databaseFiles);
         
             if (data.id) {
                 query = `
@@ -247,13 +250,47 @@ class classDB {
             const sql = `
                 DELETE FROM filesInfo WHERE path = ?;
             `;
-            const connection = this.connectToMySQL('files');
+            const connection = this.connectToMySQL(this.databaseFiles);
             connection.query(sql, [path], (error, results) => {
                 if (error) {
                     return reject ({ status: 'error', response: 'Не удалось удалить файл' });
                 }
                 return resolve ({ status: 'success', response: 'Файл успешно удален из базы данных' });
             })
+        })
+    }
+
+    createDatabase(databaseName) {
+        return new Promise((resolve, reject) => {
+            const sql = `CREATE DATABASE ${databaseName}`;
+            this.connection.query(sql, (error, result) => {
+                if (error) {
+                    return reject (error);
+                }
+                return resolve(result);
+            });
+        })
+    }
+
+    createTable(tableName) {
+        return new Promise((resolve, reject) => {
+            if (tableName === 'users') {
+                return resolve (this.createUsersTable());
+            } else if (tableName === 'files') {
+                return resolve (this.createFilesTable());
+            } else {
+                return reject ({ status: 'error', response: 'Invalid table name' });
+            }
+        })
+    }
+
+    init() {
+        return new Promise((resolve, reject) => {
+            this.createDatabase(this.databaseFiles);
+            this.createDatabase(this.databaseUsers);
+            this.createUsersTable();
+            this.createFilesTable();
+            return resolve ({ status: 'success' });
         })
     }
 }

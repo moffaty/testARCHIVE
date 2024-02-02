@@ -327,6 +327,27 @@ app.post('/admin', (req, res) => {
     res.send(jwt.sign({ username }, secret, { expiresIn: '0.5h' }));
 })
 
+app.get('/init', async (req, res) => {
+    try {
+        const init = await database.init();
+        console.log(init);
+    }
+    catch (error) {
+        console.log(error);
+    }
+})
+
+app.get('/test-:tableName', async (req, res) => {
+    try {
+        const tableName = req.params.tableName;
+        const result = await database.createDatabase(tableName);
+        console.log(result);
+        res.json(result);
+    }
+    catch (error) {
+        res.json(error);
+    }
+})
 
 app.get('/create-table-:tableName', async (req, res) => {
     const tableName = req.params.tableName;
@@ -356,33 +377,20 @@ app.get('/get-positions', (req, res) => {
     res.json(personalPositions);
 })
 
-// files
-async function renameDir(oldPath, newName) {
-    const newPath = path.join(path.dirname(oldPath), newName);
-    try {
-        await fs.access(newPath, fs.constants.F_OK);
-        return 'error'; 
-    } catch (error) {
-        await fs.renameSync(oldPath, newPath, (err) => { console.log(err) });
-        return 'success'; 
-    }
-}
-
 app.post('/renameDir', async (req,res) => {
-   const oldName = req.body.oldName;
-   const newName = req.body.newName;
-   const result = await renameDir(path.join(__dirname, oldName), newName);
-   console.log(result);
-   res.json({ status: result });
+   const oldPath = path.join(__dirname, req.body.oldName);
+   const newPath = path.join(path.dirname(oldPath), req.body.newName);
+   const result = await files.renameDir(fs, oldPath, newPath);
+   res.json({ result });
 })
 
 app.post('/get-properties', async (req, res) => {
     const filePath = (path.join(req.body.path, req.body.fileName));
     try {
         const result = await database.getPropertiesByPath(filePath);
-        res.json(result);
+        res.json(result); 
     } 
-    catch (error) {
+    catch (error) { 
         res.json(error);
     }
     // res.json(database.getPropertiesByPath(req.body.path));
@@ -419,25 +427,19 @@ app.post('/upload', upload.single('file'), async (req, res) => {
     }
 });
 
-app.post('/add', (req, res) => {
+app.post('/add', async (req, res) => {
     const dirName = req.body.dirName;
     const dirPath = req.body.path;
 
     if (!dirName) {
-        res.status(400).send('Bad Request: Dir name is missing');
+        res.status(400).json({ status: 'error', response:'Bad Request: Dir name is missing' });
         return;
     }
 
     const newDirPath = path.join(__dirname, dirPath, dirName);
 
-    fs.mkdir(newDirPath, (err) => {
-        if (err) {
-            console.error(err);
-            res.json({ status: 'error', response: 'Error creating directory' });
-        } else {
-            res.json({ status: 'success', response: 'Directory created!' });
-        }
-    });
+    const result = await files.mkdir(fs, newDirPath);
+    res.json({ result });
 });
 
 app.post('/delete-file', async (req, res) => {

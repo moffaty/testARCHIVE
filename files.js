@@ -49,17 +49,41 @@ function upload (data) {
 }
 
 function remove (fs, filePath) {
-    return new Promise((response, reject) => {
+    return new Promise((resolve, reject) => {
         fs.unlink(filePath, (err) => {
             if (err) {
                 return reject ({ status: 'error', response: 'Файл не найден' });
             }
-            return response ({ status: 'success', response: 'Файл удален из директории' });
+            return resolve ({ status: 'success', response: 'Файл удален из директории' });
         })
     })
 }
 
+function mkdir (fs, dirPath) {
+    return new Promise((resolve, reject) => {
+        fs.mkdir(dirPath, (err) => {
+            if (err) {
+                return reject ({ status: 'error', response: 'Error creating directory' });
+            } else {
+                return resolve ({ status: 'success', response: 'Directory created!' });
+            }
+        });
+    })
+}
+
+async function renameDir(fs, oldPath, newPath) {
+    try {
+        await fs.access(newPath, fs.constants.F_OK);
+        return { status: 'error' }; 
+    } catch (error) {
+        await fs.renameSync(oldPath, newPath, (err) => { console.log(err) });
+        return { status: 'success' }; 
+    }
+}
+
 module.exports = {
     upload,
-    remove
+    remove,
+    mkdir,
+    renameDir
 };
