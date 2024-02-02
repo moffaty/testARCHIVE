@@ -15,6 +15,9 @@ class classDB {
         this.databaseFiles = 'files';
         this.databaseUsers = 'users';
 
+        this.tableFiles = 'filesInfo';
+        this.tableUsers = 'auth';
+
         this.connection = this.connectToMySQL();
     }
 
@@ -262,13 +265,22 @@ class classDB {
 
     createDatabase(databaseName) {
         return new Promise((resolve, reject) => {
-            const sql = `CREATE DATABASE ${databaseName}`;
-            this.connection.query(sql, (error, result) => {
-                if (error) {
-                    return reject (error);
+            try {
+                if (this.isDatabaseExists(databaseName)) {
+                    return reject ('База данных уже существует');
                 }
-                return resolve(result);
-            });
+                const sql = `CREATE DATABASE ${databaseName}`;
+                this.connection.query(sql, (error, result) => {
+                    if (error) {
+                        return reject (error);
+                    }
+                    return resolve(result);
+                });
+            }
+            catch (err) {
+                return reject('error');
+            }
+
         })
     }
 
@@ -284,13 +296,33 @@ class classDB {
         })
     }
 
+    isDatabaseExists(databaseName) {
+        return new Promise((resolve, reject) => {
+            const sql = `SHOW DATABASES LIKE ?`;
+            this.connection.query(sql, [databaseName], (error, results) => {
+                if (results) {
+                    return reject(true);
+                }
+                else {
+                    return resolve(false);
+                }
+            })
+        })
+    }
+
     init() {
         return new Promise((resolve, reject) => {
-            this.createDatabase(this.databaseFiles);
-            this.createDatabase(this.databaseUsers);
-            this.createUsersTable();
-            this.createFilesTable();
-            return resolve ({ status: 'success' });
+            try {
+                this.createDatabase(this.databaseFiles);
+                this.createDatabase(this.databaseUsers);
+                this.createUsersTable();
+                this.createFilesTable();
+                return resolve ({ status: 'success' });
+            }
+            catch (error) {
+                return reject ({ status: 'error' });
+            }
+
         })
     }
 }
