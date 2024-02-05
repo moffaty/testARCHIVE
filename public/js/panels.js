@@ -3,6 +3,7 @@ class Panels {
         this.rightPanel = document.querySelector('#rightPanel');
         this.leftPanel = document.querySelector('#leftPanel');
         this.centerPanel = document.querySelector('#centerPanel');
+        this.centerDir = document.querySelector('#centerDir');
     }
     
     _getRightPanel() {
@@ -15,6 +16,10 @@ class Panels {
 
     _getCenterPanel() {
         return this.centerPanel;
+    }
+
+    _getCenterDir() {
+        return this.centerDir;
     }
 }
 

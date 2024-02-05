@@ -1,7 +1,7 @@
 function prop() {
     let fetchDel;
 function getCurrentPath() {
-    return '/main_dir';
+    return localStorage.getItem('currentPath') ? localStorage.getItem('currentPath') : init.main_dir;
 }
 
 function createInputRow(label, inputId, value, type = 'text') {
@@ -129,6 +129,7 @@ allFiles.forEach(button => {
 
         let filePath = button.dataset.filerenamepath;
         let fileName = button.textContent;
+        let fileType = button.className;
         let fileSitePath = getCurrentPath();
 
         const renameFileButton = menu.querySelector('.renameFile');
@@ -380,15 +381,30 @@ allFiles.forEach(button => {
                     mvToTrashModal.appendChilds(label, labelName, buttonwrapper);
 
                     const confirmDel = async () => {
-                        addresDel = '/delete-file';
                         bodyDel = JSON.stringify({ fileName, fileSitePath });
                         methodDel = 'POST';
-                        result = await mvToTrashModal.fetchData(addresDel, false, {
-                            reload: false,
-                            method: methodDel, 
-                            body: bodyDel
-                        });
-                        const notify = new mxNotify(result.status, result.response);
+                        console.log(bodyDel);
+                        if (fileType !== 'directory') {
+                            addresDel = '/delete-file';
+                            result = await mvToTrashModal.fetchData(addresDel, false, {
+                                reload: false,
+                                method: methodDel, 
+                                body: bodyDel
+                            });
+                            const notify = new mxNotify(result.status, result.response);
+                            init.updatePanels();
+                        }
+                        else {
+                            addresDel = '/delete-dir';
+                            result = await mvToTrashModal.fetchData(addresDel, false, {
+                                reload: false,
+                                method: methodDel, 
+                                body: bodyDel
+                            });
+                            const notify = new mxNotify(result.status, result.response);
+                            init.updatePanels();
+                        }
+                        
                     };
 
                     mvToTrashModal.SetListenerOnClick(confirmDel, 'confirm-delete');

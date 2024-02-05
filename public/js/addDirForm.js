@@ -6,7 +6,9 @@ addDirOpenModalBtn.addEventListener("click", function() {
     const form = createForm('createDir', 'Создать папку', [], { name:'dirName', required: true, value: 'Название новой директории' })
     const addDirModalForm = new mxModalView({id: 'addDirModal', className: 'modal', tag: 'div'})
     addDirModalForm.appendChild(form);
-
+    form.style.display = 'flex';
+    form.style.justifyContent = 'center';
+    form.style.flexWrap = 'wrap';
     const folderNameInput = form.elements['dirName'];
 
     folderNameInput.addEventListener('keydown', function(event) {
@@ -34,6 +36,7 @@ addDirOpenModalBtn.addEventListener("click", function() {
             notify.AddPopupContent(text);
             addDirModalForm.DoCloseModal();
             // TODO: update center list
+            init.updatePanels();
         })
     })
 

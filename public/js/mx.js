@@ -366,7 +366,7 @@ class mxNotify extends mxModalView {
         this.element.appendChild(this.closeButton);
         
         if (text) {
-            const h2 = document.createElement('h2');
+            const h2 = document.createElement('h3');
             h2.textContent = text;
             this.popupcontent.appendChild(h2);
         }
@@ -379,14 +379,16 @@ class mxNotify extends mxModalView {
 
     SmoothExit() {
         const popup = document.getElementById('popup');
-        popup.style.transition = 'transform 0.3s ease-in-out';
-        popup.style.transform = 'translate(100%, 100%)';
-
-        // Remove the transition property after the animation is complete
-        setTimeout(() => {
-            popup.style.transition = '';
-            this.DoCloseModal();
-        }, 300);
+        if (popup) {
+            popup.style.transition = 'transform 0.3s ease-in-out';
+            popup.style.transform = 'translate(100%, 100%)';
+    
+            // Remove the transition property after the animation is complete
+            setTimeout(() => {
+                popup.style.transition = '';
+                this.DoCloseModal();
+            }, 300);
+        }
     }
     
     AddElement() {
@@ -397,6 +399,6 @@ class mxNotify extends mxModalView {
         setTimeout(() => {
             popup.style.transform = 'translate(0, 0)';
             this.SmoothExit();
-        }, 12000);
+        }, 5000);
     }
 }

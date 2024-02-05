@@ -80,9 +80,26 @@ async function renameDir(fs, oldPath, newPath) {
     }
 }
 
+async function removeDir(fs, path, options = {}) {
+    return new Promise((resolve, reject) => {
+        fs.rmdir(path, options, (error) => {
+            if (error) {
+                if (error.code === 'ENOTEMPTY') {
+                    return reject({status: 'error', response: 'Директория не пуста. Удалите содержание перед удалением!'});
+                }
+                else {
+                    return reject({status: 'error', response: 'Директория не найдена!'});
+                }
+            }
+            return resolve({status: 'success', response: 'Директория удалена!'});
+        })
+    })
+}
+
 module.exports = {
     upload,
     remove,
     mkdir,
-    renameDir
+    renameDir,
+    removeDir
 };

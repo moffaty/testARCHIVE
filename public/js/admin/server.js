@@ -48,7 +48,7 @@ function databaseServ() {
             })
         })
         const notify = new mxNotify(data.status);
-        const text = document.createElement('h2');
+        const text = document.createElement('h3');
         text.textContent = data.response;
         notify.AddPopupContent(text);
         rightPanel.appendChild(changeButton);

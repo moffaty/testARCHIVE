@@ -28,17 +28,14 @@
                 <a href="/" style="display: inline-block;" title="В корневую директорию">
                     <img src="/images/MNS_logo.png" class="logo" alt="Лого не прогрузилось">
                 </a>
-                <button class="instructionButton" onclick="openInstructionWindow()">
-                    <p>Инструкция</p>
-                </button>
                 <!-- Кнопка для вызова модального окна -->
                 <button id="loginModalButton" class="modalButton newlogin" title="Авторизация"></button>
                 <!-- Модальное окно -->
                 <button id="emailFeedbackbutton" class="modalButton feedback" title="Обратная связь"></button>
             </div>
-            <ul class="w3-ul sizeAble" id="dir_tree">
+            <ul class="w3-ul sizeAble" id="leftPanel">
                 <li>
-                    <a href="/" title="Корневая директория">
+                    <a id='home' title="Корневая директория">
                         <img src="/images/home-50.png" height="25px" width="25px" margin-bottom:="" 0em="">
                         <span>Корневая директория</span>
                     </a>
@@ -97,7 +94,8 @@
     <script src="/js/properties.js"></script>
     <script src="/js/previewFile.js"></script>
     <script src="/js/resizeCenterUl.js"></script>
-    <script src="/js/main.js"></script>
+    <script src="/js/panels.js"></script>
+    <script src="/js/main2.js"></script>
     <script src="/js/localStorage.js"></script>
     <script src="/js/UILogic.js"></script>
 </body>

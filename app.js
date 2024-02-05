@@ -143,11 +143,13 @@ app.post('/get-dir-info', async (req, res) => {
     if (req.body.path === '') {
         req.body.path = '/main_dir';
     }
+    if (typeof(req.body.path) !== 'string') {
+        return;
+    }
     const dirPath = path.join(__dirname, req.body.path);
     try {
         const files = fs.readdirSync(dirPath);
         const data = [];
-
         for (const file of files) {
             const filePath = path.join(dirPath, file);
             const stats = fs.statSync(filePath);
@@ -157,12 +159,12 @@ app.post('/get-dir-info', async (req, res) => {
             const type = isDirectory ? 'directory' : 'file';
             obj['name'] = file;
             obj['type'] = type;
+            obj['path'] = path.relative(path.join(__dirname, main_dir), filePath).replaceAll(/\\/g, '/');
             if (type === 'file') {
                 obj['filetype'] = defineFileType(file);
             }
             data.push(obj);
         }
-
         res.json(data);
     } catch (error) {
         console.error('Произошла ошибка:', error);
@@ -432,9 +434,14 @@ app.post('/add', async (req, res) => {
     }
 
     const newDirPath = path.join(__dirname, dirPath, dirName);
+    try {
+        const result = await files.mkdir(fs, newDirPath);
+        res.json({ result });
+    }
+    catch (error) {
+        res.json({ status:'error', response: error });
+    }
 
-    const result = await files.mkdir(fs, newDirPath);
-    res.json({ result });
 });
 
 app.post('/delete-file', async (req, res) => {
@@ -452,6 +459,18 @@ app.post('/delete-file', async (req, res) => {
     catch (error) {
         console.log(error);
         res.json({status:'error'});
+    }
+})
+
+app.post('/delete-dir', async (req, res) => {
+    try {
+        const dirPath = path.join(__dirname, req.body.fileSitePath, req.body.fileName);
+        const result = await files.removeDir(fs, dirPath);
+        console.log(result);
+        res.json(result);
+    }
+    catch (error) {
+        res.json(error);
     }
 })
 

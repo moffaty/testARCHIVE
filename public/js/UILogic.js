@@ -108,41 +108,41 @@ let mainPath;
 let currentPath = localStorage.getItem('currentPath') || '/';
 const list = document.getElementById('dir_tree');
 const center = document.getElementById('centerDir');
-getMainPath()
-    .then(data => {
-        mainPath = data.path;
-        if (currentPath === '/') {
-            currentPath = mainPath;
-        }
-        getDirIncludes(mainPath)
-        .then(data => {
-            updateLeftList(list, data, mainPath);
-        })
-        .catch(error => {
-            console.error(error);
-        });
-        getDirIncludes(currentPath)
-        .then(data => {
-            updateList(center, data, currentPath);
-            updateFolderName();
-        })
-        .catch(error => {
-            console.error(error);
-        });
-    })
+// getMainPath()
+//     .then(data => {
+//         mainPath = data.path;
+//         if (currentPath === '/') {
+//             currentPath = mainPath;
+//         }
+//         getDirIncludes(mainPath)
+//         .then(data => {
+//             updateLeftList(list, data, mainPath);
+//         })
+//         .catch(error => {
+//             console.error(error);
+//         });
+//         getDirIncludes(currentPath)
+//         .then(data => {
+//             updateList(center, data, currentPath);
+//             updateFolderName();
+//         })
+//         .catch(error => {
+//             console.error(error);
+//         });
+//     })
 
-document.getElementById('backButton').addEventListener('click', (event) => {
-    console.log(currentPath);
-    if (currentPath === mainPath) {
-        return;
-    }
-    currentPath = currentPath.substring(0, currentPath.lastIndexOf('/'));
-    console.log(currentPath);
-    updateFolderName();
-    updateLocalStorage();
-    getDirIncludes(currentPath)
-    .then(data => {
-        updateFolderName();
-        updateList(center, data);
-    })
-})
+// document.getElementById('backButton').addEventListener('click', (event) => {
+//     console.log(currentPath);
+//     if (currentPath === mainPath) {
+//         return;
+//     }
+//     currentPath = currentPath.substring(0, currentPath.lastIndexOf('/'));
+//     console.log(currentPath);
+//     updateFolderName();
+//     updateLocalStorage();
+//     getDirIncludes(currentPath)
+//     .then(data => {
+//         updateFolderName();
+//         updateList(center, data);
+//     })
+// })
