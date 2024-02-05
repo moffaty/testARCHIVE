@@ -65,7 +65,7 @@ const main_dir = '/main_dir';
 const hashLenght = 10;
 
 // db
-const dbFile = 'db1.json';
+const dbFile = 'db.json';
 const database = new db.classDB(dbFile);
 
 console.log(database.getConnectInfo());

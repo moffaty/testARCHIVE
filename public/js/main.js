@@ -121,12 +121,28 @@ function addSlashIfInStrSlashNotAtTheEnd(str) {
     return str;
 }
 
+function getPathFromLastAnchor(element) {
+    let path = '';
+    while (element && element.tagName === 'A' && element.classList.contains('dir')) {
+        const parentUl = element.parentElement.closest('ul .directory');
+        const index = Array.from(parentUl.children).indexOf(element.parentElement);
+        path = '/' + element.textContent + path;
+
+        if (index > 0) {
+            path = '/' + parentUl.children[index - 1].textContent + path;
+        }
+
+        element = parentUl.previousElementSibling;
+    }
+    return path;
+}
+
 function listOnContextMenu(el, e, path = currentPath) {
-    let addictivePath = reversePath(getAddictivePath(el));
+    let addictivePath = getPathFromLastAnchor(el.querySelector('a')).trim();
     addictivePath = addSlashIfInStrSlashNotAtTheEnd(addictivePath);
     console.log('addictive', addictivePath);
-    console.log('path', path);
-    currentPath = path + addictivePath + el.textContent;
+    console.log('currentPath', path);
+    currentPath = path + addictivePath;
     updateLocalStorage();
     updateFolderName();
     console.log(currentPath);
@@ -152,15 +168,19 @@ function listOnContextMenu(el, e, path = currentPath) {
  */
 function listOnMouseDown(el, event) {
     currentPath = mainPath;
-    let addictivePath = addSlashIfInStrSlashNotAtTheEnd(reversePath(getAddictivePath(el)));
-    getDirIncludes(currentPath + addictivePath + el.textContent)
+    let addictivePath = getPathFromLastAnchor(el.querySelector('a')).trim();
+    console.log(addictivePath);
+    getDirIncludes(currentPath + addictivePath)
     .then(data => {
+        if (data.length === 0) {
+            return;
+        }
         const newlist = addList(el);
         if (newlist) {
             const ul = changeTag(el, 'ul');
             ul.style.padding = '8px 16px 0px 16px';
             if (ul) {
-                ul.addEventListener('mousedown', (event) => {
+                ul.addEventListener('mousedown', (e) => {
                     if (e.target.tagName === 'UL' && event.target.classList.contains('directory')) {
                         event.stopPropagation();
                         clearListItems(ul);
