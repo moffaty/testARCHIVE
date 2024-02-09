@@ -5,7 +5,6 @@ const path = require('path');
 const app = express();
 const jwt = require('jsonwebtoken');
 const session = require('express-session');
-const { Session } = require('inspector');
 const multer = require('multer');
 const bodyParser = require('body-parser');
 const files = require('./files.js');
@@ -65,7 +64,7 @@ const main_dir = '/main_dir';
 const hashLenght = 10;
 
 // db
-const dbFile = 'db.json';
+const dbFile = 'db1.json';
 const database = new db.classDB(dbFile);
 
 console.log(database.getConnectInfo());
@@ -108,6 +107,7 @@ function isSQLResponseHaveError(error, res) {
 
 app.use(session({
     username: '',
+    position: '',
     secret: secret,
     resave: false,
     saveUninitialized: true
@@ -128,6 +128,7 @@ app.get('/admin-pane1', (req, res) => {
 
 app.get('/', (req, res) => {
     req.session.username = 'red';
+    req.session.position = 'red';
     if (req.session.username) {
         res.sendFile(path.join(__dirname, 'index2.html'));
     } else {
@@ -317,7 +318,7 @@ app.post('/edit-user', (req, res) => {
 })
 
 app.get('/get-info-of-registration', (req, res) => {
-    res.json( req.session.username );
+    res.json({ username: req.session.username, position: req.session.position });
 })
 
 app.post('/login', (req, res) => {
@@ -360,6 +361,8 @@ app.get('/create-table-:tableName', async (req, res) => {
             result = await database.createUsersTable();
         } else if (tableName === 'files') {
             result = await database.createFilesTable();
+        } else if (tableName === 'init') {
+            result = await database.init();
         } else {
             return res.status(400).json({ success: false, response: 'Invalid table name' });
         }

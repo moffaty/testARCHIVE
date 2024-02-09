@@ -53,9 +53,10 @@ function databaseServ() {
         notify.AddPopupContent(text);
         rightPanel.appendChild(changeButton);
         if (data.status === 'success') {
+            const init = adminPanel.createButton('Создать структуру', 'init');
             const fileTable = adminPanel.createButton('Создать таблицу файлов', 'files');
             const userTable = adminPanel.createButton('Создать таблицу пользователей', 'users');
-            const buttons = [fileTable, userTable];
+            const buttons = [init, fileTable, userTable];
             buttons.forEach(button => {
                 dataDiv.appendChild(button);
                 button.addEventListener('click', e => {
