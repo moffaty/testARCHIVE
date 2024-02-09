@@ -28,9 +28,12 @@ document.addEventListener('DOMContentLoaded', () => {
             { name: 'publishDateBD', value: 'Дата издания', type: 'date' }, 
             { name: 'notesBD', value: 'Примечание', element: 'textarea', styles: `resize: vertical; margin: 0` }, 
         ];
-        const form1 = createForm('addNewFile', 'Отправить', [], inputs);
-        const file = form1.querySelector('#fileLabel');
-        const fileLoader = form1.elements['file'];
+        const form = createForm('addNewFile', 'Отправить', [], inputs);   
+        form.enctype = "multipart/form-data";
+        // form.method = 'post';
+        // form.action = '/upload';
+        const file = form.querySelector('#fileLabel');
+        const fileLoader = form.elements['file'];
         file.addEventListener('click', e => {
             fileLoader.click();
         })
@@ -39,8 +42,9 @@ document.addEventListener('DOMContentLoaded', () => {
             file.textContent = selectedFile.name;
         })
         file.textContent = 'Выберите файл';
-        form1.autocomplete = 'off';
-        const submitButton = form1.elements['submit'];
+        form.autocomplete = 'off';
+        const submitButton = form.elements['submit'];
+        submitButton.id = 'submitAddFile';
         const cancelButton = document.createElement('button');
         cancelButton.textContent = 'Отмена';
         cancelButton.classList.add('modalButton');
@@ -49,12 +53,12 @@ document.addEventListener('DOMContentLoaded', () => {
         buttonWrapper.classList.add('button-wrapper');
         buttonWrapper.appendChild(submitButton);
         buttonWrapper.appendChild(cancelButton);
-        form1.appendChild(buttonWrapper);
-        const form = new mxModalView({id: 'addFileModal', className: 'modal', tag: 'div' });
-        form.appendChild(form1);
+        form.appendChild(buttonWrapper);
+        const modal = new mxModalView({id: 'addFileModal', className: 'modal', tag: 'div' });
+        modal.appendChild(form);
         document.getElementById('addNewFile').addEventListener('submit', async e => {
             e.preventDefault();
-            const formData = new FormData(e.target);
+            const formData = new FormData(form);
             const response = await fetch('/upload', {
                 method: 'POST',
                 body: formData
@@ -62,18 +66,21 @@ document.addEventListener('DOMContentLoaded', () => {
             if (response.ok) {
                 const data = await response.json();
                 console.log(data);
+                const notify = new mxNotify(data.status, data.response);
+                modal.DoCloseModal();
+                init.updatePanels();
             } 
             // TODO: закрыть форму - вызывать обновление списка
         });
-        form.SetStyles({ width: '40%', maxHeight: '100%', paddingBottom: 8 });
-        const decimalNumberBDInput = form.querySelector('#decimalNumberBD');
-        const documentCategoryBDInput = form.querySelector('#documentCategoryBD');
+        modal.SetStyles({ width: '40%', maxHeight: '100%', paddingBottom: 8 });
+        const decimalNumberBDInput = modal.querySelector('#decimalNumberBD');
+        const documentCategoryBDInput = modal.querySelector('#documentCategoryBD');
 
         // mymask.js
         documentCategoryBDInput.onchange = () => { MaskForCategories(documentCategoryBDInput, decimalNumberBDInput); };
         MaskForCategories(documentCategoryBDInput, decimalNumberBDInput);
 
-        const fileNameAdd = form.querySelector("#fileName");
+        const fileNameAdd = modal.querySelector("#fileName");
 
         fileNameAdd.addEventListener('keydown', (event) => {
             if (disallowedChars.includes(event.key) || disallowedChars.includes(event.code)) {
@@ -87,48 +94,44 @@ document.addEventListener('DOMContentLoaded', () => {
         let yyyy = today.getFullYear();
 
         today = yyyy + '-' + mm + '-' + dd;
-        form.querySelector("#publishDateBD").setAttribute("max", today);
+        modal.querySelector("#publishDateBD").setAttribute("max", today);
         function updateFileName() {
-            const fileNameInput = form.querySelector("#file");
+            const fileNameInput = modal.querySelector("#file");
             let fileName = fileNameInput.value.split("\\").pop(); // получаем имя файла из абсолютного пути
 
-            const fileNameAdd = form.querySelector("#fileName");
+            const fileNameAdd = modal.querySelector("#fileName");
 
-            if (form.querySelector("#fileName").value === "") {
+            if (modal.querySelector("#fileName").value === "") {
                 fileNameAdd.value = fileName; // устанавливаем имя файла без расширения в поле "Имя документа"
             }
         } 
 
-        const uploadLabel = form.querySelector('#file');
+        const uploadLabel = modal.querySelector('#file');
         uploadLabel.onchange = updateFileName;
         updateFileName();
-
-        form.element.addEventListener("submit",async (event) => {
-            if(decimalNumberBDInput.value.replace(decimalNumberBDregex,'').length < 13 && documentCategoryBDInput.value !== 'Не указано' && documentCategoryBDInput.value !== 'Эскиз'){
-                event.preventDefault();
-                alert('Децимальный номер введен неверно');
-            }
-            decimalNumberBDInput.value = decimalNumberBDInput.value.toUpperCase();
-
-            const formdata = new FormData(form1);
-            console.log(formdata); 
-
-            fetch('/upload', {
-                method: 'POST',
-                body: formdata
-            })
-            .then(response => response.json())
-            .then(data => {
-                console.log(data);
-                const notify = new mxNotify(data.status, data.response);
-                form.DoCloseModal();
-            })
-        })
+        // modal.element.addEventListener("submit",async (event) => {
+        //     if(decimalNumberBDInput.value.replace(decimalNumberBDregex,'').length < 13 && documentCategoryBDInput.value !== 'Не указано' && documentCategoryBDInput.value !== 'Эскиз'){
+        //         event.preventDefault();
+        //         return alert('Децимальный номер введен неверно');
+        //     }
+        //     decimalNumberBDInput.value = decimalNumberBDInput.value.toUpperCase();
+        //     event.preventDefault();
+        //     fetch('/upload', {
+        //         method: 'POST',
+        //         body: formdata
+        //     })
+        //     .then(response => response.json())
+        //     .then(data => {
+        //         console.log(data);
+        //         const notify = new mxNotify(data.status, data.response);
+        //         modal.DoCloseModal();
+        //     })
+        // })
         cancelButton.addEventListener("click", function(event) {
             event.preventDefault();
-            form.style.display = 'none';
+            modal.DoCloseModal();
         });
 
         // Устанавливаем фокус на первый инпут формы
-        form.querySelector('input[type="text"]').focus();
+        modal.querySelector('input[type="text"]').focus();
 })

@@ -38,7 +38,6 @@ async function uploadFile(req, res, next) {
     try {
         const fileData = files.upload(req.body);
         const result = await database.uploadFile(fileData);
-        console.log(result);
         next();
     }
     catch (error) {
@@ -130,7 +129,7 @@ app.get('/', (req, res) => {
     req.session.username = 'red';
     req.session.position = 'red';
     if (req.session.username) {
-        res.sendFile(path.join(__dirname, 'index2.html'));
+        res.sendFile(path.join(__dirname, 'index.html'));
     } else {
         res.sendFile(path.join(__dirname, 'views/login.html'));
     }
@@ -161,6 +160,7 @@ app.post('/get-dir-info', async (req, res) => {
             obj['name'] = file;
             obj['type'] = type;
             obj['path'] = path.relative(path.join(__dirname, main_dir), filePath).replaceAll(/\\/g, '/');
+            obj['status'] = await database.getStatus(obj['path']);
             if (type === 'file') {
                 obj['filetype'] = defineFileType(file);
             }
@@ -405,6 +405,7 @@ app.post('/get-properties', async (req, res) => {
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
       // указываем путь к директории, куда будут сохраняться файлы
+      console.log(file);
       const pathNew = url.parse(req.headers.referer).path.slice(1);
       cb(null, 'main_dir/' + pathNew)
     },
@@ -476,6 +477,16 @@ app.post('/delete-dir', async (req, res) => {
         res.json(error);
     }
 })
+
+app.get('/search', async (req, res) => {
+    try {
+        const data = await database.search(req);
+        res.json(data);
+    }
+    catch (error) {
+        res.json(error);
+    }
+});
 
 // main
 startServer();

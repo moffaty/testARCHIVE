@@ -35,7 +35,7 @@ addDirOpenModalBtn.addEventListener("click", function() {
             text.textContent = 'Директория создана!';
             notify.AddPopupContent(text);
             addDirModalForm.DoCloseModal();
-            // TODO: update center list
+            // TODO: update center list- DONE
             init.updatePanels();
         })
     })

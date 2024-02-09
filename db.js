@@ -1,5 +1,7 @@
 const mysql = require('mysql2');
 const fs = require('fs');
+const { resolve } = require('path');
+const { rejects } = require('assert');
 
 class classDB {
     constructor(dbFile) {
@@ -319,6 +321,82 @@ class classDB {
                 return reject ({ status: 'error' });
             }
 
+        })
+    }
+
+    search(req) {
+        return new Promise((resolve, reject) => {
+            const query = req.query.query || '';
+            const options = req.query.options || '';
+            let categories = req.query.categories || '';
+            let optionOfCategory = req.query.direction || 'ASC';
+            optionOfCategory = optionOfCategory === '0' ? 'ASC' : 'DESC';
+            const optionsList = options.split('&');
+            const categoriesOfSearch = {'Заголовок':'filename', 'Децимальный номер':'decimalNumber','Статус':'status','Название проекта':'nameProject','Организация':'organisation','Дата создания':'uploadDateTime'} 
+            categories = categoriesOfSearch[categories];
+            const connection = this.connectToMySQL('files');
+        
+            // Выбор свойств файла
+            let sqlQuery = `SELECT * FROM filesInfo WHERE`;
+        
+            // Проверяем, указаны ли опции поиска
+            if (options) {
+            for (let i = 0; i < optionsList.length - 1; i++) {
+                // Добавляем условия поиска для каждой опции
+                sqlQuery += ` ` + optionsList[i] + ` LIKE ` + `'%${query}%'`;
+                if (i != optionsList.length - 2) {
+                sqlQuery += ' OR';
+                }
+            }
+            } else {
+            // Если опции поиска не указаны, используем предопределенные поля для поиска
+            sqlQuery = `SELECT * FROM ${this.databaseFiles} WHERE 
+                filename LIKE '%${query}%' OR 
+                decimalNumber LIKE '%${query}%' OR 
+                nameProject LIKE '%${query}%' OR 
+                organisation LIKE '%${query}%' OR 
+                uploadDateTime LIKE '%${query}%' OR 
+                editionNumber LIKE '%${query}%' OR 
+                author LIKE '%${query}%' OR 
+                storage LIKE '%${query}%' OR 
+                documentCategory LIKE '%${query}%' OR 
+                dirNumber LIKE '%${query}%' OR 
+                publish_date LIKE '%${query}%' OR 
+                notes LIKE '%${query}%'`;
+            }
+            sqlQuery += `ORDER BY ${categories} ${optionOfCategory};`
+        
+            // Выполняем SQL-запрос к базе данных
+            connection.query(sqlQuery, (err, results, fields) => {
+                if (err) { return reject(`Ошибка выполнения запроса: ${err}`); }
+            
+                // Преобразуем результаты запроса в удобный формат перед отправкой на клиент
+                const matchingResults = results.map(({ filename, decimalNumber, status, path, nameProject, organisation, uploadDateTime }) => ({ filename, decimalNumber, status, path, nameProject, organisation, uploadDateTime }));
+            
+                // Если createDate присутствует в результатах, преобразуем его в удобный формат даты
+                matchingResults.forEach(element => {
+                    if (element.uploadDateTime !== null){
+                        element.uploadDateTime = clientDate.clientDate(formatDateTime(element.uploadDateTime));
+                    }
+                });
+            
+                // Отправляем результаты клиенту в формате JSON
+                return resolve(matchingResults);
+            });
+        
+            // Закрываем соединение с сервером MySQL
+            connection.end((err) => {if (err) { return reject(`Ошибка закрытия подключение к БД: ${err.message}`); } });
+        })
+    }
+
+    getStatus(path) {
+        return new Promise((resolve, reject) => {
+            const connection = this.connectToMySQL(this.databaseFiles);
+            const sql = `SELECT status FROM ${this.tableFiles} WHERE path = ?`;
+            connection.query(sql, [path], (err, result) => {
+                if (err) return reject(err);
+                return resolve(result);
+            })
         })
     }
 }

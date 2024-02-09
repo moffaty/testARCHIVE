@@ -2,7 +2,7 @@ function upload (data) {
     const checkIsEmpty = (value) => {
         return value === '' ? 0 : value;
     }
-
+    
     const checkIsEmptyDate = (date) => {
         const currentDate = new Date();
         const year = currentDate.getFullYear();
