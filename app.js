@@ -10,6 +10,8 @@ const bodyParser = require('body-parser');
 const files = require('./files.js');
 const url = require('url');
 
+const isWin = process.platform === "win32";
+
 // bd
 const db = require('./db.js');
 
@@ -42,9 +44,7 @@ async function uploadFile(req, res, next) {
         const newPath = path.join(path.dirname(oldPath), req.body.fileName);
         const rename = await files.rename(fs, oldPath, newPath);
         const move = await files.move(fs, newPath, path.join(__dirname, req.body.path));
-        console.log(path.join(__dirname, req.body.path));
-        console.log(oldPath, newPath);
-        console.log(result);
+        req.result = result;
         next();
     }
     catch (error) {
@@ -167,7 +167,7 @@ app.post('/get-dir-info', async (req, res) => {
             obj['name'] = file;
             obj['type'] = type;
             obj['path'] = path.relative(path.join(__dirname, main_dir), filePath).replaceAll(/\\/g, '/');
-            Object.assign(obj,  await database.getStatus(obj['path']));
+            Object.assign(obj,  await database.getStatus(main_dir + '/' + obj['path']));
             if (type === 'file') {
                 obj['filetype'] = defineFileType(file);
             }
@@ -427,7 +427,7 @@ const upload = multer({ storage: storage });
 
 app.post('/upload', upload.single('file'), uploadFile, async (req, res) => {
     try {
-        res.json('okey)');
+        res.json(req.result);
     } 
     catch (error) {
         res.json(error);
@@ -456,8 +456,8 @@ app.post('/add', async (req, res) => {
 
 app.post('/delete-file', async (req, res) => {
     try {
-        const filePath = path.join(__dirname, req.body.fileSitePath, req.body.fileName);
-        const fileSitePath = path.join(req.body.fileSitePath, req.body.fileName);
+        const filePath = __dirname + '/' + req.body.fileSitePath + '/' + req.body.fileName;
+        const fileSitePath = req.body.fileSitePath  + '/' +  req.body.fileName;
         const delFileDB = await database.removeFile(fileSitePath);
         const delFile = await files.remove(fs, filePath);
         delFile['responseDB'] = delFileDB.response;

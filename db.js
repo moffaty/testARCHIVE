@@ -247,6 +247,7 @@ class classDB {
     }
 
     removeFile(path) {
+        console.log(path);
         return new Promise((resolve, reject) => {
             const sql = `
                 DELETE FROM filesInfo WHERE path = ?;

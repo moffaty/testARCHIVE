@@ -360,7 +360,7 @@ class mxNotify extends mxModalView {
         this.closeButton.textContent = 'x';
 
         this.closeButton.addEventListener('click', (e) => {
-            this.DoCloseModal();
+            this.SmoothExit();
         })
         this.element.appendChild(this.popupcontent);
         this.element.appendChild(this.closeButton);
