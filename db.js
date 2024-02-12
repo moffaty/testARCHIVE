@@ -133,7 +133,7 @@ class classDB {
                     })); 
                     matchingResults.forEach(element => {
                         if(element.hasOwnProperty("publish_date")){
-                            element.publish_date = clientDate(element.publish_date);
+                            element.publish_date = this.clientDate(element.publish_date);
                         }
                     }); 
                     
@@ -240,7 +240,6 @@ class classDB {
                     if(error) {
                         return reject ({ status: 'error', response: 'Не удалось добавить файл!' });
                     } 
-                    console.log(results);
                     return resolve ({ status: 'success', response: 'Файл добавлен!' });
                 });
             connection.end((err) => { if (err) { return reject ({ status: 'error' }); }});

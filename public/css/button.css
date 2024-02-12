@@ -133,3 +133,15 @@ form button[type="submit"]:hover,
 #home {
     user-select: none;
 }
+
+.input-with-addon {
+    display: flex;
+    align-items: center;
+}
+
+.addonText {
+    position: absolute;
+    color: #888;
+    right: 30px;
+    user-select: none;
+}

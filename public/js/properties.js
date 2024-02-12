@@ -1,8 +1,9 @@
-function prop() {
-    let fetchDel;
 function getCurrentPath() {
     return localStorage.getItem('currentPath') ? localStorage.getItem('currentPath') : init.main_dir;
 }
+function prop() {
+    let fetchDel;
+
 
 function createInputRow(label, inputId, value, type = 'text') {
     return `

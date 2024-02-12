@@ -34,6 +34,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // form.action = '/upload';
         const file = form.querySelector('#fileLabel');
         const fileLoader = form.elements['file'];
+        const fileNameAdd = form.querySelector("#fileName");
         file.addEventListener('click', e => {
             fileLoader.click();
         })
@@ -53,6 +54,15 @@ document.addEventListener('DOMContentLoaded', () => {
         buttonWrapper.classList.add('button-wrapper');
         buttonWrapper.appendChild(submitButton);
         buttonWrapper.appendChild(cancelButton);
+        const inputWithAddon = document.createElement('div');
+        inputWithAddon.className = 'input-with-addon';
+        const addonText = document.createElement('span');
+        addonText.className = 'addonText';
+        addonText.textContent = ' ';
+        fileNameAdd.flex = 1;
+        inputWithAddon.appendChild(fileNameAdd);
+        inputWithAddon.appendChild(addonText);
+        form.insertBefore(inputWithAddon, fileLoader);
         form.appendChild(buttonWrapper);
         const modal = new mxModalView({id: 'addFileModal', className: 'modal', tag: 'div' });
         modal.appendChild(form);
@@ -62,7 +72,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 return alert('Децимальный номер введен неверно');
             }
             decimalNumberBDInput.value = decimalNumberBDInput.value.toUpperCase();
+            if (addonText.textContent.length > 0) {
+                fileNameAdd.value += '.' + addonText.textContent;
+            }
             const formData = new FormData(form);
+            formData.append('path', getCurrentPath() + '/' + fileNameAdd.value);
             const response = await fetch('/upload', {
                 method: 'POST',
                 body: formData
@@ -84,8 +98,6 @@ document.addEventListener('DOMContentLoaded', () => {
         documentCategoryBDInput.onchange = () => { MaskForCategories(documentCategoryBDInput, decimalNumberBDInput); };
         MaskForCategories(documentCategoryBDInput, decimalNumberBDInput);
 
-        const fileNameAdd = modal.querySelector("#fileName");
-
         fileNameAdd.addEventListener('keydown', (event) => {
             if (disallowedChars.includes(event.key) || disallowedChars.includes(event.code)) {
                 event.preventDefault();
@@ -99,15 +111,23 @@ document.addEventListener('DOMContentLoaded', () => {
 
         today = yyyy + '-' + mm + '-' + dd;
         modal.querySelector("#publishDateBD").setAttribute("max", today);
+
+        function getFileExtension(fileName) {
+            const regex = /(?:\.([^.]+))?$/;
+            const extension = regex.exec(fileName)[1];
+            return extension ? extension.toLowerCase() : "";
+        }
+
         function updateFileName() {
             const fileNameInput = modal.querySelector("#file");
             let fileName = fileNameInput.value.split("\\").pop(); // получаем имя файла из абсолютного пути
-
+            const ext = getFileExtension(fileName);
+            fileName = fileName.substr(0, fileName.indexOf(ext) - 1);
             const fileNameAdd = modal.querySelector("#fileName");
-
-            if (modal.querySelector("#fileName").value === "") {
+            addonText.textContent = ext;
+            // if (modal.querySelector("#fileName").value === "") {
                 fileNameAdd.value = fileName; // устанавливаем имя файла без расширения в поле "Имя документа"
-            }
+            // }
         } 
 
         const uploadLabel = modal.querySelector('#file');

@@ -41,6 +41,9 @@ async function uploadFile(req, res, next) {
         const oldPath = path.join(__dirname, req.file.path);
         const newPath = path.join(path.dirname(oldPath), req.body.fileName);
         const rename = await files.rename(fs, oldPath, newPath);
+        const move = await files.move(fs, newPath, path.join(__dirname, req.body.path));
+        console.log(path.join(__dirname, req.body.path));
+        console.log(oldPath, newPath);
         console.log(result);
         next();
     }
@@ -409,6 +412,7 @@ app.post('/get-properties', async (req, res) => {
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
       // указываем путь к директории, куда будут сохраняться файлы
+      console.log(req.body);
       const pathNew = url.parse(req.headers.referer).path.slice(1);
       cb(null, 'main_dir/' + pathNew)
     },
