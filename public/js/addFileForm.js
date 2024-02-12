@@ -58,6 +58,10 @@ document.addEventListener('DOMContentLoaded', () => {
         modal.appendChild(form);
         document.getElementById('addNewFile').addEventListener('submit', async e => {
             e.preventDefault();
+            if(decimalNumberBDInput.value.replace(decimalNumberBDregex,'').length < 13 && documentCategoryBDInput.value !== 'Не указано' && documentCategoryBDInput.value !== 'Эскиз'){
+                return alert('Децимальный номер введен неверно');
+            }
+            decimalNumberBDInput.value = decimalNumberBDInput.value.toUpperCase();
             const formData = new FormData(form);
             const response = await fetch('/upload', {
                 method: 'POST',

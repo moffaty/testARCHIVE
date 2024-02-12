@@ -38,6 +38,10 @@ async function uploadFile(req, res, next) {
     try {
         const fileData = files.upload(req.body);
         const result = await database.uploadFile(fileData);
+        const oldPath = path.join(__dirname, req.file.path);
+        const newPath = path.join(path.dirname(oldPath), req.body.fileName);
+        const rename = await files.rename(fs, oldPath, newPath);
+        console.log(result);
         next();
     }
     catch (error) {
@@ -111,8 +115,8 @@ app.use(session({
     resave: false,
     saveUninitialized: true
 }))
+app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true })); // для обработки URL-кодированных данных
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.get('/admin-pane1', (req, res) => {
@@ -160,7 +164,7 @@ app.post('/get-dir-info', async (req, res) => {
             obj['name'] = file;
             obj['type'] = type;
             obj['path'] = path.relative(path.join(__dirname, main_dir), filePath).replaceAll(/\\/g, '/');
-            obj['status'] = await database.getStatus(obj['path']);
+            Object.assign(obj,  await database.getStatus(obj['path']));
             if (type === 'file') {
                 obj['filetype'] = defineFileType(file);
             }
@@ -385,7 +389,7 @@ app.get('/get-positions', (req, res) => {
 app.post('/renameDir', async (req,res) => {
    const oldPath = path.join(__dirname, req.body.oldName);
    const newPath = path.join(path.dirname(oldPath), req.body.newName);
-   const result = await files.renameDir(fs, oldPath, newPath);
+   const result = await files.rename(fs, oldPath, newPath);
    res.json({ result });
 })
 
@@ -405,7 +409,6 @@ app.post('/get-properties', async (req, res) => {
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
       // указываем путь к директории, куда будут сохраняться файлы
-      console.log(file);
       const pathNew = url.parse(req.headers.referer).path.slice(1);
       cb(null, 'main_dir/' + pathNew)
     },
@@ -416,11 +419,10 @@ const storage = multer.diskStorage({
     }
 });
 
-const upload = multer({ storage: storage, encoding: 'utf-8' });
+const upload = multer({ storage: storage });
 
-app.post('/upload', uploadFile, upload.single('file'), async (req, res) => {
+app.post('/upload', upload.single('file'), uploadFile, async (req, res) => {
     try {
-        // files.renameDir(fs, )
         res.json('okey)');
     } 
     catch (error) {

@@ -207,7 +207,6 @@ class classDB {
             let query = '';
             let values = data.data;
             const connection = this.connectToMySQL(this.databaseFiles);
-        
             if (data.id) {
                 query = `
                 UPDATE filesInfo SET
@@ -241,6 +240,7 @@ class classDB {
                     if(error) {
                         return reject ({ status: 'error', response: 'Не удалось добавить файл!' });
                     } 
+                    console.log(results);
                     return resolve ({ status: 'success', response: 'Файл добавлен!' });
                 });
             connection.end((err) => { if (err) { return reject ({ status: 'error' }); }});
@@ -395,7 +395,7 @@ class classDB {
             const sql = `SELECT status FROM ${this.tableFiles} WHERE path = ?`;
             connection.query(sql, [path], (err, result) => {
                 if (err) return reject(err);
-                return resolve(result);
+                return resolve(result[0]);
             })
         })
     }

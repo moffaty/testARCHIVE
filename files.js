@@ -23,8 +23,7 @@ function upload (data) {
     const dirNumberBD = checkIsEmpty(data.dirNumberBD);
     const publishDateBD = checkIsEmptyDate(data.publishDateBD);
     const notesBD = data.notesBD;
-    const path = data.path;
-
+    const path = checkIsEmptyDate(data.path);
     
     const now = new Date();
     const moscowOffset = 3 * 60;
@@ -70,12 +69,12 @@ function mkdir (fs, dirPath) {
     })
 }
 
-async function renameDir(fs, oldPath, newPath) {
+async function rename(fs, oldPath, newPath) {
     try {
         await fs.access(newPath, fs.constants.F_OK);
         return { status: 'error' }; 
     } catch (error) {
-        await fs.renameSync(oldPath, newPath, (err) => { console.log(err) });
+        await fs.rename(oldPath, newPath, (err) => { console.log(err) });
         return { status: 'success' }; 
     }
 }
@@ -100,6 +99,6 @@ module.exports = {
     upload,
     remove,
     mkdir,
-    renameDir,
+    rename,
     removeDir
 };

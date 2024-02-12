@@ -70,6 +70,7 @@ class main {
             const listName = document.createElement('a');
             // Добавляем класс в зависимости от типа элемента ('file' или 'dir')
             listName.classList.add(`${item.type === 'file' ? 'file' : 'dir'}`);
+            listName.classList.add(item.status === 'В разработке' ? 'working' : 'done');
             // Устанавливаем текст элемента 'a' на основе имени из данных
             listName.textContent = item.name;
             listItem.appendChild(listName);
