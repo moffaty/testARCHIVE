@@ -418,8 +418,7 @@ allFiles.forEach(button => {
             propertiesButton.addEventListener('click', (e) => {
             
             // Получаем значение переменной path
-            let path = fileSitePath;
-
+            let path = getCurrentPath();
             // Отправляем запрос на сервер
             fetch('/get-properties', {
                 method: 'POST',
@@ -443,8 +442,8 @@ allFiles.forEach(button => {
                     }
                     try{
                         if(data['length'] !== 0){
-
-                            data = data[0];
+                            data = data.response;
+                            data = (data[0]);
                             let id = data.id;
                             let fileNameBD = data.filename;
                             let decimalNumberBD = ZeroIsEmpty(data.decimalNumber) === '0' ? '' : ZeroIsEmpty(data.decimalNumber);
@@ -461,7 +460,6 @@ allFiles.forEach(button => {
                             let listOfAssembleyNames = ZeroIsEmpty(data.assembley_filenames);
                             let listOfAssembleyPaths = ZeroIsEmpty(data.assembley_paths);
                             let statusBD = data.status;
-                            
                             const generateCategorySelect = (currentCategory) => {
                                 const categories = ['Не указано', 'Спецификация', 'Документация', 'Эскиз'];
                                 let optionsHtml = '';   
@@ -565,11 +563,21 @@ allFiles.forEach(button => {
                             }
                             // Таблица свойств файла
                             const propertiesModal = new mxModalView({id:'propertiesModal',className:'modal',tag:'div'});
-                            propertiesModal.SetContent(`<div class="modal-content" id="propertiesModalContent" style="max-height:95%; padding-top: 10;">
+                            propertiesModal.SetContent(`
                                     <table>
                                     ${createInputRow('Имя документа', 'propfileNameBD', fileNameBD)}
-                                    ${createInputRow('Статус проверки', 'propstatusBD', statusBD, 'select')}
-                                    ${createInputRow('Категория документа', 'propdocumentCategoryBD', documentCategoryBD, 'select')}
+                                    <tr>
+                                        <td>Статус проверки:</td>
+                                        <td>
+                                            ${generateStatusSelect(statusBD)}
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>Категория документа:</td>
+                                        <td>
+                                            ${generateCategorySelect(documentCategoryBD)} 
+                                        </td>
+                                    </tr>
                                     ${createInputRow('Децимальный номер', 'propdecimalNumberBD', decimalNumberBD)}
                                     ${createInputRow('Название проекта', 'propnameProjectBD', nameProjectBD)}
                                     ${createInputRow('Название организации', 'proporganisationBD', organisationBD)}
@@ -602,6 +610,7 @@ allFiles.forEach(button => {
                                     </ul>
                                 </div>
                             `);
+                            propertiesModal.SetStyles({ maxHeight:'95%', paddingTop: 10, width: '40%' });
                             let mask, isAddFormOpen = false;    
                             propertiesModal.querySelector("#listOfAssembleys").addEventListener('click', event => {
                                 if (event.target.matches('.assembleys')) {
@@ -698,7 +707,6 @@ allFiles.forEach(button => {
                             const fileNameValue = fileNameProp.value.split('.');
                             fileNameValue.pop()
                             fileNameProp.value = fileNameValue.join('');
-
                             fileNameProp.addEventListener('keydown', function(event) {
                                 if (disallowedChars.includes(event.key) || disallowedChars.includes(event.code)) {
                                     event.preventDefault();
@@ -724,7 +732,7 @@ allFiles.forEach(button => {
                                         alert('Децимальный номер введен неверно');
                                     } 
                                     else {
-                                        const pathToDel = propertiesModal.querySelector('#proppathToDel').value;
+                                        const pathToDel = getCurrentPath();
 
                                         const decimalNumber = propertiesModal.querySelector('#propdecimalNumberBD').value;
                                         const nameProject = propertiesModal.querySelector('#propnameProjectBD').value;
@@ -770,6 +778,7 @@ allFiles.forEach(button => {
                                             dirNumber,
                                             publishDate,
                                             notes,
+                                            fileNameBD,
                                             status
                                         };
 

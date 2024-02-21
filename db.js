@@ -139,7 +139,7 @@ class classDB {
                     
                     connection.end();
 
-                    resolve({ status: 'succes', repsonse: matchingResults });
+                    resolve({ status: 'succes', response: matchingResults });
                 }
                 else {
                     connection.end();
@@ -324,6 +324,12 @@ class classDB {
         })
     }
 
+    formatDateTime(dateTime) {
+        const formatNumber = num => (num < 10 ? `0${num}` : num);
+        const formattedDateTime = `${dateTime.getUTCFullYear()}-${formatNumber(dateTime.getUTCMonth() + 1)}-${formatNumber(dateTime.getUTCDate())} ${formatNumber(dateTime.getUTCHours() + 3)}:${formatNumber(dateTime.getUTCMinutes())}:${formatNumber(dateTime.getUTCSeconds())}`;    
+        return formattedDateTime;
+    }
+
     search(req) {
         return new Promise((resolve, reject) => {
             const query = req.query.query || '';
@@ -350,7 +356,7 @@ class classDB {
             }
             } else {
             // Если опции поиска не указаны, используем предопределенные поля для поиска
-            sqlQuery = `SELECT * FROM ${this.databaseFiles} WHERE 
+            sqlQuery = `SELECT * FROM ${this.tableFiles} WHERE 
                 filename LIKE '%${query}%' OR 
                 decimalNumber LIKE '%${query}%' OR 
                 nameProject LIKE '%${query}%' OR 
@@ -376,7 +382,7 @@ class classDB {
                 // Если createDate присутствует в результатах, преобразуем его в удобный формат даты
                 matchingResults.forEach(element => {
                     if (element.uploadDateTime !== null){
-                        element.uploadDateTime = clientDate.clientDate(formatDateTime(element.uploadDateTime));
+                        element.uploadDateTime = this.clientDate(this.formatDateTime(element.uploadDateTime));
                     }
                 });
             

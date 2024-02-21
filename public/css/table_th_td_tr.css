@@ -8,6 +8,8 @@ table, th, td {
 }
 th, td {
     padding: 0.5em;
+    padding-top: 0.2em;
+    padding-bottom: 0.2em;
 }
 th {
     padding-top: 0.75em;

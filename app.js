@@ -26,6 +26,17 @@ function checkHeadersMiddleware(req, res, next) {
     next();
 };
 
+function unixpath(...paths) {
+    let res = '';
+    if (!paths[0].startsWith('/') && !paths[0].startsWith('C:')) {
+        res += '/';
+    }
+    paths.forEach(path => {
+        res += path + '/';
+    })
+    return res.substring(0, res.length - 1);
+}
+
 async function checkToken(req, res, next) {
     try {
         const userToken = req.headers['authorization'];
@@ -397,9 +408,11 @@ app.post('/renameDir', async (req,res) => {
 })
 
 app.post('/get-properties', async (req, res) => {
-    const filePath = (path.join(req.body.path, req.body.fileName));
+    
+    const filePath = unixpath(req.body.path, req.body.fileName);
     try {
         const result = await database.getPropertiesByPath(filePath);
+        console.log(result);
         res.json(result); 
     } 
     catch (error) { 
@@ -407,6 +420,113 @@ app.post('/get-properties', async (req, res) => {
     }
     // res.json(database.getPropertiesByPath(req.body.path));
 })
+
+app.post('/get-old-info', (req, res) => {
+    const formData = req.body;
+    const id = formData.id;
+    const connection = database.connectToMySQL('files');
+
+    connection.query(`SELECT * FROM oldFilesInfo WHERE id= ? `, [id] , (err, results, fields) => {
+        if (err) {
+            console.log(err);
+            return res.json(err);
+        }
+        const matchingResults = results.map(({ id, filename, decimalNumber, nameProject, organisation, uploadDateTime, editionNumber, author, storage, documentCategory, dirNumber, publish_date, notes, path, status, assembley_filenames, assembley_paths }) => ({
+            id, 
+            filename,
+            decimalNumber,
+            nameProject,
+            organisation,
+            uploadDateTime,
+            editionNumber,
+            author,
+            storage,
+            documentCategory,
+            dirNumber,
+            publish_date,
+            notes,
+            path,
+            status,
+            assembley_filenames,
+            assembley_paths
+        }));
+        res.json(matchingResults);
+    })
+})
+
+app.post('/update-properties', (req,res) => {
+    const formData = req.body;
+    let { fileNameBD, pathToDel, fileName, decimalNumber, nameProject, organisation, uploadDateTime, editionNumber, author, storage, documentCategory, dirNumber, publishDate, notes, fileSitePath, status} = formData['updatedData'];
+    dirNumber = dirNumber === '' ? 0 : dirNumber;
+    decimalNumber = decimalNumber === '' ? 0 : decimalNumber;
+    fileSitePath = fileSitePath.replaceAll('\\', '/');
+    const fileExtension = path.extname(fileNameBD); // получаем расширение файла
+    fileName = fileName + fileExtension;
+    const connection = database.connectToMySQL('files');
+
+    const query = `
+    UPDATE filesInfo SET 
+        filename = ?, 
+        decimalNumber = ?, 
+        nameProject = ?, 
+        organisation = ?, 
+        uploadDateTime = ?, 
+        editionNumber = ?, 
+        author = ?, 
+        storage = ?, 
+        documentCategory = ?, 
+        dirNumber = ?, 
+        publish_date = ?, 
+        notes = ?, 
+        status = ? 
+    WHERE path = ?;
+    `;
+
+    const values = [
+        fileName,
+        decimalNumber,
+        nameProject,
+        organisation,
+        uploadDateTime,
+        editionNumber,
+        author,
+        storage,
+        documentCategory,
+        dirNumber,
+        publishDate,
+        notes,
+        status,
+        fileSitePath,
+    ];
+    connection.query(query, values, (err, results, fields) => {});
+    if(fs.existsSync(path.join(__dirname, pathToDel, fileNameBD))){
+        if (fileSitePath.startsWith('\\')) { fileSitePath = fileSitePath.replaceAll(slashPlatform,'/'); }
+        const oldSitePath = path.join(__dirname, pathToDel, fileNameBD);
+        fileSitePath = path.join(__dirname, pathToDel, fileName);
+        // fileSitePath = unixpath(__dirname, pathToDel, fileName);
+        console.log(oldSitePath);
+        console.log(fileSitePath);
+        connection.query('UPDATE filesInfo SET path = ?, fileName = ? WHERE path = ?', [fileSitePath, fileName, oldSitePath], (err, results, fields) => {});
+            const newFilePath = fileSitePath; // создаем новый путь с расширением
+            if (fs.existsSync(newFilePath)){
+                console.log(`Файл ${fileName} уже существует.`);
+                res.json('Existed');
+            } 
+            else {
+                console.log(`Файл ${pathToDel} переименован в ${fileName}`);
+                fs.rename(path.join(__dirname, pathToDel, fileNameBD), newFilePath, (err) => {
+                    if (err) throw err;
+                    res.json('Renamed');
+                });
+        }
+    } else {
+        console.dir(`${path.join(__dirname, pathToDel, fileName)} is not exists, window reloading`)
+        res.json('IsntExists');
+    }
+    connection.end((err) => {
+        if (err) { return console.dir(`Ошибка закрытия подключение к БД: ${err.message}`); }
+    });
+});
 
 // настройка multer для сохранения загруженных файлов
 const storage = multer.diskStorage({

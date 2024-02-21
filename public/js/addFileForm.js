@@ -30,8 +30,6 @@ document.addEventListener('DOMContentLoaded', () => {
         ];
         const form = createForm('addNewFile', 'Отправить', [], inputs);   
         form.enctype = "multipart/form-data";
-        // form.method = 'post';
-        // form.action = '/upload';
         const file = form.querySelector('#fileLabel');
         const fileLoader = form.elements['file'];
         const fileNameAdd = form.querySelector("#fileName");

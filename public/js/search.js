@@ -77,6 +77,7 @@ document.getElementById('searchFormModalButton').addEventListener('click', e => 
             // если данные есть - заполняем таблицу данными
             let tableRows;
             if(data[0]) { 
+              console.log(data);
             searchModal.querySelector('.modal-content').style.top = '50%';
             tableRows = data.map(({ filename, decimalNumber, status, nameProject, uploadDateTime, path, organisation }) => {
                 const colorStatus = (status) => {

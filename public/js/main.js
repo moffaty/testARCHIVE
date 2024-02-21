@@ -214,6 +214,7 @@ class main {
 
     getCurrentPath() {
         if (!localStorage.getItem('currentPath')) {
+            localStorage.setItem('currentPath', '');
             return '/main_dir';
         }
         return localStorage.getItem('currentPath');
@@ -294,7 +295,7 @@ class main {
     }
 
     updateFolderName() {
-        const path = localStorage.getItem('currentPath');
+        const path = this.getCurrentPath();
         this.header.textContent = this.getLastDir(path === '' ? this.main_dir : path);
         if ('/' + this.header.textContent == this.main_dir) {
             this.header.textContent = 'Корневая директория';
