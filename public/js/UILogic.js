@@ -1,4 +1,16 @@
+
 window.addEventListener('load', () => {
+    const iframe = document.getElementById('pfdPreview');
+    const btn = document.querySelector('.fullscreen');
+    function openNewWindow() {
+        const url = iframe.src;
+        const name = 'Предпросмотр';
+        const features = `width=${window.outerWidth},height=${window.outerHeight}`;
+        const newWindow = window.open(url, name, features);
+    }
+    btn.addEventListener('click', e => {
+        openNewWindow();
+    })
     var pageLoadTime = window.performance.timing.domContentLoadedEventEnd - window.performance.timing.navigationStart;
     console.log('Page load time: ' + pageLoadTime + ' milliseconds');
 });
@@ -97,12 +109,7 @@ treedirs.forEach(dir => {
     }
 });
 
-function openNewWindow() {
-    const url = iframe.src;
-    const name = 'Предпросмотр';
-    const features = `width=${window.outerWidth},height=${window.outerHeight}`;
-    const newWindow = window.open(url, name, features);
-}
+
 
 let mainPath;
 let currentPath = localStorage.getItem('currentPath') || '/';

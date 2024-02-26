@@ -23,7 +23,7 @@ document.getElementById('searchFormModalButton').addEventListener('click', e => 
         </div>
       </div>
     `);
-    searchModal.SetStyles({ overflow: 'hidden', top: '50%', padding: '0.625em', display: 'flex' });
+    searchModal.SetStyles({ overflow: 'hidden', display: 'flex' });
     let category = 'Заголовок';
     let countOfDirection = 0;
     let direction = 0;

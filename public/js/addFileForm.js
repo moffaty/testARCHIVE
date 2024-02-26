@@ -16,7 +16,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const inputs = [ // styles: "cursor: pointer; opacity:0; overflow: hidden; position: absolute; top:0;right: 5; width: 19.7vh; margin-top:1.25em;"
             { name: 'fileLabel', element: 'label', styles: 'width:100%; margin: 0', classNames: 'modalButton', required: true }, 
             { name: 'file', type: 'file', value: 'Выберите файл', styles: 'display:none;', classNames: 'modalButton' },
-            { name: 'fileName', value: 'Имя документа', styles: "margin-top: 0.625em", required: true  }, 
+            { name: 'fileName', value: 'Имя документа', styles: "margin-top: 0.625em;", required: true  }, 
             { name: 'documentCategoryBD', element: 'select',  options: ['Спецификация', 'Документация', 'Эскиз', 'Не указано'] },
             { name: 'decimalNumberBD', value: 'Децимальный номер', required: false  }, 
             { name: 'nameProjectBD', value: 'Название проекта' }, 
@@ -39,6 +39,7 @@ document.addEventListener('DOMContentLoaded', () => {
         fileLoader.addEventListener('change', e => {
             const selectedFile = e.target.files[0];
             file.textContent = selectedFile.name;
+            fileNameAdd.style.width = '90%';
         })
         file.textContent = 'Выберите файл';
         form.autocomplete = 'off';
@@ -74,7 +75,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 fileNameAdd.value += '.' + addonText.textContent;
             }
             const formData = new FormData(form);
-            formData.append('path', getCurrentPath() + '/' + fileNameAdd.value);
+            const filePath = getCurrentPath() + '/' + fileNameAdd.value;
+            formData.append('path', filePath);
             const response = await fetch('/upload', {
                 method: 'POST',
                 body: formData

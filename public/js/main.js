@@ -62,6 +62,51 @@ class main {
         });
     }
 
+
+    rmvProject() {
+        function createButton(className, id, textContent) {
+            const button = document.createElement('button');
+            button.className = className;
+            button.id = id;
+            button.textContent = textContent;
+            return button;
+        }
+    
+        function createLabel(text) {
+            const label = document.createElement('label');
+            label.textContent = text;
+            label.style.textAlign = 'center';
+            return label;
+        }
+        const projectName = document.getElementById('centerTopH').textContent;
+        const mvToTrashModal = new mxModalView({ id:'moveToTrashModal', className:'modal' });
+        const label = createLabel(`Вы уверены, что хотите удалить проект?`);
+        const buttonconfirm = createButton('modalButton', 'confirm-delete', 'Да');
+        const buttoncancel = createButton('modalButton', 'cancel-delete', 'Нет');
+        const buttonwrapper = Object.assign(document.createElement('div'), {
+            className: 'button-wrapper'
+        });
+        buttonwrapper.appendChild(buttonconfirm);
+        buttonwrapper.appendChild(buttoncancel);
+        mvToTrashModal.appendChilds(label, buttonwrapper);
+
+        const confirmDel = async () => {
+            const bodyDel = JSON.stringify({ projectName, path: localStorage.getItem('currentPath') });
+            const methodDel = 'POST';
+            console.log(bodyDel);
+            const addresDel = '/delete-project';
+            const result = await mvToTrashModal.fetchData(addresDel, false, {
+                reload: false,
+                method: methodDel, 
+                body: bodyDel
+            });
+            const notify = new mxNotify(result.status, result.response);
+            init.updatePanels();
+        }
+        mvToTrashModal.SetListenerOnClick(confirmDel, 'confirm-delete');
+        mvToTrashModal.SetListenerOnClick( () => { mvToTrashModal.remove(); } , 'cancel-delete');
+    }
+
     fillList(list, data, linkMouseDown = false) {
         data.forEach(item => {
             const listItem = document.createElement('li');
@@ -83,6 +128,17 @@ class main {
                 }
             }
         });
+        if (data.some(item => item.name === '.project')) {
+            const projectBtn = document.getElementById('addProjectModalButton');
+            projectBtn.removeEventListener('click', projectFunction);
+            projectBtn.querySelector('img').src = '/images/rmvproject.png';
+            projectBtn.addEventListener('click', this.rmvProject);
+        } else {
+            const projectBtn = document.getElementById('addProjectModalButton');
+            projectBtn.removeEventListener('click', this.rmvProject);
+            projectBtn.querySelector('img').src = '/images/project.png';
+            projectBtn.addEventListener('click', projectFunction);
+        }
     }
 
     /**
@@ -124,6 +180,9 @@ class main {
                 .catch((error) => {
                     console.error("Error filling left panel:", error);
                 });
+
+            await this.getReferal();
+
             this.updateFolderName();
         })
     }
@@ -155,20 +214,25 @@ class main {
     addMouseDownEvent(el, parent = this.leftPanel) {
         el.addEventListener('click', (e) => {
             e.preventDefault();
-            this.getDirIncludes(this.main_dir + '/' + el.dataset.path)
+            const path = this.main_dir + '/' + el.dataset.path;
+            this.getDirIncludes(path)
                 .then(data => {
                     if (data.length === 0) {
                         return;
                     }
-                    if (el.nextElementSibling && el.nextElementSibling.tagName === 'UL') {
+    
+                    const nextElementSibling = el.nextElementSibling;
+    
+                    if (nextElementSibling && nextElementSibling.tagName === 'UL') {
+                        // If the next sibling is already a <ul>, remove it
+                        nextElementSibling.remove();
                         return;
                     }
     
                     const newlist = document.createElement('ul');
                     newlist.classList.add('dir');
                     this.fillList(newlist, data);
-                    
-                    parent.insertBefore(newlist, el.nextElementSibling);
+                    parent.insertBefore(newlist, nextElementSibling);
     
                     newlist.querySelectorAll('li').forEach(li => {
                         li.addEventListener('click', e => {
@@ -180,10 +244,11 @@ class main {
                         })
                     });
     
-                    currentPath = currentPath.substring(0, currentPath.lastIndexOf('/')); // обрезаем добавленный слеш
+                    this.currentPath = currentPath.substring(0, currentPath.lastIndexOf('/'));
                 });
         });
     }
+    
 
     addDbClickEvent(el) {
         el.addEventListener('dblclick', (e) => {
@@ -230,7 +295,6 @@ class main {
                 if (data.length === 0) {
                     return resolve();
                 } 
-                console.log(panels._getLeftPanel())
                 this.fillList(panels._getLeftPanel(), data, true);
                 return resolve(data);
             } catch (error) {
@@ -243,13 +307,14 @@ class main {
     fillCenterPanel() {
         return new Promise(async (resolve, reject) => {
             try {
-                const path = localStorage.getItem('currentPath');
+                const path = this.getCurrentPath();
                 const data = await this.getDirIncludes(path);
                 if (data.length === 0) {
                     return resolve();
                 } 
                 this.fillList(panels._getCenterDir(), data);
                 prop(); // properties.js
+                preview();
                 return resolve(data);
             } catch (error) {
                 console.error("Error fetching directory information:", error);
@@ -294,6 +359,23 @@ class main {
         })
     }
 
+    async getReferal() {
+        const response = await fetch('/get-ref');
+        const data = await response.json();
+        if (data.status === 'success') {
+            this.setCurrentPath(data.response.path);
+            const generalPath = (data.response.path + '/' + data.response.file).replace('/main_dir/', '');
+            this.centerPanel.querySelectorAll('li.file').forEach(li => {
+                if (generalPath === li.dataset.path) {
+                    li.classList.add('fade-out'); // Добавляем класс для анимации
+                }
+            })
+            // this.updateCenterPanel();
+            await fetch('/clear-ref');
+        }
+        console.log(data);
+    }
+
     updateFolderName() {
         const path = this.getCurrentPath();
         this.header.textContent = this.getLastDir(path === '' ? this.main_dir : path);
@@ -328,7 +410,7 @@ document.getElementById('backButton').addEventListener('click', (event) => {
     })
 })
 
-document.getElementById('home').addEventListener('click', e => {
+document.getElementById('home1').addEventListener('click', e => {
     e.preventDefault();
     if (localStorage.getItem('currentPath') !== '') {
         console.log('shit');

@@ -1,6 +1,6 @@
 const express = require('express');
 const bcrypt = require('bcrypt');
-const fs = require('fs');
+const fs = require('fs-extra');
 const path = require('path');
 const app = express();
 const jwt = require('jsonwebtoken');
@@ -125,6 +125,8 @@ function isSQLResponseHaveError(error, res) {
 app.use(session({
     username: '',
     position: '',
+    file: '',
+    path: main_dir,
     secret: secret,
     resave: false,
     saveUninitialized: true
@@ -150,6 +152,15 @@ app.get('/', (req, res) => {
         res.sendFile(path.join(__dirname, 'index.html'));
     } else {
         res.sendFile(path.join(__dirname, 'views/login.html'));
+    }
+})
+
+app.get('/get-ref', (req, res) =>  {
+    if (req.session.path && req.session.file) {
+        res.json({ status: 'success', response: { path: req.session.path, file: req.session.file }})
+    }
+    else {
+        res.json({ status: 'error' });
     }
 })
 
@@ -412,7 +423,6 @@ app.post('/get-properties', async (req, res) => {
     const filePath = unixpath(req.body.path, req.body.fileName);
     try {
         const result = await database.getPropertiesByPath(filePath);
-        console.log(result);
         res.json(result); 
     } 
     catch (error) { 
@@ -459,6 +469,7 @@ app.post('/update-properties', (req,res) => {
     let { fileNameBD, pathToDel, fileName, decimalNumber, nameProject, organisation, uploadDateTime, editionNumber, author, storage, documentCategory, dirNumber, publishDate, notes, fileSitePath, status} = formData['updatedData'];
     dirNumber = dirNumber === '' ? 0 : dirNumber;
     decimalNumber = decimalNumber === '' ? 0 : decimalNumber;
+    const filePath = (fileSitePath + '/' + fileNameBD);
     fileSitePath = fileSitePath.replaceAll('\\', '/');
     const fileExtension = path.extname(fileNameBD); // получаем расширение файла
     fileName = fileName + fileExtension;
@@ -482,6 +493,9 @@ app.post('/update-properties', (req,res) => {
     WHERE path = ?;
     `;
 
+    const convertedDate = new Date(uploadDateTime);
+    uploadDateTime = convertedDate.toISOString().slice(0, 19).replace("T", " ");
+    
     const values = [
         fileName,
         decimalNumber,
@@ -496,20 +510,20 @@ app.post('/update-properties', (req,res) => {
         publishDate,
         notes,
         status,
-        fileSitePath,
+        filePath,
     ];
-    connection.query(query, values, (err, results, fields) => {});
+    connection.query(query, values, (err, results, fields) => {
+        console.log(err);
+    });
     if(fs.existsSync(path.join(__dirname, pathToDel, fileNameBD))){
         if (fileSitePath.startsWith('\\')) { fileSitePath = fileSitePath.replaceAll(slashPlatform,'/'); }
         const oldSitePath = path.join(__dirname, pathToDel, fileNameBD);
         fileSitePath = path.join(__dirname, pathToDel, fileName);
         // fileSitePath = unixpath(__dirname, pathToDel, fileName);
-        console.log(oldSitePath);
-        console.log(fileSitePath);
         connection.query('UPDATE filesInfo SET path = ?, fileName = ? WHERE path = ?', [fileSitePath, fileName, oldSitePath], (err, results, fields) => {});
             const newFilePath = fileSitePath; // создаем новый путь с расширением
             if (fs.existsSync(newFilePath)){
-                console.log(`Файл ${fileName} уже существует.`);
+                // console.log(`Файл ${fileName} уже существует.`);
                 res.json('Existed');
             } 
             else {
@@ -571,7 +585,6 @@ app.post('/add', async (req, res) => {
     catch (error) {
         res.json({ status:'error', response: error });
     }
-
 });
 
 app.post('/delete-file', async (req, res) => {
@@ -596,7 +609,6 @@ app.post('/delete-dir', async (req, res) => {
     try {
         const dirPath = path.join(__dirname, req.body.fileSitePath, req.body.fileName);
         const result = await files.removeDir(fs, dirPath);
-        console.log(result);
         res.json(result);
     }
     catch (error) {
@@ -613,6 +625,232 @@ app.get('/search', async (req, res) => {
         res.json(error);
     }
 });
+
+app.get('/get-all-units', (req,res) => {
+    const path = req.query.path || '';
+    const connection = database.connectToMySQL('files');
+    connection.query(`SELECT id,filename FROM filesInfo WHERE path NOT IN ('${path}');`, (err, result, fields) => { res.json(result); });
+    connection.end((err) => {
+        if (err) { console.dir(`Ошибка закрытия подключение к БД: ${err.message}`); }
+    });
+})
+
+app.post('/add-to-units', (req, res) => {
+    const formData = req.body;
+    const selectedUnit = formData.selectedUnit;
+    const mainPath = (formData.mainPath + '/' + formData.fileName);
+    const connection = database.connectToMySQL('files');
+    connection.query(`
+    UPDATE filesInfo 
+    SET assembley_units = 
+        CASE 
+            WHEN assembley_units IS NULL THEN JSON_OBJECT('ids', JSON_ARRAY( ? )) 
+            WHEN JSON_CONTAINS(assembley_units->'$.ids', JSON_ARRAY( ? ), '$') THEN assembley_units
+            ELSE JSON_ARRAY_APPEND(assembley_units, '$.ids',  ? ) 
+        END 
+    WHERE path = ? ;`,[selectedUnit, selectedUnit, selectedUnit, mainPath], (err, result, fields) => {
+        res.json('updated');
+    });
+
+    connection.end((err) => {
+        if (err) { console.dir(`Ошибка закрытия подключение к БД: ${err.message}`); }
+    });
+})
+
+app.post('/get-assembley-units', (req,res) => {
+    const formData = req.body;
+    const path = formData.path + '/' + formData.fileNameBD;
+    console.log(path);
+    const connection = database.connectToMySQL('files');
+
+    connection.query(`       
+    SELECT 
+        IFNULL(GROUP_CONCAT(fd.path), '') AS assembley_paths,
+        IFNULL(GROUP_CONCAT(fd.filename), 'Нет сборочных единиц') AS assembley_filenames
+    FROM filesInfo fi
+    LEFT JOIN JSON_TABLE(fi.assembley_units, '$.ids[*]' COLUMNS (file_id INT PATH '$')) jt
+    ON 1=1
+    LEFT JOIN filesInfo fd ON jt.file_id = fd.id
+    WHERE fi.path = ?;`, [path],
+    (err, result, fields) => { 
+        res.json(result); 
+    });
+    connection.end((err) => {
+        if (err) { console.dir(`Ошибка закрытия подключение к БД: ${err.message}`); }
+    });
+})
+
+app.post('/del-from-units', (req, res) => {
+    const formData = req.body;
+    const selectedUnit = formData.selectedUnit; // path
+    const mainPath = formData.mainPath;
+    
+    console.dir(mainPath);
+    console.dir(selectedUnit);
+    // SELECT JSON_EXTRACT(assembley_units, '$.ids') FROM filesInfo WHERE path='${mainPath}';
+    async function executeQueries() {
+        try {
+            const connection = database.connectToMySQL('files');
+
+            let firstresult, id = 0;
+    
+            // Запрос 1
+            const query1Result = await new Promise((resolve, reject) => {
+                connection.query(`SELECT id FROM filesInfo WHERE path= ? ;`, [selectedUnit], 
+                (err, result, fields) => {
+                    if (err) {
+                        reject(err);
+                    } else {
+                        if(result[0]){
+                            id = result[0]['id'];
+                        }
+                        resolve(result);
+                    }
+                });
+            });
+    
+            // Запрос 2
+            const query2Result = await new Promise((resolve, reject) => {
+                connection.query(`SELECT (JSON_EXTRACT(assembley_units, '$.ids')) FROM filesInfo WHERE path= ? ;`, [selectedUnit], 
+                (err, result, fields) => {
+                    if (err) {
+                        reject(err);
+                    } else {
+                        firstresult = result[0]["(JSON_EXTRACT(assembley_units, '$.ids'))"];
+                        const index = firstresult.indexOf(id);
+                        if (index !== -1) {
+                            firstresult.splice(index, 1);
+                        }
+                        resolve(firstresult);
+                    }
+                });
+            });
+    
+            // Запрос 3
+            const query3Result = await new Promise((resolve, reject) => {
+                connection.query(`UPDATE filesInfo 
+                SET assembley_units = JSON_SET(assembley_units, '$.ids', JSON_ARRAY( ? ))
+                WHERE path= ? ;`, [firstresult, selectedUnit],
+                (err, result, fields) => {
+                    if (err) {
+                        reject(err);
+                    } else {
+                        resolve(result);
+                    }
+                });
+            });
+    
+            // Например, вернуть результаты третьего запроса как ответ на API запрос.
+            res.json(query3Result);
+            connection.end((err) => {
+                if (err) { console.dir(`Ошибка закрытия подключение к БД: ${err.message}`); }
+            });
+        } catch (error) {
+            console.error(error);
+            // Здесь можно обработать ошибку, если возникла проблема при выполнении запросов.
+            // Например, отправить клиенту сообщение об ошибке.
+            res.status(500).json({ error: 'Произошла ошибка при выполнении запросов.' });
+        }
+    }
+    
+    // Вызываем функцию для выполнения запросов.
+    executeQueries();
+})
+
+app.get('/get-file:filePath(*)/:fileName(*)', (req, res) => {
+    const fileName = req.params.fileName;
+    const filePath = req.params.filePath;
+    req.session.path = filePath;
+    req.session.file = fileName;
+    console.log(req.session);
+    res.redirect('/');
+})
+
+app.get('/clear-ref', (req, res) => {
+    req.session.path = '';
+    req.session.file = '';
+    res.json({ status: 'success' });
+})
+
+app.get('/main_dir/:filename(*)', (req, res) => {
+    const { filename } = req.params;
+    const filePath = path.join(__dirname, main_dir, filename);
+    if (fs.existsSync(filePath)) {
+        // Отправляем файл в ответ на запрос
+        res.sendFile(filePath);
+    }
+    else {
+        res.status(300);
+        res.send();
+    }
+});
+
+app.post('/add-project', (req, res) => {
+    console.log(req.body);
+
+    // Проверка наличия основного свойства 'name' в req.body
+    if (!req.body.projectName) {
+        return res.status(400).json({ error: 'Missing "name" property in the request body.' });
+    }
+    console.log('log');
+    // Создание структуры в req.body.path
+    const directories = [
+        'Основание/Договор',
+        'Основание/Другие документы',
+        'Основание/Решения',
+        'Основание/ТЗ',
+        'Схемы/Э1',
+        'Схемы/Э2',
+        'Схемы/Э4',
+        'Схемы/Э6',
+        'Текстовые документы/Переписка/Организационные',
+        'Текстовые документы/Переписка/Внешняя переписка',
+        'Текстовые документы/Решения',
+        'Текстовые документы/Служебные записки',
+        'Текстовые документы/ТУ',
+        'Текстовые документы/Испытания/Акты',
+        'Текстовые документы/Испытания/ПМ',
+        'Текстовые документы/Испытания/Протоколы испытаний',
+        'Текстовые документы/Извещения',
+        'РКД/Чертежи/ГЧ',
+        'РКД/Чертежи/Другие',
+        'РКД/Чертежи/МЧ',
+        'РКД/Чертежи/ВО',
+        'РКД/Схемы/Э1',
+        'РКД/Схемы/Э2',
+        'РКД/Схемы/Э3',
+        'РКД/Схемы/Э4_общая',
+        'РКД/Схемы/Э5',
+        'РКД/Схемы/Э6',
+        'РКД/Спецификация',
+        'РКД/Тестовые документы/ПМ',
+        'РКД/Тестовые документы/Решения',
+        'РКД/Тестовые документы/ТУ',
+        'РКД/Извещения',
+        'ОКР/Этапы ОКР',
+        'ОКР/Основания/Договор',
+        'ОКР/Основания/Другие документы',
+        'ОКР/Основания/Решения',
+        'ОКР/Основания/ТЗ',
+        'ОКР/Переписка',
+        'ОКР/Извещения',
+    ];
+
+    // Создание директорий
+    directories.forEach(directory => {
+        const fullPath = path.join(__dirname, req.body.path, req.body.projectName, directory);
+        // Создание директории с использованием fs
+        // recursive: true гарантирует, что все промежуточные директории также будут созданы, если их нет
+        fs.mkdirSync(fullPath, { recursive: true });
+        console.log(`Created directory: ${fullPath}`);
+    });
+
+    fs.createFileSync(path.join(__dirname, req.body.path, req.body.projectName, '.project'));
+
+    // Отправка ответа
+    res.json({ status: 'success', message: 'Project structure added successfully.', data: req.body });
+});
+
 
 // main
 startServer();

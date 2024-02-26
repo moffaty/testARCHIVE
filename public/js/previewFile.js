@@ -1,10 +1,6 @@
-// Получаем ссылки на все файлы в списке
-const fileLinks = document.querySelectorAll('.file a');
-
 const rightPanel = document.querySelector('#rightPanel');
 const headerPreview = rightPanel.querySelector('#headerPreview');
 const iframe = rightPanel.querySelector('#pfdPreview');
-
 // Перебираем все ссылки и добавляем обработчик события на клик
 function updatePreview(filePath, title) {
     const listOfFilePath = filePath.split('/');
@@ -38,17 +34,22 @@ if (pdfSource === null) {
     })
     updatePreview(pdfSource, 'Предпросмотр');
 }
-
-// Перебираем все ссылки и добавляем обработчик события на клик
-fileLinks.forEach(link => {
-    link.addEventListener('click', (e) => {
-        e.preventDefault(); // Предотвращаем переход по ссылке
-        // Получаем путь к файлу из атрибута data-filepath ссылки
-        const filePath = link.getAttribute('data-filepath');
-        if (filePath.endsWith('.pdf') || filePath.endsWith('.png') || filePath.endsWith('.jpg') || filePath.endsWith('.jpeg')) {
-            const fileName = link.title;
-            updatePreview(filePath, 'Предпросмотр');
-        }
+function preview() {
+    // Получаем ссылки на все файлы в списке
+    const fileLinks = document.querySelectorAll('li.file');
+    console.log(fileLinks);
+    // Перебираем все ссылки и добавляем обработчик события на клик
+    fileLinks.forEach(link => {
+        link.addEventListener('click', (e) => {
+            e.preventDefault(); // Предотвращаем переход по ссылке
+            // Получаем путь к файлу из атрибута data-path ссылки
+            const filePath = init.main_dir + '/' + link.getAttribute('data-path');
+            if (filePath.endsWith('.pdf') || filePath.endsWith('.png') || filePath.endsWith('.jpg') || filePath.endsWith('.jpeg')) {
+                const fileName = link.title;
+                updatePreview(filePath, 'Предпросмотр');
+            }
+        });
     });
+}
 
-});
+preview();

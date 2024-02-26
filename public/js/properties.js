@@ -52,10 +52,30 @@ function createButton(className, id, textContent) {
     return button;
 }
 
-function renameFunction(filePath, fileName, fileSitePath, renameFileButton) {
+async function shareFunction(fileName, fileSitePath) {
+    const shareModal = new mxModalView({id:'shareModal',className:'modal'});
+    const label = document.createElement('a');
+    label.href = `/get-file${encodeURIComponent(fileSitePath)}/${encodeURIComponent(fileName)}`;
+    label.textContent = 'Ссылка на файл';
+    const copyButton = document.createElement('button');
+    copyButton.className = 'modalButton';
+    const img = document.createElement('img');
+    img.src = '/images/copy.png';
+    img.style.width = '20px';
+    img.style.height = '20px';
+    copyButton.appendChild(img);
+    copyButton.addEventListener('click', e => {
+        navigator.clipboard.writeText(label.href);
+    })
+    // const response = await fetch(`/get-file${encodeURIComponent(fileSitePath)}/${encodeURIComponent(fileName)}`);
+    shareModal.appendChilds(label, copyButton);
+    shareModal.SetStyles({ display: 'flex', alignItems: 'strech', flexDirection: 'column', })
+}
+
+function renameFunction(fileName, fileSitePath, renameFileButton) {
     const renameFileModal = new mxModalView({id:'renameFileModal',className:'modal'});
     const label = createLabel('Введите новое имя для папки:');
-    const input = createInput(fileName, 'new-file-name', 'text', true, 'Запрещено использовать: слеши (/ и \\)');
+    const input = createInput(fileName, 'new-file-name', 'text', true, 'Запрещено использовать: слеши (/ и \)');
     const buttonconfirm = createButton('modalButton', 'confirm-rename', 'Переименовать');
     const buttoncancel = createButton('modalButton', 'cancel-rename', 'Отмена');
     const buttonwrapper = Object.assign(document.createElement('div'), {
@@ -83,12 +103,13 @@ function renameFunction(filePath, fileName, fileSitePath, renameFileButton) {
         .then(response => response.json())
         .then(data => {
             console.log(data.status);
-            console.log('HERE!');
             const test = new mxNotify();
             const text = document.createElement('h3');
             text.textContent = 'Директория переименована!';
             test.AddPopupContent(text);
             renameFileModal.DoCloseModal();
+            init.updateCenterPanel();
+            init.updateLeftPanel();
         });
     }
     // Переименование
@@ -107,8 +128,8 @@ allFiles.forEach(button => {
 
         const menu = new mxContextMenu({id:'menu',className:'menu','tag':'div'});
         if (button.classList.contains('file')){
-            const buttonlist = ['properties', 'concat', 'moveToTrash'];
-            const buttontext = ['Свойства', 'Редактирование документа', 'Удалить'];
+            const buttonlist = ['properties', 'share', 'moveToTrash'];
+            const buttontext = ['Свойства', 'Поделиться документом', 'Удалить'];
             const elements = menu.SetItems(buttonlist, buttontext);
             elements['moveToTrash'].setAttribute('fetch', '/moveToTrash');
         } else {
@@ -128,7 +149,6 @@ allFiles.forEach(button => {
             top: `${y}px`
         });
 
-        let filePath = button.dataset.filerenamepath;
         let fileName = button.textContent;
         let fileType = button.className;
         let fileSitePath = getCurrentPath();
@@ -136,8 +156,14 @@ allFiles.forEach(button => {
         const renameFileButton = menu.querySelector('.renameFile');
         if (renameFileButton) {
             renameFileButton.addEventListener('click', () => {
-                renameFunction(filePath, fileName, fileSitePath, renameFileButton);
+                renameFunction(fileName, fileSitePath, renameFileButton);
             });
+        }
+        const shareFileButton = menu.querySelector('.share');
+        if (shareFileButton) {
+            shareFileButton.addEventListener('click', async () => {
+                await shareFunction(fileName, fileSitePath);
+            })
         }
         const concatFileButton = menu.querySelector('.concat');
         if (concatFileButton) {
@@ -412,7 +438,7 @@ allFiles.forEach(button => {
                     mvToTrashModal.SetListenerOnClick( () => { mvToTrashModal.remove(); } , 'cancel-delete');
                 }); 
             });
-
+        let fileNameBD;
         const propertiesButton = menu.querySelector('.properties');
         if (propertiesButton) {
             propertiesButton.addEventListener('click', (e) => {
@@ -445,7 +471,7 @@ allFiles.forEach(button => {
                             data = data.response;
                             data = (data[0]);
                             let id = data.id;
-                            let fileNameBD = data.filename;
+                            fileNameBD = data.filename;
                             let decimalNumberBD = ZeroIsEmpty(data.decimalNumber) === '0' ? '' : ZeroIsEmpty(data.decimalNumber);
                             let nameProjectBD = ZeroIsEmpty(data.nameProject);
                             let organisationBD = ZeroIsEmpty(data.organisation);
@@ -468,7 +494,7 @@ allFiles.forEach(button => {
                                     optionsHtml += `<option value="${category}">${category}</option>`;
                                     }
                                 }
-                                return `<select id="propdocumentCategoryBD">
+                                return `<select id="propdocumentCategoryBD" style="margin-top:5px">
                                             <option value="${currentCategory}">${currentCategory}</option>
                                             ${optionsHtml}
                                         </select>`;
@@ -482,7 +508,7 @@ allFiles.forEach(button => {
                                     optionsHtml += `<option value="${status}">${status}</option>`;
                                     }
                                 }
-                                return `<select id="propstatusBD">
+                                return `<select id="propstatusBD" style="margin-top:5px">
                                             <option value="${currentStatus}">${currentStatus}</option>
                                             ${optionsHtml}
                                         </select>`;
@@ -497,7 +523,7 @@ allFiles.forEach(button => {
                                     headers: {
                                         'Content-Type': 'application/json'
                                     },
-                                    body: JSON.stringify({ path })
+                                    body: JSON.stringify({ path, fileNameBD })
                                 })
                                 .then(response => response.json()) // Преобразуем ответ в JSON
                                 .then(newdata => { 
@@ -534,7 +560,7 @@ allFiles.forEach(button => {
                                         month: '2-digit',
                                         year: 'numeric'
                                       });
-                                    result += `<li><a href="${path}">${oldInfo[i].filename}</a> (Изделие ${copyNumber}) ${formattedDate}</li>`;
+                                    result += `<li><a href="${path}">${oldInfo[i].filename}</a> (Версия ${copyNumber}) ${formattedDate}</li>`;
                                   }
                                   
                                   console.log(result);
@@ -594,15 +620,6 @@ allFiles.forEach(button => {
                                     <button class="modalButton" style="position: absolute; right: 5px;" id="close-properties" style="margin-top:3%">Закрыть</button>
                                     </div>
                                 </div>
-                                <div id="assembleyUnits" class="modal-content">
-                                    <h4>Сборочные единицы <img src="/images/info.png" width=20px height=20px title="Изделия что входят в исходное"></h4>
-                                    <div style="height: 32vh; overflow:auto">
-                                        <ul class="w3-ul" id="listOfAssembleys">
-                                            ${viewOfAssembleyUnits(listOfAssembleyNames)}
-                                        </ul>
-                                    </div>
-                                    <button id="addUnit" class="modalButton">Добавить в сборочные единицы</button><br>
-                                </div>
                                 <div style="height: 37vh; left: 85%;" id="listOfOldVersions" class="modal-content">
                                     <h4> Предыдущие версии файла <img src="/images/info.png" width=20px height=20px title="Что ранее использовались вместо его"></h4>
                                     <ul class="w3-ul" id="OldVersions">
@@ -610,90 +627,103 @@ allFiles.forEach(button => {
                                     </ul>
                                 </div>
                             `);
-                            propertiesModal.SetStyles({ maxHeight:'95%', paddingTop: 10, width: '40%' });
+                            propertiesModal.SetStyles({ maxHeight:'100%', paddingTop: 10, width: '40%' });
                             let mask, isAddFormOpen = false;    
-                            propertiesModal.querySelector("#listOfAssembleys").addEventListener('click', event => {
-                                if (event.target.matches('.assembleys')) {
-                                    event.preventDefault();
-                                    const href = event.target.href;
-                                    const filename = href.split('/').pop();
-                                    localStorage.setItem('selected', decodeURIComponent(filename));
-                                    window.location.href = event.target.getAttribute('data-relocation');
-                                }
-                                if (event.target.matches('.delAssembley')){
-                                    const mainPath = fileSitePath;
-                                    const selectedUnit = event.target.getAttribute('data-db');
-                                    fetch('/del-from-units', {
-                                        method: 'POST',
-                                        headers: { 'Content-Type': 'application/json' },
-                                        body: JSON.stringify({ mainPath, selectedUnit })
-                                    })
-                                    .then(async response => {
-                                        await response;
-                                        await checkNewList();
-                                    })
-                                    .then(data => {})
-                                }
-                            });
-                            propertiesModal.querySelector("#assembleyUnits").querySelector("#addUnit").addEventListener('click', event => {
-                                if(isAddFormOpen === true){
-                                    return;
-                                }
-                                isAddFormOpen = true;
-                                fetch(`/get-all-units?path=${fileSitePath}`, {
-                                    method: 'GET'
-                                })
-                                .then(response => response.json())
-                                .then(data => {
-                                    const selectOfAssembleyUnits = (data) => {
-                                        if (data) {
-                                            result = `<form id="addAssembley">
-                                            <select id="selectUnit">`;
-                                            data.forEach(element => {
-                                                result += `<option value="${element.id}">${element.filename}</option>`;
-                                            })
-                                            result += ` </select>
-                                            <button class="modalButton">Добавить</button>
-                                                        </form>`;
-                                            return result;
-                                        }
-                                        else {
-                                            return "Нет загруженных файлов, помимо текущего!"
-                                        }
-                                    }
-                                    const addAssemlbeyUnitForm = new mxModalView({id:'addAssembleyForm',className:'modal-content',tag:'div',parentID:'propertiesModal'});
-                                    console.log(addAssemlbeyUnitForm);
-                                    addAssemlbeyUnitForm.SetStyles({
-                                        left: "15%",
-                                        top: "15%", 
-                                        width: "20vw",
-                                        zIndex: 9999
-                                    })
-                                    addAssemlbeyUnitForm.SetContent(selectOfAssembleyUnits(data));
-                                    const submutAddAssembleyUnit = () => {
-                                        const selectedUnit = addAssemlbeyUnitForm.querySelector('#selectUnit').value;
-                                        const mainPath = fileSitePath;
-                                        fetch('/add-to-units', {
-                                            method: 'POST',
-                                            headers: { 'Content-Type': 'application/json' },
-                                            body: JSON.stringify({ mainPath, selectedUnit })
-                                        })
-                                        .then(async response => {
-                                            await response.json();
-                                            await checkNewList();
-                                        })
-                                        .then(async data => {
-                                        })
-                                        .catch(error => {
-                                            console.error('Ошибка:',error);
-                                        })
-                                    }
-                                    addAssemlbeyUnitForm.SetListenerOnSubmit(submutAddAssembleyUnit,'addAssembley');
-                                })
-                                .catch(error => {
-                                    console.error('Ошибка при обновлении данных:', error);
-                                });
-                            });
+                            // <div id="assembleyUnits" class="modal-content">
+                            //     <h4>Сборочные единицы <img src="/images/info.png" width=20px height=20px title="Изделия что входят в исходное"></h4>
+                            //     <div style="height: 32vh; overflow:auto">
+                            //         <ul class="w3-ul" id="listOfAssembleys">
+                            //             ${viewOfAssembleyUnits(listOfAssembleyNames)}
+                            //         </ul>
+                            //     </div>
+                            //     <button id="addUnit" class="modalButton">Добавить в сборочные единицы</button><br>
+                            // </div>
+                            // propertiesModal.querySelector("#listOfAssembleys").addEventListener('click', event => {
+                            //     if (event.target.matches('.assembleys')) {
+                            //         event.preventDefault();
+                            //         const href = event.target.href;
+                            //         const filename = href.split('/').pop();
+                            //         localStorage.setItem('selected', decodeURIComponent(filename));
+                            //         window.location.href = event.target.getAttribute('data-relocation');
+                            //     }
+                            //     if (event.target.matches('.delAssembley')){
+                            //         const mainPath = getCurrentPath();
+                            //         const selectedUnit = event.target.getAttribute('data-db');
+                            //         fetch('/del-from-units', {
+                            //             method: 'POST',
+                            //             headers: { 'Content-Type': 'application/json' },
+                            //             body: JSON.stringify({ mainPath, selectedUnit })
+                            //         })
+                            //         .then(async response => {
+                            //             await response;
+                            //             await checkNewList();
+                            //         })
+                            //         .then(data => {})
+                            //     }
+                            // });
+                            // propertiesModal.querySelector("#assembleyUnits").querySelector("#addUnit").addEventListener('click', event => {
+                            //     if(isAddFormOpen === true){
+                            //         return;
+                            //     }
+                            //     isAddFormOpen = true;
+                            //     fetch(`/get-all-units?path=${fileSitePath}`, {
+                            //         method: 'GET'
+                            //     })
+                            //     .then(response => response.json())
+                            //     .then(data => {
+                            //         const selectOfAssembleyUnits = (data) => {
+                            //             if (data) {
+                            //                 result = `<form id="addAssembley" style="margin:0;">
+                            //                 <select id="selectUnit">`;
+                            //                 data.forEach(element => {
+                            //                     result += `<option value="${element.id}">${element.filename}</option>`;
+                            //                 })
+                            //                 result += ` </select>
+                            //                 <button class="modalButton">Добавить</button>
+                            //                             </form>`;
+                            //                 return result;
+                            //             }
+                            //             else {
+                            //                 return "Нет загруженных файлов, помимо текущего!"
+                            //             }
+                            //         }
+                            //         const addAssemlbeyUnitForm = new mxModalView({id:'addAssembleyForm',tag:'div',parentID:'propertiesModal'});
+                            //         console.log(selectOfAssembleyUnits(data));
+                            //         addAssemlbeyUnitForm.SetContent(selectOfAssembleyUnits(data));
+                            //         addAssemlbeyUnitForm.SetStyles({
+                            //             left: "15%",
+                            //             top: "12%", 
+                            //             width: "20vw",
+                            //             zIndex: 9999
+                            //         })
+                            //         const submutAddAssembleyUnit = () => {
+                            //             const selectElement = document.getElementById("selectUnit");
+                            //             const selectedUnit = selectElement.value;
+                            //             const selectedOption = selectElement.options[selectElement.selectedIndex];
+                            //             const optionText = selectedOption.textContent;
+                            //             const fileName = optionText;
+                            //             const mainPath = fileSitePath;
+                            //             fetch('/add-to-units', {
+                            //                 method: 'POST',
+                            //                 headers: { 'Content-Type': 'application/json' },
+                            //                 body: JSON.stringify({ mainPath, fileName, selectedUnit })
+                            //             })
+                            //             .then(async response => {
+                            //                 await response.json();
+                            //                 await checkNewList();
+                            //             })
+                            //             .then(async data => {
+                            //             })
+                            //             .catch(error => {
+                            //                 console.error('Ошибка:',error);
+                            //             })
+                            //         }
+                            //         addAssemlbeyUnitForm.SetListenerOnSubmit(submutAddAssembleyUnit,'addAssembley');
+                            //     })
+                            //     .catch(error => {
+                            //         console.error('Ошибка при обновлении данных:', error);
+                            //     });
+                            // });
                             
                             const propdocumentCategoryBDInput = propertiesModal.querySelector('#propdocumentCategoryBD');
                             const propdecimalNumberBDInput = propertiesModal.querySelector('#propdecimalNumberBD');
@@ -721,6 +751,7 @@ allFiles.forEach(button => {
                             // Проверка ввода данных
                             const updateBtn = propertiesModal.querySelector('#update-properties');
                             const updateEvent = (event) => {
+                                event.preventDefault();
                                 const isFileNameTooLong = document.querySelector('#propfileNameBD').value.length >= 230; // максимальное имя файла
                                 if(!isFileNameTooLong){
                                     const delLastSpace = (str) => {
@@ -762,10 +793,10 @@ allFiles.forEach(button => {
                                         const dirNumber = propertiesModal.querySelector('#propdirNumberBD').value;
                                         const notes = propertiesModal.querySelector('#propnotesBD').value;
                                         const status = propertiesModal.querySelector('#propstatusBD').value;
-
+                                        alert(getCurrentPath());
                                         const updatedData = {
                                             pathToDel,
-                                            fileSitePath,
+                                            fileSitePath: getCurrentPath(),
                                             fileName,
                                             decimalNumber,
                                             nameProject,
@@ -790,7 +821,10 @@ allFiles.forEach(button => {
                                         })
                                         .then(response => response.json())
                                         .then(data => {
-                                            location.reload();
+                                            console.log(data);
+                                            propertiesModal.DoCloseModal();
+                                            init.updateCenterPanel();
+                                            init.updateLeftPanel();
                                         })
                                         .catch(error => {
                                             console.error('Ошибка при обновлении данных:', error);

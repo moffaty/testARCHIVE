@@ -74,7 +74,14 @@ async function rename(fs, oldPath, newPath) {
         await fs.access(newPath, fs.constants.F_OK);
         return { status: 'error' }; 
     } catch (error) {
-        await fs.rename(oldPath, newPath, (err) => { console.log(err) });
+        // Создаем новую директорию
+        await fs.mkdirSync(newPath);
+
+        // Копируем содержимое старой директории в новую
+        await fs.copySync(oldPath, newPath);
+
+        // Удаляем старую директорию
+        await fs.removeSync(oldPath);
         return { status: 'success' }; 
     }
 }

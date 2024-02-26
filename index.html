@@ -25,7 +25,7 @@
     <main class="main">
         <div class="box" style="height: auto; padding:0vw; display:flex;">
             <div class="image-container">
-                <a href="/" style="display: inline-block;" title="В корневую директорию">
+                <a href="/" id="home1" style="display: inline-block;" title="В корневую директорию">
                     <img src="/images/MNS_logo.png" class="logo" alt="Лого не прогрузилось">
                 </a>
                 <!-- Кнопка для вызова модального окна -->
@@ -34,16 +34,16 @@
                 <button id="emailFeedbackbutton" class="modalButton feedback" title="Обратная связь"></button>
             </div>
             <ul class="w3-ul sizeAble" id="leftPanel">
-                <li>
+                <!-- <li>
                     <a id='home' title="Корневая директория">
                         <img src="/images/home-50.png" height="25px" width="25px" margin-bottom:="" 0em="">
                         <span>Корневая директория</span>
                     </a>
-                </li>
+                </li> -->
             </ul>
-            <button id="trashFormModalButton" type="submit" class="modalButton">
+            <!-- <button id="trashFormModalButton" type="submit" class="modalButton">
                 <img src="/images/trash.svg" width="20px" height="20px" alt="Корзина" title="Корзина">
-            </button>
+            </button> -->
         </div>
 
         <div class="box" id="center">
@@ -55,6 +55,9 @@
                     </a>
                     <button id="addDirModalButton" class="modalButton" title="Создать папку">
                         <img src="/images/createfolder-80.png" width="20px" height="20px" alt="Создать папку" title="Создать папку">
+                    </button>
+                    <button id="addProjectModalButton" class="modalButton" title="Создать проект">
+                        <img src="/images/project.png" width="20px" height="20px" alt="Создать проект" title="Создать проект">
                     </button>
                     <button id="addFileModalButton" class="modalButton" title="Загрузить файл">
                         <img src="/images/upload.png" width="20px" height="20px" alt="Загрузить файл">
@@ -88,6 +91,7 @@
     <script src="/js/sizeAbleBlocks.js"></script>
     <script src="/js/trash.js"></script>
     <script src="/js/addDirForm.js"></script>
+    <script src="/js/addProject.js"></script>
     <script src="/js/addFileForm.js"></script>
     <script src="/js/dragLogic.js"></script>  
     <script src="/js/centerDirStatus.js"></script>

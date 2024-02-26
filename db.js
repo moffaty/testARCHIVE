@@ -161,6 +161,7 @@ class classDB {
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
             `;
             connection.execute(sql);
+            connection.end();
             return { status: 'success', response: 'Created!' };
         }
         catch (err) {
@@ -194,6 +195,7 @@ class classDB {
               );
             `;
             connection.execute(sql);
+            connection.end();
             return { status: 'success', response: 'Created!' };
         }
         catch (err) {
@@ -259,6 +261,7 @@ class classDB {
                 }
                 return resolve ({ status: 'success', response: 'Файл успешно удален из базы данных' });
             })
+            connection.end();
         })
     }
 
@@ -268,17 +271,18 @@ class classDB {
                 const sql = `
                 CREATE DATABASE IF NOT EXISTS ${databaseName}
                 `;
-                this.connection.query(sql, (error, result) => {
+                const connection = this.connectToMySQL(this.databaseFiles);
+                connection.query(sql, (error, result) => {
                     if (error) {
                         return reject (error);
                     }
                     return resolve(result);
                 });
+                connection.end();
             }
             catch (err) {
                 return reject('error');
             }
-
         })
     }
 
@@ -403,6 +407,7 @@ class classDB {
                 if (err) return reject(err);
                 return resolve(result[0]);
             })
+            connection.end((err) => {if (err) { return reject(`Ошибка закрытия подключение к БД: ${err.message}`); } });
         })
     }
 }
