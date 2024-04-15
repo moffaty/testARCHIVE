@@ -9,9 +9,10 @@ const multer = require('multer');
 const bodyParser = require('body-parser');
 const files = require('./files.js');
 const url = require('url');
+const { addToLog, createLogDir } = require('./logs.js');
+createLogDir();
 
 const isWin = process.platform === "win32";
-
 // bd
 const db = require('./db.js');
 
