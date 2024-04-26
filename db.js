@@ -1,7 +1,6 @@
 const mysql = require('mysql2');
 const fs = require('fs');
-const { resolve } = require('path');
-const { rejects } = require('assert');
+const { dbLogs, getFunctionName } = require('./helpers/logs.js');
 
 class classDB {
     constructor(dbFile) {
@@ -54,7 +53,7 @@ class classDB {
             return connection;
         } 
         catch(err) {
-            console.log(err);
+            dbLogs(err);
             if (res) {
                 res.json({ response:'Error connection to DB' }); 
             }
@@ -164,7 +163,7 @@ class classDB {
             return { status: 'success', response: 'Created!' };
         }
         catch (err) {
-            console.log(err);
+            dbLogs(err);
             return { status: 'error', response: 'error' };
         }
     }
@@ -197,7 +196,7 @@ class classDB {
             return { status: 'success', response: 'Created!' };
         }
         catch (err) {
-            console.log(err);
+            dbLogs(err);
             return { status: 'error', response: 'error' };
         }
     }
@@ -247,7 +246,7 @@ class classDB {
     }
 
     removeFile(path) {
-        console.log(path);
+        dbLogs(path);
         return new Promise((resolve, reject) => {
             const sql = `
                 DELETE FROM filesInfo WHERE path = ?;
@@ -397,7 +396,21 @@ class classDB {
                 if (err) return reject(err);
                 return resolve(result[0]);
             })
+            connection.end();
         })
+    }
+
+    testConnection() {
+        return new Promise((resolve, reject) => {
+            const connection = this.connectToMySQL(this.databaseFiles);
+            connection.connect((err) => {
+                if (err) {
+                    dbLogs('error while connect to database');
+                } else {
+                    dbLogs('connected');
+                }
+            });
+        });
     }
 }
 

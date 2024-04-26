@@ -9,9 +9,8 @@ const multer = require('multer');
 const bodyParser = require('body-parser');
 const files = require('./files.js');
 const url = require('url');
-const { addToLog, createLogDir } = require('./logs.js');
+const { addToLog, createLogDir, serverLogs } = require('./helpers/logs.js');
 createLogDir();
-
 const isWin = process.platform === "win32";
 // bd
 const db = require('./db.js');
@@ -30,7 +29,7 @@ function checkHeadersMiddleware(req, res, next) {
 async function checkToken(req, res, next) {
     try {
         const userToken = req.headers['authorization'];
-        console.log(jwt.verify(userToken.replace(/^Bearer\s+/, ''), secret));
+        serverLogs(jwt.verify(userToken.replace(/^Bearer\s+/, ''), secret));
     } catch (err) {
         return res.status(400).json({ response: `Access denied` });
     }
@@ -74,7 +73,7 @@ const hashLenght = 10;
 const dbFile = 'db1.json';
 const database = new db.classDB(dbFile);
 
-console.log(database.getConnectInfo());
+serverLogs(database.getConnectInfo());
 
 function defineFileType(filePath) {
     const splitted = filePath.split('.');
@@ -83,7 +82,7 @@ function defineFileType(filePath) {
 
 async function startServer() {
     server = app.listen(PORT, () => {
-        console.log(`Started http://localhost:${PORT}`)
+        serverLogs(`Started http://localhost:${PORT}`)
     })
 }
 
@@ -91,7 +90,7 @@ async function stopServer() {
     if (server) {
         server.close();
     }
-    console.log('Server stopped');
+    serverLogs('Server stopped');
 }
 
 function getUserData(req, res) {
@@ -413,7 +412,7 @@ app.post('/get-properties', async (req, res) => {
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
       // указываем путь к директории, куда будут сохраняться файлы
-      console.log(req.body);
+      serverLogs(req.body);
       const pathNew = url.parse(req.headers.referer).path.slice(1);
       cb(null, 'main_dir/' + pathNew)
     },
@@ -462,13 +461,13 @@ app.post('/delete-file', async (req, res) => {
         const delFileDB = await database.removeFile(fileSitePath);
         const delFile = await files.remove(fs, filePath);
         delFile['responseDB'] = delFileDB.response;
-        console.log(delFile);
+        serverLogs(delFile);
         res.send(delFile);
         // phys delete file
         // database delete file
     }
     catch (error) {
-        console.log(error);
+        serverLogs(error);
         res.json({status:'error'});
     }
 })
@@ -477,7 +476,7 @@ app.post('/delete-dir', async (req, res) => {
     try {
         const dirPath = path.join(__dirname, req.body.fileSitePath, req.body.fileName);
         const result = await files.removeDir(fs, dirPath);
-        console.log(result);
+        serverLogs(result);
         res.json(result);
     }
     catch (error) {
@@ -501,9 +500,10 @@ startServer();
 async function test()  {
     const userP = '1234';
     const registerP = await bcrypt.hash(userP, hashLenght);
-    console.log("IN BD:", registerP);
+    serverLogs("IN BD:", registerP);
     const loginP = await bcrypt.compare(userP, registerP);
-    console.log("LOGIN:",loginP);
+    serverLogs("LOGIN:",loginP);
+    await database.testConnection();
 }
 test();
 // console.dir(bcrypt.compare(rawPassword, user.password));

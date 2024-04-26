@@ -1,9 +1,10 @@
 const fs = require('fs');
 const path = require('path');
 let clear = false;
-let logDir = './logs';
+let logDir = path.resolve(__dirname, '../logs');
 // Получение аргументов из запуска
 const clearLogs = process.argv[2];
+const { colors, backgroundColors } = require('./color');
 
 // Получаем аргумент, смотрим, если он clear_logs - очищаем текущие (текущий день) логи
 // P.S - пока не работает
@@ -18,7 +19,7 @@ function createLogDir() {
     fs.mkdir(path.join(__dirname, 'logs'), (err) => {
         if (!err || err.code === 'EEXIST') {
             const contDate = getFormattedDate();
-            const pathToContDir = path.join(__dirname, 'logs', contDate);
+            const pathToContDir = logDir;
             if (!fs.existsSync(pathToContDir)) {
                 fs.mkdir(pathToContDir, (err) => {
                     if (!err || err.code === 'EEXIST') {
@@ -73,7 +74,37 @@ function addToLog(filename, data) {
     });
 }
 
+function log(where, message) {
+    const trace = new Error().stack.split('\n')[3];
+    const func = trace.substring(trace.indexOf('at') + 2, trace.indexOf('('));
+    const line = path.basename(trace.substring(trace.indexOf('(')).replace(')', ''));
+    const time = new Date();
+    const log = { time, where, function: func.trim(), line: line, message };
+
+    // Форматирование и вывод сообщения
+    const formattedLog = JSON.stringify(log);
+    const colorfulLog = `${colors['gray']}[${log.time.toISOString()}]${colors['reset']} ${colors['blue']}${log.where}${colors['reset']} ${colors['yellow']}${log.line}${colors['reset']} ${colors['green']}function:${log.function}${colors['reset']}=>${colors['white']}${log.message}${colors['reset']}`;
+    console.log(colorfulLog);
+}
+
+function getFunctionName() {
+    const trace = new Error().stack.split('\n')[2];
+    const func = trace.substring(trace.indexOf('at') + 2, trace.indexOf('('));
+    return func;
+}
+
+function serverLogs(...message) {
+    log('APP', message.join(' '));
+}
+
+function dbLogs(...message) {
+    log('DB', message.join(' '));
+}
+
 module.exports = {
     addToLog,
-    createLogDir
+    createLogDir,
+    serverLogs,
+    dbLogs,
+    getFunctionName
 };
