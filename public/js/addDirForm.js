@@ -25,7 +25,7 @@ addDirOpenModalBtn.addEventListener("click", function() {
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ dirName, path: '/main_dir' })
+            body: JSON.stringify({ dirName, path: init.getCurrentPath() })
         })
         .then(response => response.json())
         .then(data => {
@@ -35,7 +35,6 @@ addDirOpenModalBtn.addEventListener("click", function() {
             text.textContent = 'Директория создана!';
             notify.AddPopupContent(text);
             addDirModalForm.DoCloseModal();
-            // TODO: update center list- DONE
             init.updatePanels();
         })
     })

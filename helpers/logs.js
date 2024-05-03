@@ -2,6 +2,7 @@ const fs = require('fs');
 const path = require('path');
 let clear = false;
 let logDir = path.resolve(__dirname, '../logs');
+const loginLogFile = 'authlogs.csv';
 // Получение аргументов из запуска
 const clearLogs = process.argv[2];
 const { colors, backgroundColors } = require('./color');
@@ -16,23 +17,22 @@ if(clearLogs){
 
 // Создание необходимой папки для логирования
 function createLogDir() {
-    fs.mkdir(path.join(__dirname, 'logs'), (err) => {
+    fs.mkdir(logDir, (err) => {
         if (!err || err.code === 'EEXIST') {
             const contDate = getFormattedDate();
-            const pathToContDir = logDir;
+            const pathToContDir = path.join(logDir, contDate);
             if (!fs.existsSync(pathToContDir)) {
                 fs.mkdir(pathToContDir, (err) => {
                     if (!err || err.code === 'EEXIST') {
                         logDir = pathToContDir;
-                        fs.appendFile(path.join(pathToContDir, 'authlogs.csv'), "NAME,DATE,TIME,IP\n", (err) => {});
+                        fs.appendFile(path.join(pathToContDir, loginLogFile), "NAME,DATE,TIME,IP\n", (err) => {});
                     }
                 });
             } else {
                 if (!clear) {
-                    if (!fs.existsSync(path.join(pathToContDir, 'authlogs.csv'))) {
-                        fs.appendFile(path.join(pathToContDir, 'authlogs.csv'), "NAME,DATE,TIME,IP\n", (err) => {});
+                    if (!fs.existsSync(path.join(pathToContDir, loginLogFile))) {
+                        fs.appendFile(path.join(pathToContDir, loginLogFile), "NAME,DATE,TIME,IP\n", (err) => {});
                     }
-                    logDir = pathToContDir;
                 }
             }
         }
@@ -65,12 +65,26 @@ createLogDir();
 function addToLog(filename, data) {
     const now = new Date();
     const timeString = `${now.getHours()}:${now.getMinutes()}:${now.getSeconds()}`;
-    console.dir(filename, data);
-    fs.appendFile(path.join(logDir, filename), `${accName}, ${timeString}, ${data.join(',')} \n`, (err) => {
+    const contDate = getFormattedDate();
+    const log = `${timeString}, ${data.join(',')} \n`;
+    fs.appendFile(path.join(logDir, contDate, filename), log, (err) => {
         if (err) {
-            return console.dir(`Не удалось записать в лог - ${err}`);
+            return logLogs(`Не удалось записать в лог - ${err}`);
         }
-        console.dir("Данные успешно записаны в лог!");
+        logLogs("Данные успешно записаны в лог!");
+    });
+}
+
+function loginLog(username, ip) {
+    const now = new Date();
+    const timeString = `${now.getHours()}:${now.getMinutes()}:${now.getSeconds()}`;
+    const contDate = getFormattedDate();
+    const log = `${username}, ${contDate}, ${timeString}, ${ip} \n`;
+    fs.appendFile(path.join(logDir, contDate, loginLogFile), log, (err) => {
+        if (err) {
+            return logLogs(`Не удалось записать в лог - ${err}`);
+        }
+        logLogs("data of auth logged");
     });
 }
 
@@ -101,10 +115,15 @@ function dbLogs(...message) {
     log('DB', message.join(' '));
 }
 
+function logLogs(...message) {
+    log('LOG', message.join(' '));
+}
+
 module.exports = {
     addToLog,
     createLogDir,
     serverLogs,
+    loginLog,
     dbLogs,
     getFunctionName
 };

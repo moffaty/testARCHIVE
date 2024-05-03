@@ -9,8 +9,7 @@ const multer = require('multer');
 const bodyParser = require('body-parser');
 const files = require('./files.js');
 const url = require('url');
-const { addToLog, createLogDir, serverLogs } = require('./helpers/logs.js');
-createLogDir();
+const { addToLog, serverLogs, loginLog } = require('./helpers/logs.js');
 const isWin = process.platform === "win32";
 // bd
 const db = require('./db.js');
@@ -133,12 +132,10 @@ app.get('/admin-pane1', (req, res) => {
 // })
 
 app.get('/', (req, res) => {
-    req.session.username = 'red';
-    req.session.position = 'red';
     if (req.session.username) {
-        res.sendFile(path.join(__dirname, 'index.html'));
+        res.sendFile(path.join(__dirname, 'public', 'views', 'index.html'));
     } else {
-        res.sendFile(path.join(__dirname, 'views/login.html'));
+        res.sendFile(path.join(__dirname, 'public', 'views', 'login.html'));
     }
 })
 
@@ -182,40 +179,33 @@ app.post('/get-dir-info', async (req, res) => {
 
 // login
 app.post('/login',(req,res)=>{
-    const username = req.body.username;
-    const password = req.body.password;
-    const connection = database.connectToMySQL('personals');
-    connection.query(`SELECT * FROM auth WHERE username="${username}" AND password="${password}"`,
-        (err, results, fields) => {
-            try {
-                const authData = results[0];
-                // const authData = { username: "123", password: "123"};
-                if (authData.username === username && authData.password === password){
-                    // Если пользователь аутентифицирован, генерируем токен
-                    const token = jwt.sign({ username }, secret, { expiresIn: '0.5h' });
-                    // Сохраняем токен в куках браузера
-                    
-                    res.cookie('token', secret, { httpOnly: true, maxAge: 3600000, secure: true, sameSite: 'none'});
-                    // addToLog("authlogs.csv", [  ]);
-                    res.setHeader('Set-Cookie', [
-                        `token=${token}; HttpOnly; Max-Age=3600; Path=/`,
-                        `name=${username}; HttpOnly; Max-Age=3600; Path=/`
-                    ]);
-                    req.session.username = {
-                        username: username
-                    };
-                    res.json({ status: 'success' });
-                } else {
-                    // Ошибка: неверные данные для авторизации
-                    res.json({ status: 'error' });
-                }
-            } catch(err){
-                res.json({ status: 'error' });
-            }});
-            
-    connection.end((err) => {
-      if (err) { return console.dir(`Ошибка закрытия подключение к БД: ${err.message}`); }
-    });
+    try {
+        const username = req.body.username;
+        const password = req.body.password;
+        const loginResult = database.login(username, password);
+        loginLog(username, req.socket.remoteAddress);
+        if (loginResult === true) {
+            // Если пользователь аутентифицирован, генерируем токен
+            const token = jwt.sign({ username }, secret, { expiresIn: '0.5h' });
+            // Сохраняем токен в куках браузера
+            res.cookie('token', secret, { httpOnly: true, maxAge: 3600000, secure: true, sameSite: 'none'});
+            // addToLog("authlogs.csv", [  ]);
+            res.setHeader('Set-Cookie', [
+                `token=${token}; HttpOnly; Max-Age=3600; Path=/`,
+                `name=${username}; HttpOnly; Max-Age=3600; Path=/`
+            ]);
+            req.session.username = {
+                username: username
+            };
+            res.json({ status: 'success' });
+        }
+        else {
+            res.json({ status: 'error' });
+        }
+    }
+    catch (err) {
+        serverLogs(err);
+    }
 })
 
 // logout
@@ -328,21 +318,6 @@ app.get('/get-info-of-registration', (req, res) => {
     res.json({ username: req.session.username, position: req.session.position });
 })
 
-app.post('/login', (req, res) => {
-    const data = getUserData(req, res);
-    const connection = database.connectToMySQL('personals', res);
-    const query = 'SELECT * FROM auth WHERE username = ? AND password = ?';
-    if (!connection) {
-        return;
-    }
-    connection.query(query, data, (error, result) => {
-        if (!isSQLResponseHaveError(error, res)) {
-            const username = data[0];
-            const userToken = jwt.sign({ username }, secret, { expiresIn: '0.5h' });
-            res.status(200).send(`\nToken: ${userToken}\nUse token in header to get acces. Like this: "Authorization: Bearer token"`);
-        }
-    })
-})
 
 app.post('/admin', (req, res) => {
     const username = 'admin';
@@ -437,7 +412,7 @@ app.post('/upload', upload.single('file'), uploadFile, async (req, res) => {
 app.post('/add', async (req, res) => {
     const dirName = req.body.dirName;
     const dirPath = req.body.path;
-
+    serverLogs(dirPath);
     if (!dirName) {
         res.status(400).json({ status: 'error', response:'Bad Request: Dir name is missing' });
         return;

@@ -58,3 +58,6 @@ li.file, li.directory, ul.directory {
     overflow: hidden;
     text-overflow: ellipsis;
 }
+#home {
+    cursor: pointer;
+}

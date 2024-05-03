@@ -412,6 +412,30 @@ class classDB {
             });
         });
     }
+
+    login(username, password) {
+        return new Promise((resolve, reject) => {
+            const connection = this.connectToMySQL('personals');
+            connection.query(`SELECT * FROM auth WHERE username="${username}" AND password="${password}"`,
+                (err, results, fields) => {
+                    try {
+                        const authData = results ? results[0] : '';
+                        // const authData = { username: "123", password: "123"};
+                        if (authData.username === username && authData.password === password){
+                            resolve(true);
+                        } else {
+                            // Ошибка: неверные данные для авторизации
+                            resolve(false);
+                        }
+                    } 
+                    catch(err){
+                        reject(err.message);
+                    }});
+            connection.end((err) => {
+                if (err) { reject(err.message); }
+            });
+        })
+    }
 }
 
 
