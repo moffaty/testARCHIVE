@@ -178,7 +178,7 @@ app.post('/get-dir-info', async (req, res) => {
 });
 
 // login
-app.post('/login', (req,res)=>{
+app.post('/login', async (req,res)=>{
     try {
         const username = req.body.username;
         const password = req.body.password;
@@ -187,7 +187,7 @@ app.post('/login', (req,res)=>{
             res.json({ status: 'success', redirect: '/admin-pane1' });
         }
         else {
-            const loginResult = database.login(username, password);
+            const loginResult = await database.login(username, password);
             if (loginResult === true) {
                 // Если пользователь аутентифицирован, генерируем токен
                 const token = jwt.sign({ username }, secret, { expiresIn: '0.5h' });

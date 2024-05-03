@@ -99,10 +99,10 @@ class classDB {
                 fi.status,
                 IFNULL(GROUP_CONCAT(fd.path), '') AS assembley_paths,
                 IFNULL(GROUP_CONCAT(fd.filename), 'Нет сборочных единиц') AS assembley_filenames
-            FROM filesInfo fi
+            FROM ${this.tableFiles} fi
             LEFT JOIN JSON_TABLE(fi.assembley_units, '$.ids[*]' COLUMNS (file_id INT PATH '$')) jt
             ON 1=1
-            LEFT JOIN filesInfo fd ON jt.file_id = fd.id
+            LEFT JOIN ${this.tableFiles} fd ON jt.file_id = fd.id
             WHERE fi.path = ?
             GROUP BY fi.id; `;
 
@@ -155,7 +155,7 @@ class classDB {
             const connection = this.connectToMySQL(this.databaseUsers);
             
             // Проверяем существование записей с именами admin, user, red
-            const checkNames= `SELECT username FROM auth WHERE username IN ('admin', 'user', 'red')`;
+            const checkNames= `SELECT username FROM ${this.tableUsers} WHERE username IN ('admin', 'user', 'red')`;
             const [results] = await connection.promise().query(checkNames);
             const isExist = results.length > 0;
 
@@ -167,7 +167,7 @@ class classDB {
     
             // Создаем таблицу, если она не существует
             const createTableSql = `
-                CREATE TABLE IF NOT EXISTS auth (
+                CREATE TABLE IF NOT EXISTS ${this.tableUsers} (
                     username varchar(255) NOT NULL,
                     password varchar(255) NOT NULL,
                     position varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL DEFAULT 'user',
@@ -177,11 +177,11 @@ class classDB {
             await connection.execute(createTableSql);
     
             // Вставляем данные, если пользователи еще не существуют
-            const insertAdminSql = `INSERT INTO auth(username, password, position) VALUES('admin', 'pass', 'admin')`;
+            const insertAdminSql = `INSERT INTO ${this.tableUsers}(username, password, position) VALUES('admin', 'pass', 'admin')`;
             await connection.execute(insertAdminSql);
-            const insertUserSql = `INSERT INTO auth(username, password, position) VALUES('user', 'pass', 'user')`;
+            const insertUserSql = `INSERT INTO ${this.tableUsers}(username, password, position) VALUES('user', 'pass', 'user')`;
             await connection.execute(insertUserSql);
-            const insertRedSql = `INSERT INTO auth(username, password, position) VALUES('red', 'pass', 'red')`;
+            const insertRedSql = `INSERT INTO ${this.tableUsers}(username, password, position) VALUES('red', 'pass', 'red')`;
             await connection.execute(insertRedSql);
     
             connection.end();
@@ -197,7 +197,7 @@ class classDB {
         try {
             const connection = this.connectToMySQL(this.databaseFiles);
             const sql = `
-            CREATE TABLE IF NOT EXISTS filesInfo (
+            CREATE TABLE IF NOT EXISTS ${this.tableFiles} (
                 id bigint NOT NULL AUTO_INCREMENT,
                 filename text,
                 decimalNumber varchar(255) DEFAULT NULL,
@@ -234,7 +234,7 @@ class classDB {
             const connection = this.connectToMySQL(this.databaseFiles);
             if (data.id) {
                 query = `
-                UPDATE filesInfo SET
+                UPDATE ${this.tableFiles} SET
                     fileName = ?,
                     decimalNumber = ?,
                     nameProject = ?,
@@ -253,7 +253,7 @@ class classDB {
             }
             else {
                 query = `
-                INSERT INTO filesInfo (
+                INSERT INTO ${this.tableFiles} (
                     fileName, decimalNumber, nameProject, organisation, editionNumber, author, storage,
                     documentCategory, dirNumber, publish_date, notes, path, uploadDateTime
                 ) 
@@ -275,7 +275,7 @@ class classDB {
         dbLogs(path);
         return new Promise((resolve, reject) => {
             const sql = `
-                DELETE FROM filesInfo WHERE path = ?;
+                DELETE FROM ${this.tableFiles} WHERE path = ?;
             `;
             const connection = this.connectToMySQL(this.databaseFiles);
             connection.query(sql, [path], (error, results) => {
@@ -363,7 +363,7 @@ class classDB {
             const connection = this.connectToMySQL('files');
         
             // Выбор свойств файла
-            let sqlQuery = `SELECT * FROM filesInfo WHERE`;
+            let sqlQuery = `SELECT * FROM ${this.tableFiles} WHERE`;
         
             // Проверяем, указаны ли опции поиска
             if (options) {
@@ -376,7 +376,7 @@ class classDB {
             }
             } else {
             // Если опции поиска не указаны, используем предопределенные поля для поиска
-            sqlQuery = `SELECT * FROM ${this.databaseFiles} WHERE 
+            sqlQuery = `SELECT * FROM ${this.tableFiles} WHERE 
                 filename LIKE '%${query}%' OR 
                 decimalNumber LIKE '%${query}%' OR 
                 nameProject LIKE '%${query}%' OR 
@@ -442,22 +442,25 @@ class classDB {
 
     login(username, password) {
         return new Promise((resolve, reject) => {
-            const connection = this.connectToMySQL('personals');
-            connection.query(`SELECT * FROM auth WHERE username="${username}" AND password="${password}"`,
+            const connection = this.connectToMySQL(this.databaseUsers);
+            console.log(`SELECT * FROM auth WHERE username="${username}" AND password="${password}";`);
+            connection.query(`SELECT * FROM auth WHERE username="${username}" AND password="${password}";`,
                 (err, results, fields) => {
                     try {
+                        console.log(results);
                         const authData = results ? results[0] : '';
-                        // const authData = { username: "123", password: "123"};
-                        if (authData.username === username && authData.password === password){
+                        if (authData && authData.username === username && authData.password === password){
                             resolve(true);
-                        } else {
-                            // Ошибка: неверные данные для авторизации
+                        } 
+                        else {
                             resolve(false);
                         }
                     } 
                     catch(err){
                         reject(err.message);
-                    }});
+                    }
+                }
+            );
             connection.end((err) => {
                 if (err) { reject(err.message); }
             });
