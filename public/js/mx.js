@@ -134,6 +134,7 @@ class mxModalView {
         const parser = new DOMParser();
         const htmlContent = parser.parseFromString(this.element.innerHTML, 'text/html');
         this.htmlContent = htmlContent.querySelector('.modal-content');
+        return this.htmlContent;
     }
 
     GetContent () {

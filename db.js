@@ -63,6 +63,10 @@ class classDB {
         }
     }
 
+    pathToUnix(path) {
+        return path.replaceAll('\\', '/')
+    }
+
     clientDate(dateString){
         const date = new Date(dateString);
         const day = date.getDate();
@@ -76,9 +80,7 @@ class classDB {
         return new Promise((resolve, reject) => {
             const connection = this.connectToMySQL(this.databaseFiles);
 
-            if (!connection) {
-                return { status: "error" };
-            }
+            if (!connection) { return { status: "error" }; }
 
             const sql = 
             `SELECT 
@@ -106,7 +108,7 @@ class classDB {
             WHERE fi.path = ?
             GROUP BY fi.id; `;
 
-            connection.query(sql, [path], (err, results, fields) => {
+            connection.query(sql, [this.pathToUnix(path)], (err, results, fields) => {
                 if (err) {
                     connection.end();
                     return reject ({ status: 'error' });
@@ -140,7 +142,7 @@ class classDB {
                     
                     connection.end();
 
-                    resolve({ status: 'succes', repsonse: matchingResults });
+                    resolve({ status: 'success', response: matchingResults });
                 }
                 else {
                     connection.end();

@@ -442,9 +442,9 @@ allFiles.forEach(button => {
                         return data === undefined ? '' : data; 
                     }
                     try{
-                        if(data['length'] !== 0){
-
-                            data = data[0];
+                        if(data.status == 'success'){
+                            console.log(data);
+                            data = data.response[0];
                             let id = data.id;
                             let fileNameBD = data.filename;
                             let decimalNumberBD = ZeroIsEmpty(data.decimalNumber) === '0' ? '' : ZeroIsEmpty(data.decimalNumber);
@@ -539,7 +539,6 @@ allFiles.forEach(button => {
                                     result += `<li><a href="${path}">${oldInfo[i].filename}</a> (Изделие ${copyNumber}) ${formattedDate}</li>`;
                                   }
                                   
-                                  console.log(result);
                                   propertiesModal.querySelector('#OldVersions').innerHTML = result;
                                   return result;
                                 });
@@ -565,43 +564,45 @@ allFiles.forEach(button => {
                             }
                             // Таблица свойств файла
                             const propertiesModal = new mxModalView({id:'propertiesModal',className:'modal',tag:'div'});
-                            propertiesModal.SetContent(`<div class="modal-content" id="propertiesModalContent" style="max-height:95%; padding-top: 10;">
+                            const m_c = propertiesModal.SetContent(`
+                            <div class="modal-content" id="propertiesModalContent" style="max-height:95%; padding-top: 10;">
                                     <table>
-                                    ${createInputRow('Имя документа', 'propfileNameBD', fileNameBD)}
-                                    ${createInputRow('Статус проверки', 'propstatusBD', statusBD, 'select')}
-                                    ${createInputRow('Категория документа', 'propdocumentCategoryBD', documentCategoryBD, 'select')}
-                                    ${createInputRow('Децимальный номер', 'propdecimalNumberBD', decimalNumberBD)}
-                                    ${createInputRow('Название проекта', 'propnameProjectBD', nameProjectBD)}
-                                    ${createInputRow('Название организации', 'proporganisationBD', organisationBD)}
-                                    ${createHiddenInput('propuploadDateTimeBD', uploadDateTimeBD)}
-                                    ${createInputRow('Номер издания', 'propeditionNumberBD', editionNumberBD)}
-                                    ${createInputRow('Автор', 'propauthorBD', authorBD)}
-                                    ${createInputRow('Место хранения', 'propstorageBD', storageBD)}
-                                    ${createInputRow('Номер папки', 'propdirNumberBD', dirNumberBD)}
-                                    ${createInputRow('Дата издания', 'proppublishDateBD', toDate(publishDateBD), 'date')}
-                                    ${createTextAreaRow('Примечание', 'propnotesBD', notesBD)}
+                                        ${createInputRow('Имя документа', 'propfileNameBD', fileNameBD)}
+                                        ${createInputRow('Статус проверки', 'propstatusBD', statusBD, 'select')}
+                                        ${createInputRow('Категория документа', 'propdocumentCategoryBD', documentCategoryBD, 'select')}
+                                        ${createInputRow('Децимальный номер', 'propdecimalNumberBD', decimalNumberBD)}
+                                        ${createInputRow('Название проекта', 'propnameProjectBD', nameProjectBD)}
+                                        ${createInputRow('Название организации', 'proporganisationBD', organisationBD)}
+                                        ${createHiddenInput('propuploadDateTimeBD', uploadDateTimeBD)}
+                                        ${createInputRow('Номер издания', 'propeditionNumberBD', editionNumberBD)}
+                                        ${createInputRow('Автор', 'propauthorBD', authorBD)}
+                                        ${createInputRow('Место хранения', 'propstorageBD', storageBD)}
+                                        ${createInputRow('Номер папки', 'propdirNumberBD', dirNumberBD)}
+                                        ${createInputRow('Дата издания', 'proppublishDateBD', toDate(publishDateBD), 'date')}
+                                        ${createTextAreaRow('Примечание', 'propnotesBD', notesBD)}
                                     </table>
                                     <div class="button-wrapper">
-                                    <button class="modalButton" id="update-properties">Применить</button>
-                                    <button class="modalButton" style="position: absolute; right: 5px;" id="close-properties" style="margin-top:3%">Закрыть</button>
+                                        <button class="modalButton" id="update-properties">Применить</button>
+                                        <button class="modalButton" style="position: absolute; right: 5px;" id="close-properties" style="margin-top:3%">Закрыть</button>
                                     </div>
-                                </div>
-                                <div id="assembleyUnits" class="modal-content">
-                                    <h4>Сборочные единицы <img src="/images/info.png" width=20px height=20px title="Изделия что входят в исходное"></h4>
-                                    <div style="height: 32vh; overflow:auto">
-                                        <ul class="w3-ul" id="listOfAssembleys">
-                                            ${viewOfAssembleyUnits(listOfAssembleyNames)}
-                                        </ul>
-                                    </div>
-                                    <button id="addUnit" class="modalButton">Добавить в сборочные единицы</button><br>
-                                </div>
-                                <div style="height: 37vh; left: 85%;" id="listOfOldVersions" class="modal-content">
-                                    <h4> Предыдущие версии файла <img src="/images/info.png" width=20px height=20px title="Что ранее использовались вместо его"></h4>
-                                    <ul class="w3-ul" id="OldVersions">
-                                        <td>${viewOfOldVersion(id)}</td>
+                            </div>
+                            <div id="assembleyUnits" class="modal-content">
+                                <h4>Сборочные единицы <img src="/images/info.png" width=20px height=20px title="Изделия что входят в исходное"></h4>
+                                <div style="height: 32vh; overflow:auto">
+                                    <ul class="w3-ul" id="listOfAssembleys">
+                                        ${viewOfAssembleyUnits(listOfAssembleyNames)}
                                     </ul>
                                 </div>
+                                <button id="addUnit" class="modalButton">Добавить в сборочные единицы</button><br>
+                            </div>
+                            <div style="height: 37vh; left: 85%;" id="listOfOldVersions" class="modal-content">
+                                <h4> Предыдущие версии файла <img src="/images/info.png" width=20px height=20px title="Что ранее использовались вместо его"></h4>
+                                <ul class="w3-ul" id="OldVersions">
+                                    <td>${viewOfOldVersion(id)}</td>
+                                </ul>
+                            </div>
                             `);
+                            document.querySelector('.modal-content').className = '';
                             let mask, isAddFormOpen = false;    
                             propertiesModal.querySelector("#listOfAssembleys").addEventListener('click', event => {
                                 if (event.target.matches('.assembleys')) {
@@ -799,14 +800,6 @@ allFiles.forEach(button => {
                             }
 
                             const closeBtn = propertiesModal.querySelector('#close-properties');
-
-                            // Добавляем обработчик события на оверлей
-                            propertiesModal.SetListenerOnClick(function(event) {
-                                // Если нажали на оверлей, скрываем модальное окно и оверлей
-                                if (event.target === propertiesModal.element) {
-                                    propertiesModal.remove();
-                                }
-                            });
 
                             closeBtn.addEventListener('click', () => {
                                 closeForm();

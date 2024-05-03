@@ -135,7 +135,7 @@ app.get('/', (req, res) => {
     if (req.session.username) {
         res.sendFile(path.join(__dirname, 'public', 'views', 'index.html'));
     } else {
-        res.sendFile(path.join(__dirname, 'public', 'views', 'login.html'));
+        res.sendFile(path.join(__dirname, 'public', 'views', 'index.html'));
     }
 })
 
@@ -392,7 +392,6 @@ app.post('/get-properties', async (req, res) => {
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
       // указываем путь к директории, куда будут сохраняться файлы
-      serverLogs(req.body);
       const pathNew = url.parse(req.headers.referer).path.slice(1);
       cb(null, 'main_dir/' + pathNew)
     },
