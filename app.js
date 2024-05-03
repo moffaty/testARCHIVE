@@ -1,13 +1,19 @@
 const express = require('express');
 const bcrypt = require('bcrypt');
-const mysql = require('mysql2');
-const bodyParser = require('body-parser');
 const fs = require('fs');
 const path = require('path');
 const app = express();
 const jwt = require('jsonwebtoken');
 const session = require('express-session');
-const { Session } = require('inspector');
+const multer = require('multer');
+const bodyParser = require('body-parser');
+const files = require('./files.js');
+const url = require('url');
+const { addToLog, createLogDir, serverLogs } = require('./helpers/logs.js');
+createLogDir();
+const isWin = process.platform === "win32";
+// bd
+const db = require('./db.js');
 
 // middlewares
 function checkHeadersMiddleware(req, res, next) {
@@ -23,11 +29,27 @@ function checkHeadersMiddleware(req, res, next) {
 async function checkToken(req, res, next) {
     try {
         const userToken = req.headers['authorization'];
-        console.log(jwt.verify(userToken.replace(/^Bearer\s+/, ''), secret));
+        serverLogs(jwt.verify(userToken.replace(/^Bearer\s+/, ''), secret));
     } catch (err) {
         return res.status(400).json({ response: `Access denied` });
     }
     next();
+}
+
+async function uploadFile(req, res, next) {
+    try {
+        const fileData = files.upload(req.body);
+        const result = await database.uploadFile(fileData);
+        const oldPath = path.join(__dirname, req.file.path);
+        const newPath = path.join(path.dirname(oldPath), req.body.fileName);
+        const rename = await files.rename(fs, oldPath, newPath);
+        const move = await files.move(fs, newPath, path.join(__dirname, req.body.path));
+        req.result = result;
+        next();
+    }
+    catch (error) {
+        res.json(error);
+    }
 }
 
 // list of personals positions in bd 
@@ -48,52 +70,10 @@ const main_dir = '/main_dir';
 const hashLenght = 10;
 
 // db
-const dataDB = fs.readFileSync('db.json', 'utf8');
-// Parse the JSON data
-const jsonData = JSON.parse(dataDB);
+const dbFile = 'db1.json';
+const database = new db.classDB(dbFile);
 
-// Set values for your parameters
-const hostDB = jsonData.host;
-const userDB = jsonData.user;
-const passwordDB = jsonData.password;
-const portDB = jsonData.port;
-
-console.log('HostDB:', hostDB);
-console.log('UserDB:', userDB);
-console.log('PasswordDB:', passwordDB);
-
-/**
- * Connects to a MySQL database.
- * @param {string} dbNAME The name of the database to connect to.
- * @param {Object} res The *response* from server query. Need for response error 
- * @returns {Object} The MySQL connection object.
- */
-function connectToMySQL(dbNAME, res) {
-    try {
-        const connection = mysql.createConnection({
-            host: hostDB,
-            user: userDB,
-            password: passwordDB,
-            database: dbNAME,
-            port: portDB
-        });
-        connection.connect((err) => {
-            if (err) { 
-                console.dir(err); 
-                if (res) {
-                    res.json({  response:'Error connection to DB' }); 
-                    return null;
-                }
-            }
-        });
-        return connection;
-    } catch(err) {
-        if (res) {
-            res.json({  response:'Error connection to DB' }); 
-        }
-        return null;
-    }
-}
+serverLogs(database.getConnectInfo());
 
 function defineFileType(filePath) {
     const splitted = filePath.split('.');
@@ -102,7 +82,7 @@ function defineFileType(filePath) {
 
 async function startServer() {
     server = app.listen(PORT, () => {
-        console.log(`Started http://localhost:${PORT}`)
+        serverLogs(`Started http://localhost:${PORT}`)
     })
 }
 
@@ -110,11 +90,11 @@ async function stopServer() {
     if (server) {
         server.close();
     }
-    console.log('Server stopped');
+    serverLogs('Server stopped');
 }
 
 function getUserData(req, res) {
-    if (!req.body.password && req.body.username) {
+    if (!(req.body.password) || !(req.body.username)) {
         res.json({ response:`response: haven't login or password` });
     } 
     const username = req.body.username;
@@ -133,12 +113,13 @@ function isSQLResponseHaveError(error, res) {
 
 app.use(session({
     username: '',
+    position: '',
     secret: secret,
     resave: false,
     saveUninitialized: true
 }))
+app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true })); // для обработки URL-кодированных данных
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.get('/admin-pane1', (req, res) => {
@@ -153,8 +134,9 @@ app.get('/admin-pane1', (req, res) => {
 
 app.get('/', (req, res) => {
     req.session.username = 'red';
+    req.session.position = 'red';
     if (req.session.username) {
-        res.sendFile(path.join(__dirname, 'index2.html'));
+        res.sendFile(path.join(__dirname, 'index.html'));
     } else {
         res.sendFile(path.join(__dirname, 'views/login.html'));
     }
@@ -168,11 +150,13 @@ app.post('/get-dir-info', async (req, res) => {
     if (req.body.path === '') {
         req.body.path = '/main_dir';
     }
+    if (typeof(req.body.path) !== 'string') {
+        return;
+    }
     const dirPath = path.join(__dirname, req.body.path);
     try {
         const files = fs.readdirSync(dirPath);
         const data = [];
-
         for (const file of files) {
             const filePath = path.join(dirPath, file);
             const stats = fs.statSync(filePath);
@@ -182,12 +166,13 @@ app.post('/get-dir-info', async (req, res) => {
             const type = isDirectory ? 'directory' : 'file';
             obj['name'] = file;
             obj['type'] = type;
+            obj['path'] = path.relative(path.join(__dirname, main_dir), filePath).replaceAll(/\\/g, '/');
+            Object.assign(obj,  await database.getStatus(main_dir + '/' + obj['path']));
             if (type === 'file') {
                 obj['filetype'] = defineFileType(file);
             }
             data.push(obj);
         }
-
         res.json(data);
     } catch (error) {
         console.error('Произошла ошибка:', error);
@@ -199,7 +184,7 @@ app.post('/get-dir-info', async (req, res) => {
 app.post('/login',(req,res)=>{
     const username = req.body.username;
     const password = req.body.password;
-    const connection = connectToMySQL('personals');
+    const connection = database.connectToMySQL('personals');
     connection.query(`SELECT * FROM auth WHERE username="${username}" AND password="${password}"`,
         (err, results, fields) => {
             try {
@@ -219,7 +204,7 @@ app.post('/login',(req,res)=>{
                     req.session.username = {
                         username: username
                     };
-                    res.json({ status: 'succes' });
+                    res.json({ status: 'success' });
                 } else {
                     // Ошибка: неверные данные для авторизации
                     res.json({ status: 'error' });
@@ -250,23 +235,7 @@ app.get('/logout', (req, res) => {
 // BD settings
 
 app.get('/get-db-connection-info', (req, res) => {
-    const filePath = path.join(__dirname, 'db.json');
-
-    fs.readFile(filePath, 'utf8', (err, data) => {
-        if (err) {
-            console.error(err);
-            res.status(500).json({ error: 'Internal Server Error' });
-            return;
-        }
-
-        try {
-            const dbinfo = JSON.parse(data);
-            res.json(dbinfo);
-        } catch (parseError) {
-            console.error(parseError);
-            res.status(500).json({ error: 'Error parsing JSON' });
-        }
-    });
+    res.json(database.getConnectInfo());
 });
 
 app.post('/change-connect-db', async (req, res) => {
@@ -281,36 +250,29 @@ app.post('/change-connect-db', async (req, res) => {
         port: port
     };
     const jsonData = JSON.stringify(data, null, 2);``
-    fs.writeFileSync('db.json', jsonData);
+    fs.writeFileSync(dbFile, jsonData);
     await stopServer();
     await startServer();
-    res.json({status: 'succes', response: 'Data base connection changed. Server rebooted.'});
+    res.json({status: 'success', response: 'Data base connection changed. Server rebooted.'});
 })
 
 // BD status
 
 app.get('/get-database-status', async (req, res) => {
-    try {
-        const connection = mysql.createConnection({
-            host: hostDB,
-            user: userDB,
-            password: passwordDB,
-            port: portDB
-        });
-        connection.connect((err) => {
-            res.status(200).json({ status: 'success', response: 'Database connection is active' });
-        })
-    } catch (error) {
-        console.error('Database connection error:', error.message);
-        res.status(500).json({ status: 'error', response: 'Failed to connect to the database' });
-    }
+    database.connection.connect(err => {
+        if (err) {
+            res.status(500).json({ status: 'error', response: 'Failed to connect to the database' });
+            return;
+        }
+        res.status(200).json({ status: 'success', response: 'Database connection is active' });
+    })
 })
 
 // BD user-queries
 
 app.post('/get-user-info', (req, res) => {
     const data = [req.body.username];
-    const connection = connectToMySQL('personals', res);
+    const connection = database.connectToMySQL('personals', res);
     const query = 'SELECT * FROM auth WHERE username = ?';
     connection.query(query, data, (error, result) => {
         if (!isSQLResponseHaveError(error, res)) {
@@ -322,18 +284,21 @@ app.post('/get-user-info', (req, res) => {
 app.post('/register-user', async (req, res) => {
     const data = getUserData(req, res);
     data.push(req.body.position);
-    const connection = connectToMySQL('personals', res);
+    const connection = database.connectToMySQL('personals', res);
+    if (res.getHeader('content-type')) {
+        return;
+    }
     const query = 'INSERT INTO auth(username, password, position) VALUES(?, ?, ?)';
     connection.query(query, data, (error, result) => {
-        if (!isSQLResponseHaveError(error, res)) {
+    //     if (!isSQLResponseHaveError(error, res)) {
             res.json({ status: 'success', response: `Registered new user: ${data[0]}!` })
-        }
+    //     }
     })
 })
 
 app.post('/delete-user', (req, res) => {
     const data = [req.body.username];
-    const connection = connectToMySQL('personals', res);
+    const connection = database.connectToMySQL('personals', res);
     const query = 'DELETE FROM auth WHERE username = ?';
     connection.query(query, data, (error, result) => {
         if (!isSQLResponseHaveError(error, res)) {
@@ -350,7 +315,7 @@ app.post('/edit-user', (req, res) => {
     const data = getUserData(req, res);
     data.push(req.body.position);
     data.push(req.body.old_username); // where condition
-    const connection = connectToMySQL('personals', res);
+    const connection = database.connectToMySQL('personals', res);
     const query = 'UPDATE auth SET username = ?, password = ?, position = ? WHERE username = ?';
     connection.query(query, data, (error, result) => {
         if (!isSQLResponseHaveError(error, res)) {
@@ -360,12 +325,12 @@ app.post('/edit-user', (req, res) => {
 })
 
 app.get('/get-info-of-registration', (req, res) => {
-    res.json( req.session.username );
+    res.json({ username: req.session.username, position: req.session.position });
 })
 
 app.post('/login', (req, res) => {
     const data = getUserData(req, res);
-    const connection = connectToMySQL('personals', res);
+    const connection = database.connectToMySQL('personals', res);
     const query = 'SELECT * FROM auth WHERE username = ? AND password = ?';
     if (!connection) {
         return;
@@ -384,43 +349,161 @@ app.post('/admin', (req, res) => {
     res.send(jwt.sign({ username }, secret, { expiresIn: '0.5h' }));
 })
 
-// app.get('/admin-panel', (req, res) => {
-//     res.sendFile(path.join(__dirname, 'admin-panel.html'));
-// })
+app.get('/init', async (req, res) => {
+    try {
+        const result = await database.init();
+        res.json(result);
+    }
+    catch (error) {
+        res.send(error);
+    }
+})
+
+app.get('/create-table-:tableName', async (req, res) => {
+    const tableName = req.params.tableName;
+    try {
+        let result;
+
+        if (tableName === 'users') {
+            result = await database.createUsersTable();
+        } else if (tableName === 'files') {
+            result = await database.createFilesTable();
+        } else if (tableName === 'init') {
+            result = await database.init();
+        } else {
+            return res.status(400).json({ success: false, response: 'Invalid table name' });
+        }
+
+        res.json({
+            status: 'success',
+            response: `${tableName} table created successfully`,
+            result
+        });
+    } catch (error) {
+        console.error(`Error creating ${tableName} table:`, error);
+        res.status(500).json({ success: false, response: `Error creating ${tableName} table` });
+    }
+})
 
 app.get('/get-positions', (req, res) => {
     res.json(personalPositions);
 })
 
-
-// files
-async function renameDir(oldPath, newName) {
-    const newPath = path.join(path.dirname(oldPath), newName);
-    try {
-        await fs.access(newPath, fs.constants.F_OK);
-        return 'error'; 
-    } catch (error) {
-        await fs.renameSync(oldPath, newPath, (err) => { console.log(err) });
-        return 'success'; 
-    }
-}
-
 app.post('/renameDir', async (req,res) => {
-   const oldName = req.body.oldName;
-   const newName = req.body.newName;
-   const result = await renameDir(path.join(__dirname, oldName), newName);
-   console.log(result);
-   res.json({ status: result });
+   const oldPath = path.join(__dirname, req.body.oldName);
+   const newPath = path.join(path.dirname(oldPath), req.body.newName);
+   const result = await files.rename(fs, oldPath, newPath);
+   res.json({ result });
 })
 
+app.post('/get-properties', async (req, res) => {
+    const filePath = (path.join(req.body.path, req.body.fileName));
+    try {
+        const result = await database.getPropertiesByPath(filePath);
+        res.json(result); 
+    } 
+    catch (error) { 
+        res.json(error);
+    }
+    // res.json(database.getPropertiesByPath(req.body.path));
+})
+
+// настройка multer для сохранения загруженных файлов
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+      // указываем путь к директории, куда будут сохраняться файлы
+      serverLogs(req.body);
+      const pathNew = url.parse(req.headers.referer).path.slice(1);
+      cb(null, 'main_dir/' + pathNew)
+    },
+    filename: (req, file, cb) => {
+      // генерируем имя для файла - берем из формы и добавляем расширение из оригинального имени файла
+      const fileName = file.originalname;
+      cb(null, fileName);
+    }
+});
+
+const upload = multer({ storage: storage });
+
+app.post('/upload', upload.single('file'), uploadFile, async (req, res) => {
+    try {
+        res.json(req.result);
+    } 
+    catch (error) {
+        res.json(error);
+    }
+});
+
+app.post('/add', async (req, res) => {
+    const dirName = req.body.dirName;
+    const dirPath = req.body.path;
+
+    if (!dirName) {
+        res.status(400).json({ status: 'error', response:'Bad Request: Dir name is missing' });
+        return;
+    }
+
+    const newDirPath = path.join(__dirname, dirPath, dirName);
+    try {
+        const result = await files.mkdir(fs, newDirPath);
+        res.json({ result });
+    }
+    catch (error) {
+        res.json({ status:'error', response: error });
+    }
+
+});
+
+app.post('/delete-file', async (req, res) => {
+    try {
+        const filePath = __dirname + '/' + req.body.fileSitePath + '/' + req.body.fileName;
+        const fileSitePath = req.body.fileSitePath  + '/' +  req.body.fileName;
+        const delFileDB = await database.removeFile(fileSitePath);
+        const delFile = await files.remove(fs, filePath);
+        delFile['responseDB'] = delFileDB.response;
+        serverLogs(delFile);
+        res.send(delFile);
+        // phys delete file
+        // database delete file
+    }
+    catch (error) {
+        serverLogs(error);
+        res.json({status:'error'});
+    }
+})
+
+app.post('/delete-dir', async (req, res) => {
+    try {
+        const dirPath = path.join(__dirname, req.body.fileSitePath, req.body.fileName);
+        const result = await files.removeDir(fs, dirPath);
+        serverLogs(result);
+        res.json(result);
+    }
+    catch (error) {
+        res.json(error);
+    }
+})
+
+app.get('/search', async (req, res) => {
+    try {
+        const data = await database.search(req);
+        res.json(data);
+    }
+    catch (error) {
+        res.json(error);
+    }
+});
+
+// main
 startServer();
 
 async function test()  {
     const userP = '1234';
     const registerP = await bcrypt.hash(userP, hashLenght);
-    console.log("IN BD:", registerP);
+    serverLogs("IN BD:", registerP);
     const loginP = await bcrypt.compare(userP, registerP);
-    console.log("LOGIN:",loginP);
+    serverLogs("LOGIN:",loginP);
+    await database.testConnection();
 }
 test();
 // console.dir(bcrypt.compare(rawPassword, user.password));

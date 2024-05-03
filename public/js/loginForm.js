@@ -7,12 +7,17 @@ loginOpenModalBtn.addEventListener('click', (event) => {
         .then((data) => {
             console.log(data);
             const userName = data && data['username'] ? data['username'] : 'гость';
-            const buttonText = userName === 'гость' ? 'Войти в аккаунт' : 'Выйти из аккаунта';
+            const userPosition = data && data['position'] ? data['position'] : 'гость';
+            const buttonAccs = userName === 'гость' ? 'Войти в аккаунт' : 'Выйти из аккаунта';
+            const buttonSubs = 'Показать подписки';
+            const buttonInst = 'Ознакомиться с инструкцией';
 
             loginFormModal.SetContent(`
-                <div id="exitForm">
-                    <span style="display:flex;justify-content:space-around">Привет ${userName}!</span><br>
-                    <button id="exitFromAccount" class="modalButton">${buttonText}</button>
+                <div id="exitForm" style="display:flex; flex-direction: column">
+                    <p style="display:flex;justify-content:space-around">Здравствуйте, ${userName}! Ваша позиция: ${userPosition}</p>
+                    <button id="instructionButton" onclick="openInstructionWindow()" class="modalButton">${buttonInst}</button>
+                    <button id="showSubscriptions" class="modalButton">${buttonSubs}</button>
+                    <button id="exitFromAccount" class="modalButton">${buttonAccs}</button>
                 </div>`);
                 
             const exitFromAccount = loginFormModal.querySelector('#exitFromAccount');

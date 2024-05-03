@@ -10,6 +10,10 @@
     width: 26.25em;
 }
 
+.working {
+    color: green;
+}
+
 .centerButtons{
     display: flex;
     align-items: center;

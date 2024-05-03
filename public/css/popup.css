@@ -7,8 +7,15 @@
     transition: transform 0.3s ease-in-out;
 }
 
-.popup-content {
+.success {
     background-color: #0dff8c;
+}
+
+.error {
+    background-color: #ff2d2d;
+}
+
+.popup-content {
     padding: 10px;
     padding-right: 25px;
     border-radius: 8px;

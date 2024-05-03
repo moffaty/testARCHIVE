@@ -43,7 +43,7 @@ form button[type="submit"], #labelFile {
     height: 4vw;
     margin-left: 3%;
     border-radius: 0.9375em;
-    background-color: aliceblue;
+    background-color: aliceblue !important;
     vertical-align: bottom; background-repeat: no-repeat; background-size: 75% auto; background-position: center; position: absolute; top: 20%; 
 }
 
@@ -127,5 +127,21 @@ form button[type="submit"]:hover,
     background: none;
 }
 .modalButton, .instructionButton, .centerButtons, .fullscreen, .image-container {
+    user-select: none;
+}
+
+#home {
+    user-select: none;
+}
+
+.input-with-addon {
+    display: flex;
+    align-items: center;
+}
+
+.addonText {
+    position: absolute;
+    color: #888;
+    right: 30px;
     user-select: none;
 }

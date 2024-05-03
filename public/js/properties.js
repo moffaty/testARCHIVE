@@ -1,8 +1,9 @@
+function getCurrentPath() {
+    return localStorage.getItem('currentPath') ? localStorage.getItem('currentPath') : init.main_dir;
+}
 function prop() {
     let fetchDel;
-function getCurrentPath() {
-    return '/main_dir';
-}
+
 
 function createInputRow(label, inputId, value, type = 'text') {
     return `
@@ -119,7 +120,7 @@ allFiles.forEach(button => {
         }
         menu.SetListenerOnContextMenu ( () => {}, 'menu-context-item');
         const { x, y } = event;
-
+        console.log(menu.element)
         menu.SetStyles({
             zIndex: "9999",
             position: "absolute",
@@ -129,6 +130,7 @@ allFiles.forEach(button => {
 
         let filePath = button.dataset.filerenamepath;
         let fileName = button.textContent;
+        let fileType = button.className;
         let fileSitePath = getCurrentPath();
 
         const renameFileButton = menu.querySelector('.renameFile');
@@ -161,7 +163,7 @@ allFiles.forEach(button => {
                     return result;
                 };
                 const concatFileModal = new mxModalView({id:'concatFileModal', className:'modal', tag:'div'});
-                concatFileModal.SetContent(`<div class="modal-content" style="display:flex">
+                concatFileModal.SetContent(`
                                         <div>
                                             <p>Добавление страниц другого документа к ${fileName}</p>
                                             <form>
@@ -187,7 +189,7 @@ allFiles.forEach(button => {
                                             До (включительно): <input type="number" id="numberOfPageDelEnd" min=1 max=0><br>
                                             <button class="modalButton" id="confirm-delpages">Удалить</button>
                                         </div>
-                                        </div>`);
+                                        `);
                 const mainPage = concatFileModal.querySelector('#numberOfPageStart');
 
                 const startDelPage = concatFileModal.querySelector('#numberOfPageDelStart');
@@ -364,28 +366,46 @@ allFiles.forEach(button => {
                           return fileName.substring(0, maxLength) + '...';
                         }
                         return fileName;
-                      }
+                    }
+                    
+                    const mvToTrashModal = new mxModalView({id:'moveToTrashModal', className:'modal'});
+                    const label = createLabel(`Вы уверены, что хотите удалить`);
+                    const labelName = createLabel(`${truncateFileName(fileName, 30)}`);
+                    const buttonconfirm = createButton('modalButton', 'confirm-delete', 'Да');
+                    const buttoncancel = createButton('modalButton', 'cancel-delete', 'Нет');
+                    const buttonwrapper = Object.assign(document.createElement('div'), {
+                        className: 'button-wrapper'
+                    });
+                    labelName.style.display = 'block';
+                    buttonwrapper.appendChild(buttonconfirm);
+                    buttonwrapper.appendChild(buttoncancel);
+                    mvToTrashModal.appendChilds(label, labelName, buttonwrapper);
 
-                    const mvToTrashModal = new mxModalView({id:'moveToTrashModal',className:'modal',tag:'div'});
-                    mvToTrashModal.SetContent(`<div class="modal-content" id="delModal">
-                                            <p>Вы уверены, что хотите удалить<br>${truncateFileName(fileName, 30)}?</p>
-                                            <div class="button-wrapper">
-                                            <button class="modalButton" id="confirm-delete">Да</button>
-                                            <button class="modalButton" id="cancel-delete">Нет</button>
-                                            </div>
-                                            </div>`
-                    );
-
-                    const confirmDel = () => {
-                        element = menu.querySelector('.moveToTrash') || menu.querySelector('.delFile');
-                        addresDel = element.dataset.fetch;
-                        bodyDel = JSON.stringify({ filePath, fileSitePath });
+                    const confirmDel = async () => {
+                        bodyDel = JSON.stringify({ fileName, fileSitePath });
                         methodDel = 'POST';
-                        result = mvToTrashModal.fetchData(addresDel, true, {
-                            reload: true,
-                            method: methodDel, 
-                            body: bodyDel
-                        });
+                        console.log(bodyDel);
+                        if (fileType !== 'directory') {
+                            addresDel = '/delete-file';
+                            result = await mvToTrashModal.fetchData(addresDel, false, {
+                                reload: false,
+                                method: methodDel, 
+                                body: bodyDel
+                            });
+                            const notify = new mxNotify(result.status, result.response);
+                            init.updatePanels();
+                        }
+                        else {
+                            addresDel = '/delete-dir';
+                            result = await mvToTrashModal.fetchData(addresDel, false, {
+                                reload: false,
+                                method: methodDel, 
+                                body: bodyDel
+                            });
+                            const notify = new mxNotify(result.status, result.response);
+                            init.updatePanels();
+                        }
+                        
                     };
 
                     mvToTrashModal.SetListenerOnClick(confirmDel, 'confirm-delete');
@@ -395,21 +415,28 @@ allFiles.forEach(button => {
 
         const propertiesButton = menu.querySelector('.properties');
         if (propertiesButton) {
-            propertiesButton.addEventListener('click', () => {
+            propertiesButton.addEventListener('click', (e) => {
             
             // Получаем значение переменной path
             let path = fileSitePath;
-            
+
             // Отправляем запрос на сервер
             fetch('/get-properties', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ path })
+                body: JSON.stringify({ path, fileName })
             })
                 .then(response => response.json()) // Преобразуем ответ в JSON
                 .then(data => {
+                    if (data.status === 'error') {
+                        const test = new mxNotify('error');
+                        const text = document.createElement('h3');
+                        text.textContent = 'Файл не найден!';
+                        test.AddPopupContent(text);
+                        return;
+                    }
                     // Получаем значения переменных из ответа
                     function ZeroIsEmpty(data){
                         return data === undefined ? '' : data; 

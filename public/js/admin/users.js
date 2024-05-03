@@ -1,7 +1,7 @@
 function getUserData() {
     const usersOperations = ['create', 'delete', 'edit'];
     const usersOperationsRU = ['Создать', 'Удалить', 'Изменить'];
-    getData(usersOperations, usersOperationsRU, 'User');
+    adminPanel.getData(usersOperations, usersOperationsRU, 'User');
 } 
 
 async function getPositions() {
@@ -12,8 +12,8 @@ async function getPositions() {
 async function createUser() {
     let positions = await getPositions();
     const rightPanel = panels._getRightPanel();
-    clearElement(rightPanel);
-    const form = createForm("create_user", "Создать пользователя", {}, "login", "password");
+    adminPanel.clearElement(rightPanel);
+    const form = adminPanel.createForm("create_user", "Создать пользователя", {}, "login", "password");
     rightPanel.appendChild(form);
 
     const select = document.createElement('select');
@@ -41,7 +41,7 @@ async function createUser() {
             body: JSON.stringify({ username, password, position })
         })
         .then(response => response.json())
-        .then(data => { dataResponse(data.response, rightPanel); });
+        .then(data => { adminPanel.dataResponse(data.response, rightPanel); });
     })
 }
 
@@ -66,7 +66,7 @@ function deleteUser() {
         })
         .then(response => response.json())
         .then(data => {
-            dataResponse(data.response, rightPanel);
+            adminPanel.dataResponse(data.response, rightPanel);
         })
     })
 }
@@ -154,14 +154,14 @@ async function editUser() {
                     .then(response => response.json())
                     .then(data => {
                         console.log('shit');
-                        const dataElement = dataResponse(data.response, rightPanel);
+                        const dataElement = adminPanel.dataResponse(data.response, rightPanel);
                         elements.forEach(el => el.remove());
                         elements.push(dataElement);
                     })
                 })
             } 
             else {
-                const dataElement = dataResponse('Такого пользователя не существует', rightPanel);
+                const dataElement = adminPanel.dataResponse('Такого пользователя не существует', rightPanel);
                 elements.push(dataElement);
             } 
         })

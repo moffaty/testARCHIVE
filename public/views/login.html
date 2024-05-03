@@ -90,7 +90,7 @@
       })
       .then(response => response.json())
       .then(data => {
-        if (data.status === 'succes') {
+        if (data.status === 'success') {
           location.reload();
         } else {
           const modal = new mxModalView({id: 'error', className: 'modal', tag: 'div'});
