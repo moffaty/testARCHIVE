@@ -142,6 +142,6 @@ form button[type="submit"]:hover,
 .addonText {
     position: absolute;
     color: #888;
-    right: 30px;
+    right: 35px;
     user-select: none;
 }

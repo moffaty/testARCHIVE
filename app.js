@@ -7,7 +7,7 @@ const jwt = require('jsonwebtoken');
 const session = require('express-session');
 const multer = require('multer');
 const bodyParser = require('body-parser');
-const files = require('./files.js');
+const files = require('./helpers/files.js');
 const url = require('url');
 const { addToLog, serverLogs, loginLog } = require('./helpers/logs.js');
 const isWin = process.platform === "win32";
@@ -265,58 +265,47 @@ app.get('/get-database-status', async (req, res) => {
 
 // BD user-queries
 
-app.post('/get-user-info', (req, res) => {
-    const data = [req.body.username];
-    const connection = database.connectToMySQL('personals', res);
-    const query = 'SELECT * FROM auth WHERE username = ?';
-    connection.query(query, data, (error, result) => {
-        if (!isSQLResponseHaveError(error, res)) {
-            res.json({ status: 'success', response: result })
-        }
-    })
+app.post('/get-user-info', async (req, res) => {
+    try {
+        const data = [req.body.username];
+        res.json(await database.getUserInfo(data));
+    }
+    catch (error) {
+        res.json(err);
+    }
 })
 
 app.post('/register-user', async (req, res) => {
-    const data = getUserData(req, res);
-    data.push(req.body.position);
-    const connection = database.connectToMySQL('personals', res);
-    if (res.getHeader('content-type')) {
-        return;
+    try {
+        const data = getUserData(req, res);
+        data.push(req.body.position);
+        res.json(await database.createUser(data));
     }
-    const query = 'INSERT INTO auth(username, password, position) VALUES(?, ?, ?)';
-    connection.query(query, data, (error, result) => {
-    //     if (!isSQLResponseHaveError(error, res)) {
-            res.json({ status: 'success', response: `Registered new user: ${data[0]}!` })
-    //     }
-    })
+    catch (error) {
+        res.json(error)
+    }
 })
 
-app.post('/delete-user', (req, res) => {
-    const data = [req.body.username];
-    const connection = database.connectToMySQL('personals', res);
-    const query = 'DELETE FROM auth WHERE username = ?';
-    connection.query(query, data, (error, result) => {
-        if (!isSQLResponseHaveError(error, res)) {
-            if (result.affectedRows > 0) {
-                res.json({ status: 'success', response: `Deleted user: "${data[0]}"!` });
-            } else {
-                res.json({ status: 'error', response: "User doesn't exist" });
-            }
-        }
-    })
+app.post('/delete-user', async (req, res) => {
+    try {
+        const data = [req.body.username];
+        res.json(await database.deleteUser(data));
+    }
+    catch (error) {
+        res.json(error);
+    }
 })
 
-app.post('/edit-user', (req, res) => {
-    const data = getUserData(req, res);
-    data.push(req.body.position);
-    data.push(req.body.old_username); // where condition
-    const connection = database.connectToMySQL('personals', res);
-    const query = 'UPDATE auth SET username = ?, password = ?, position = ? WHERE username = ?';
-    connection.query(query, data, (error, result) => {
-        if (!isSQLResponseHaveError(error, res)) {
-            res.json({ status: 'success', response: `Data is updated!` })
-        }
-    })
+app.post('/edit-user', async (req, res) => {
+    try {
+        const data = getUserData(req, res);
+        data.push(req.body.position);
+        data.push(req.body.old_username); // where condition
+        res.json(await database.editUser(data));
+    }
+    catch (err) {
+        res.json(err);
+    }
 })
 
 app.get('/get-info-of-registration', (req, res) => {
@@ -448,6 +437,15 @@ app.post('/delete-file', async (req, res) => {
     catch (error) {
         serverLogs(error);
         res.json({status:'error'});
+    }
+})
+
+app.post('/update-properties', async (req, res) => {
+    try {
+        res.json(await database.updateFile(req.body.updatedData));
+    }
+    catch(err) {
+        res.json(err);
     }
 })
 

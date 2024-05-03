@@ -163,7 +163,10 @@ document.getElementById('searchFormModalButton').addEventListener('click', e => 
     searchResultsContainer.addEventListener('click', event => {
       if (event.target.matches('.searchlink')) {
         event.preventDefault();
-        const href = event.target.href;
+        init.setCurrentPath(event.target.getAttribute('data-relocation'));
+        init.updateCenterPanel();
+        init.updateLeftPanel();
+        init.updateFolderName();
         const filename = href.split('/').pop();
         localStorage.setItem('selected', decodeURIComponent(filename));
         window.location.href = event.target.getAttribute('data-relocation');

@@ -4,7 +4,7 @@ const emailFeedbackbutton = document.getElementById("emailFeedbackbutton");
 emailFeedbackbutton.addEventListener("click", () => {
 const emailFeedbackForm = new mxModalView({ id:'emailFeedback',className:'modal',tag:'div' });
 emailFeedbackForm.SetContent(`
-    <div class="modal-content">
+    <div>
         <form id="contact-form" action="/send" method="post">
         <label>Сообщите об ошибке:</label>
         <input type="text" name="name" placeholder="Ваше имя"><br><br>

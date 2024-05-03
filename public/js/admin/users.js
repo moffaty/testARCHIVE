@@ -56,17 +56,28 @@ function deleteUser() {
     rightPanel.innerHTML = htmlData;
     document.getElementById('detele_user').addEventListener('submit', e => {
         e.preventDefault();
-        const username = document.getElementsByName("login")[0].value;
-        fetch('/delete-user', {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({ username })
-        })
-        .then(response => response.json())
-        .then(data => {
-            adminPanel.dataResponse(data.response, rightPanel);
+        const submitModal = new mxModalView({ id: 'submit', className: 'modal' });
+        submitModal.SetContent(`
+            <form style="display:flex; flex-direction:column; align-items:stretch">
+            <label>Вы уверены что хотите удалить пользователя?</label>
+            <button type="submit">Да</button>
+            <button class="modalButton">Нет</button>
+            </form>
+        `);
+        submitModal.SetListenerOnSubmit(e => {
+            const username = document.getElementsByName("login")[0].value;
+            fetch('/delete-user', {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ username })
+            })
+            .then(response => response.json())
+            .then(data => {
+                adminPanel.dataResponse(data.response, rightPanel);
+                submitModal.DoCloseModal();
+            })
         })
     })
 }
@@ -153,10 +164,11 @@ async function editUser() {
                     })
                     .then(response => response.json())
                     .then(data => {
-                        console.log('shit');
                         const dataElement = adminPanel.dataResponse(data.response, rightPanel);
-                        elements.forEach(el => el.remove());
+                        elements.forEach(el => el.id !== 'response' ? el.remove() : el = el);
+                        elements = [];
                         elements.push(dataElement);
+                        console.log(elements);
                     })
                 })
             } 
@@ -166,5 +178,8 @@ async function editUser() {
             } 
         })
     }
-    document.getElementById('get-info-user').addEventListener('submit', e => { send(e); })
+    document.getElementById('get-info-user').addEventListener('submit', e => { 
+        e.preventDefault();
+        send(e); 
+    });
 }

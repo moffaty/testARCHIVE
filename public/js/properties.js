@@ -536,13 +536,14 @@ allFiles.forEach(button => {
                                         month: '2-digit',
                                         year: 'numeric'
                                       });
-                                    result += `<li><a href="${path}">${oldInfo[i].filename}</a> (Изделие ${copyNumber}) ${formattedDate}</li>`;
+                                    result += `<li><a href="${path}">${oldInfo[i].filename}</a> (Версия ${copyNumber}) ${formattedDate}</li>`;
                                   }
                                   
                                   propertiesModal.querySelector('#OldVersions').innerHTML = result;
                                   return result;
                                 });
-                              }
+                            }
+
                             const viewOfAssembleyUnits = (list) => {
                                 const withoutFile = (path) => {
                                     path = path.split('/');
@@ -563,13 +564,16 @@ allFiles.forEach(button => {
                                 return result;
                             }
                             // Таблица свойств файла
+                            // ${createInputRow('Имя документа', 'propfileNameBD', fileNameBD)}
                             const propertiesModal = new mxModalView({id:'propertiesModal',className:'modal',tag:'div'});
-                            const m_c = propertiesModal.SetContent(`
+                            propertiesModal.SetContent(`
                             <div class="modal-content" id="propertiesModalContent" style="max-height:95%; padding-top: 10;">
                                     <table>
-                                        ${createInputRow('Имя документа', 'propfileNameBD', fileNameBD)}
-                                        ${createInputRow('Статус проверки', 'propstatusBD', statusBD, 'select')}
-                                        ${createInputRow('Категория документа', 'propdocumentCategoryBD', documentCategoryBD, 'select')}
+                                        <tr><td>Имя документа</td>
+                                        <td><div class="input-with-addon"><input type="text" name="propfileNameBD" id="propfileNameBD" placeholder="Имя документа" style="margin-top: 0.625em;">
+                                        <span class="addonText">${fileNameBD.substring(1 + fileNameBD.lastIndexOf('.'))}</span></div></td></tr>
+                                        <tr><td>Статус</td><td>${generateStatusSelect(statusBD)}</td></tr>
+                                        <tr><td>Категория документа</td><td>${generateCategorySelect(documentCategoryBD)}</td></tr>
                                         ${createInputRow('Децимальный номер', 'propdecimalNumberBD', decimalNumberBD)}
                                         ${createInputRow('Название проекта', 'propnameProjectBD', nameProjectBD)}
                                         ${createInputRow('Название организации', 'proporganisationBD', organisationBD)}
@@ -603,6 +607,7 @@ allFiles.forEach(button => {
                             </div>
                             `);
                             document.querySelector('.modal-content').className = '';
+                            document.querySelector('.input-with-addon input').value = fileNameBD;
                             let mask, isAddFormOpen = false;    
                             propertiesModal.querySelector("#listOfAssembleys").addEventListener('click', event => {
                                 if (event.target.matches('.assembleys')) {
@@ -725,14 +730,13 @@ allFiles.forEach(button => {
                                         alert('Децимальный номер введен неверно');
                                     } 
                                     else {
-                                        const pathToDel = propertiesModal.querySelector('#proppathToDel').value;
-
-                                        const decimalNumber = propertiesModal.querySelector('#propdecimalNumberBD').value;
-                                        const nameProject = propertiesModal.querySelector('#propnameProjectBD').value;
-                                        const organisation = propertiesModal.querySelector('#proporganisationBD').value;
-                                        const uploadDateTime = propertiesModal.querySelector('#propuploadDateTimeBD').value;
+                                        console.log(propertiesModal.element);
+                                        const decimalNumber = propertiesModal.element.querySelector('#propdecimalNumberBD').value;
+                                        const nameProject = propertiesModal.element.querySelector('#propnameProjectBD').value;
+                                        const organisation = propertiesModal.element.querySelector('#proporganisationBD').value;
+                                        const uploadDateTime = propertiesModal.element.querySelector('#propuploadDateTimeBD').value;
                                         const entereduploadDateTime = new Date(uploadDateTime).getTime();
-                                        const publishDate = propertiesModal.querySelector('#proppublishDateBD').value;
+                                        const publishDate = propertiesModal.element.querySelector('#proppublishDateBD').value;
                                         const enteredPublishDate = new Date(uploadDateTime).getTime();
                                         if(uploadDateTime){
                                             const minDate = new Date('1900-01-01').getTime();
@@ -757,7 +761,6 @@ allFiles.forEach(button => {
                                         const status = propertiesModal.querySelector('#propstatusBD').value;
 
                                         const updatedData = {
-                                            pathToDel,
                                             fileSitePath,
                                             fileName,
                                             decimalNumber,
@@ -771,7 +774,8 @@ allFiles.forEach(button => {
                                             dirNumber,
                                             publishDate,
                                             notes,
-                                            status
+                                            status,
+                                            fileNameBD
                                         };
 
                                         // Отправка данных на сервер для обновления записи в БД
@@ -782,7 +786,10 @@ allFiles.forEach(button => {
                                         })
                                         .then(response => response.json())
                                         .then(data => {
-                                            location.reload();
+                                            console.log(data);
+                                            init.updateCenterPanel();
+                                            init.updateLeftPanel();
+                                            propertiesModal.DoCloseModal();
                                         })
                                         .catch(error => {
                                             console.error('Ошибка при обновлении данных:', error);

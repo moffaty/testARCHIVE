@@ -1,5 +1,7 @@
 const mysql = require('mysql2');
 const fs = require('fs');
+const path = require('path');
+const { rename } = require('./helpers/files.js');
 const { dbLogs, getFunctionName } = require('./helpers/logs.js');
 
 class classDB {
@@ -22,6 +24,19 @@ class classDB {
         this.admin = { username: 'admin', password: 'pass' };
 
         this.connection = this.connectToMySQL();
+    }
+
+    testConnection() {
+        return new Promise((resolve, reject) => {
+            const connection = this.connectToMySQL(this.databaseFiles);
+            connection.connect((err) => {
+                if (err) {
+                    dbLogs('error while connect to database');
+                } else {
+                    dbLogs('connected');
+                }
+            });
+        });
     }
 
     getConnectInfo() {
@@ -61,6 +76,162 @@ class classDB {
             }
             return null;
         }
+    }
+
+    async createUsersTable() {
+        try {
+            const connection = this.connectToMySQL(this.databaseUsers);
+            
+            // Проверяем существование записей с именами admin, user, red
+            const checkNames= `SELECT username FROM ${this.tableUsers} WHERE username IN ('admin', 'user', 'red')`;
+            const [results] = await connection.promise().query(checkNames);
+            const isExist = results.length > 0;
+
+            if (isExist) {
+                connection.end();
+                dbLogs('users are exist')
+                return { status: 'success', response: 'Users already exist!' };
+            }
+    
+            // Создаем таблицу, если она не существует
+            const createTableSql = `
+                CREATE TABLE IF NOT EXISTS ${this.tableUsers} (
+                    username varchar(255) NOT NULL,
+                    password varchar(255) NOT NULL,
+                    position varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL DEFAULT 'user',
+                    PRIMARY KEY (username)
+                )
+            `;
+            await connection.execute(createTableSql);
+    
+            // Вставляем данные, если пользователи еще не существуют
+            const insertAdminSql = `INSERT INTO ${this.tableUsers}(username, password, position) VALUES('admin', 'pass', 'admin')`;
+            await connection.execute(insertAdminSql);
+            const insertUserSql = `INSERT INTO ${this.tableUsers}(username, password, position) VALUES('user', 'pass', 'user')`;
+            await connection.execute(insertUserSql);
+            const insertRedSql = `INSERT INTO ${this.tableUsers}(username, password, position) VALUES('red', 'pass', 'red')`;
+            await connection.execute(insertRedSql);
+    
+            connection.end();
+            dbLogs('users table is created!');
+            return { status: 'success', response: 'Created!' };
+        } catch (err) {
+            dbLogs(err);
+            return { status: 'error', response: 'error' };
+        }
+    }
+
+    async createFilesTable() {
+        try {
+            const connection = this.connectToMySQL(this.databaseFiles);
+            const sql = `
+            CREATE TABLE IF NOT EXISTS ${this.tableFiles} (
+                id bigint NOT NULL AUTO_INCREMENT,
+                filename text,
+                decimalNumber varchar(255) DEFAULT NULL,
+                nameProject varchar(255) DEFAULT NULL,
+                organisation varchar(255) DEFAULT NULL,
+                editionNumber int DEFAULT NULL,
+                author varchar(255) DEFAULT NULL,
+                storage varchar(128) DEFAULT NULL,
+                documentCategory varchar(128) DEFAULT NULL,
+                dirNumber int DEFAULT NULL,
+                publish_date timestamp(6) NULL DEFAULT CURRENT_TIMESTAMP(6),
+                notes text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+                path text,
+                status varchar(128) NOT NULL DEFAULT 'В разработке',
+                assembley_units json DEFAULT NULL,
+                uploadDateTime datetime DEFAULT NULL,
+                PRIMARY KEY (id)
+              );
+            `;
+            connection.execute(sql);
+            dbLogs('files table is created!');
+            return { status: 'success', response: 'Created!' };
+        }
+        catch (err) {
+            dbLogs(err);
+            return { status: 'error', response: 'error' };
+        }
+    }
+
+    removeFile(path) {
+        dbLogs(path);
+        return new Promise((resolve, reject) => {
+            const sql = `
+                DELETE FROM ${this.tableFiles} WHERE path = ?;
+            `;
+            const connection = this.connectToMySQL(this.databaseFiles);
+            connection.query(sql, [path], (error, results) => {
+                if (error) {
+                    return reject ({ status: 'error', response: 'Не удалось удалить файл' });
+                }
+                return resolve ({ status: 'success', response: 'Файл успешно удален из базы данных' });
+            })
+        })
+    }
+
+    createDatabase(databaseName) {
+        return new Promise((resolve, reject) => {
+            try {
+                const sql = `
+                CREATE DATABASE IF NOT EXISTS ${databaseName}
+                `;
+                this.connection.query(sql, (error, result) => {
+                    if (error) {
+                        return reject (error);
+                    }
+                    dbLogs(`${databaseName} is created or exists`);
+                    return resolve(result);
+                });
+            }
+            catch (err) {
+                return reject('error');
+            }
+
+        })
+    }
+
+    createTable(tableName) {
+        return new Promise((resolve, reject) => {
+            if (tableName === 'users') {
+                return resolve (this.createUsersTable());
+            } else if (tableName === 'files') {
+                return resolve (this.createFilesTable());
+            } else {
+                return reject ({ status: 'error', response: 'Invalid table name' });
+            }
+        })
+    }
+
+    isDatabaseExists(databaseName) {
+        return new Promise((resolve, reject) => {
+            const sql = `SHOW DATABASES LIKE ?`;
+            this.connection.query(sql, [databaseName], (error, results) => {
+                if (results) {
+                    return reject(true);
+                }
+                else {
+                    return resolve(false);
+                }
+            })
+        })
+    }
+
+    init() {
+        return new Promise((resolve, reject) => {
+            try {
+                this.createDatabase(this.databaseFiles);
+                this.createDatabase(this.databaseUsers);
+                this.createUsersTable();
+                this.createFilesTable();
+                return resolve ({ status: 'success' });
+            }
+            catch (error) {
+                return reject ({ status: 'error' });
+            }
+
+        })
     }
 
     pathToUnix(path) {
@@ -151,82 +322,92 @@ class classDB {
             })
         })
     }
-    
-    async createUsersTable() {
-        try {
-            const connection = this.connectToMySQL(this.databaseUsers);
-            
-            // Проверяем существование записей с именами admin, user, red
-            const checkNames= `SELECT username FROM ${this.tableUsers} WHERE username IN ('admin', 'user', 'red')`;
-            const [results] = await connection.promise().query(checkNames);
-            const isExist = results.length > 0;
 
-            if (isExist) {
-                connection.end();
-                dbLogs('users are exist')
-                return { status: 'success', response: 'Users already exist!' };
-            }
-    
-            // Создаем таблицу, если она не существует
-            const createTableSql = `
-                CREATE TABLE IF NOT EXISTS ${this.tableUsers} (
-                    username varchar(255) NOT NULL,
-                    password varchar(255) NOT NULL,
-                    position varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL DEFAULT 'user',
-                    PRIMARY KEY (username)
-                )
-            `;
-            await connection.execute(createTableSql);
-    
-            // Вставляем данные, если пользователи еще не существуют
-            const insertAdminSql = `INSERT INTO ${this.tableUsers}(username, password, position) VALUES('admin', 'pass', 'admin')`;
-            await connection.execute(insertAdminSql);
-            const insertUserSql = `INSERT INTO ${this.tableUsers}(username, password, position) VALUES('user', 'pass', 'user')`;
-            await connection.execute(insertUserSql);
-            const insertRedSql = `INSERT INTO ${this.tableUsers}(username, password, position) VALUES('red', 'pass', 'red')`;
-            await connection.execute(insertRedSql);
-    
-            connection.end();
-            dbLogs('users table is created!');
-            return { status: 'success', response: 'Created!' };
-        } catch (err) {
-            dbLogs(err);
-            return { status: 'error', response: 'error' };
-        }
+    login(username, password) {
+        return new Promise((resolve, reject) => {
+            const connection = this.connectToMySQL(this.databaseUsers);
+            console.log(`SELECT * FROM auth WHERE username="${username}" AND password="${password}";`);
+            connection.query(`SELECT * FROM auth WHERE username="${username}" AND password="${password}";`,
+                (err, results, fields) => {
+                    try {
+                        console.log(results);
+                        const authData = results ? results[0] : '';
+                        if (authData && authData.username === username && authData.password === password){
+                            resolve(true);
+                        } 
+                        else {
+                            resolve(false);
+                        }
+                    } 
+                    catch(err){
+                        reject(err.message);
+                    }
+                }
+            );
+            connection.end((err) => {
+                if (err) { reject(err.message); }
+            });
+        })
     }
 
-    async createFilesTable() {
-        try {
-            const connection = this.connectToMySQL(this.databaseFiles);
-            const sql = `
-            CREATE TABLE IF NOT EXISTS ${this.tableFiles} (
-                id bigint NOT NULL AUTO_INCREMENT,
-                filename text,
-                decimalNumber varchar(255) DEFAULT NULL,
-                nameProject varchar(255) DEFAULT NULL,
-                organisation varchar(255) DEFAULT NULL,
-                editionNumber int DEFAULT NULL,
-                author varchar(255) DEFAULT NULL,
-                storage varchar(128) DEFAULT NULL,
-                documentCategory varchar(128) DEFAULT NULL,
-                dirNumber int DEFAULT NULL,
-                publish_date timestamp(6) NULL DEFAULT CURRENT_TIMESTAMP(6),
-                notes text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
-                path text,
-                status varchar(128) NOT NULL DEFAULT 'В разработке',
-                assembley_units json DEFAULT NULL,
-                uploadDateTime datetime DEFAULT NULL,
-                PRIMARY KEY (id)
-              );
-            `;
-            connection.execute(sql);
-            dbLogs('files table is created!');
-            return { status: 'success', response: 'Created!' };
-        }
-        catch (err) {
-            dbLogs(err);
-            return { status: 'error', response: 'error' };
-        }
+    editUser(data) {
+        return new Promise((resolve, reject) => {
+            const connection = this.connectToMySQL(this.databaseUsers);
+            const query = 'UPDATE auth SET username = ?, password = ?, position = ? WHERE username = ?';
+            connection.query(query, data, (error, result) => {
+                if (error) {
+                    reject({ status: 'error' });
+                } 
+                resolve({ status: 'success', response: `Data is updated!` })
+            })
+        })
+    }
+
+    getUserInfo(username) {
+        return new Promise((resolve, reject) => {
+            const connection = this.connectToMySQL(this.databaseUsers);
+            const query = 'SELECT * FROM auth WHERE username = ?';
+            connection.query(query, username, (error, result) => {
+                if (error) {
+                    console.log(error);
+                    reject({ status: 'error' });
+                } 
+                resolve({ status: 'success', response: result })
+            })
+        })
+    }
+
+    deleteUser(username) {
+        return new Promise((resolve, reject) => {
+            const connection = this.connectToMySQL(this.databaseUsers);
+            const query = 'DELETE FROM auth WHERE username = ?';
+            connection.query(query, username, (error, result) => {
+                if (error) {
+                    reject({ status: 'error', response: error.message });
+                }
+                if (result.affectedRows > 0) {
+                    resolve({ status: 'success', response: `Deleted user: "${username[0]}"!` });
+                } else {
+                    reject({ status: 'error', response: "User doesn't exist" });
+                }
+            })
+        })
+    }
+
+    createUser(data) {
+        return new Promise((resolve, reject) => {
+            const connection = this.connectToMySQL(this.databaseUsers);
+            const query = 'INSERT INTO auth(username, password, position) VALUES(?, ?, ?)';
+            connection.query(query, data, (error, result) => {
+                if (error) {
+                    if (error.code == 'ER_DUP_ENTRY') {
+                        reject({ status:'error', response: 'Пользователь с таким именем уже существует' });
+                    }
+                    reject({ status:'error', response: error.message });
+                }
+                resolve({ status: 'success', response: `Registered new user: ${data[0]}!` })
+            })
+        })
     }
 
     uploadFile (data) {
@@ -273,82 +454,48 @@ class classDB {
         })
     }
 
-    removeFile(path) {
-        dbLogs(path);
+    updateFile(data) {
         return new Promise((resolve, reject) => {
-            const sql = `
-                DELETE FROM ${this.tableFiles} WHERE path = ?;
-            `;
             const connection = this.connectToMySQL(this.databaseFiles);
-            connection.query(sql, [path], (error, results) => {
-                if (error) {
-                    return reject ({ status: 'error', response: 'Не удалось удалить файл' });
+            const datetimeString = data.uploadDateTime;
+            const datetime = new Date(datetimeString);
+            const formattedDatetime = datetime.toISOString().slice(0, 19).replace('T', ' ');
+            const extension = path.extname(data.fileNameBD);
+            const oldPath = path.join(__dirname, data.fileSitePath, data.fileNameBD);
+            const newPath = path.join(__dirname, data.fileSitePath, data.fileName + extension);
+            const newSitePath = data.fileSitePath + '/' + data.fileName + extension;
+            if (!fs.existsSync(newPath)) {
+                rename(fs, oldPath, newPath);
+            }
+            else {
+                reject({ status: 'error', response: 'Нельзя хранить два одинаковых файла в одной директории' });
+            }
+            const query = `
+            UPDATE filesInfo SET 
+                filename = '${data.fileName + extension}', 
+                decimalNumber = '${data.decimalNumber}', 
+                nameProject = '${data.nameProject}', 
+                organisation = '${data.organisation}', 
+                uploadDateTime = '${formattedDatetime}', 
+                editionNumber = '${data.editionNumber}', 
+                author = '${data.author}', 
+                storage = '${data.storage}', 
+                documentCategory = '${data.documentCategory}', 
+                dirNumber = '${data.dirNumber}', 
+                publish_date = '${data.publishDate}', 
+                notes = '${data.notes}', 
+                status = '${data.status}', 
+                path = '${newSitePath}'
+            WHERE path = '${this.pathToUnix(path.join(data.fileSitePath, data.fileNameBD))}';
+            `;
+            console.log(query);
+            connection.query(query, (err, result) => {
+                if (err) {
+                    reject({status: 'error', response: err.message});
                 }
-                return resolve ({ status: 'success', response: 'Файл успешно удален из базы данных' });
+                resolve({status: 'success', response: result });
             })
-        })
-    }
-
-    createDatabase(databaseName) {
-        return new Promise((resolve, reject) => {
-            try {
-                const sql = `
-                CREATE DATABASE IF NOT EXISTS ${databaseName}
-                `;
-                this.connection.query(sql, (error, result) => {
-                    if (error) {
-                        return reject (error);
-                    }
-                    dbLogs(`${databaseName} is created or exists`);
-                    return resolve(result);
-                });
-            }
-            catch (err) {
-                return reject('error');
-            }
-
-        })
-    }
-
-    createTable(tableName) {
-        return new Promise((resolve, reject) => {
-            if (tableName === 'users') {
-                return resolve (this.createUsersTable());
-            } else if (tableName === 'files') {
-                return resolve (this.createFilesTable());
-            } else {
-                return reject ({ status: 'error', response: 'Invalid table name' });
-            }
-        })
-    }
-
-    isDatabaseExists(databaseName) {
-        return new Promise((resolve, reject) => {
-            const sql = `SHOW DATABASES LIKE ?`;
-            this.connection.query(sql, [databaseName], (error, results) => {
-                if (results) {
-                    return reject(true);
-                }
-                else {
-                    return resolve(false);
-                }
-            })
-        })
-    }
-
-    init() {
-        return new Promise((resolve, reject) => {
-            try {
-                this.createDatabase(this.databaseFiles);
-                this.createDatabase(this.databaseUsers);
-                this.createUsersTable();
-                this.createFilesTable();
-                return resolve ({ status: 'success' });
-            }
-            catch (error) {
-                return reject ({ status: 'error' });
-            }
-
+            connection.end();
         })
     }
 
@@ -404,7 +551,7 @@ class classDB {
                 // Если createDate присутствует в результатах, преобразуем его в удобный формат даты
                 matchingResults.forEach(element => {
                     if (element.uploadDateTime !== null){
-                        element.uploadDateTime = clientDate.clientDate(formatDateTime(element.uploadDateTime));
+                        element.uploadDateTime = this.clientDate((element.uploadDateTime));
                     }
                 });
             
@@ -429,45 +576,6 @@ class classDB {
         })
     }
 
-    testConnection() {
-        return new Promise((resolve, reject) => {
-            const connection = this.connectToMySQL(this.databaseFiles);
-            connection.connect((err) => {
-                if (err) {
-                    dbLogs('error while connect to database');
-                } else {
-                    dbLogs('connected');
-                }
-            });
-        });
-    }
-
-    login(username, password) {
-        return new Promise((resolve, reject) => {
-            const connection = this.connectToMySQL(this.databaseUsers);
-            console.log(`SELECT * FROM auth WHERE username="${username}" AND password="${password}";`);
-            connection.query(`SELECT * FROM auth WHERE username="${username}" AND password="${password}";`,
-                (err, results, fields) => {
-                    try {
-                        console.log(results);
-                        const authData = results ? results[0] : '';
-                        if (authData && authData.username === username && authData.password === password){
-                            resolve(true);
-                        } 
-                        else {
-                            resolve(false);
-                        }
-                    } 
-                    catch(err){
-                        reject(err.message);
-                    }
-                }
-            );
-            connection.end((err) => {
-                if (err) { reject(err.message); }
-            });
-        })
-    }
 }
 
 
