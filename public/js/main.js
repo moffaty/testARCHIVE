@@ -153,7 +153,7 @@ class main {
     // }
 
     addMouseDownEvent(el, parent = this.leftPanel) {
-        el.addEventListener('click', (e) => {
+        el.addEventListener('mousedown', (e) => {
             e.preventDefault();
             this.getDirIncludes(this.main_dir + '/' + el.dataset.path)
                 .then(data => {

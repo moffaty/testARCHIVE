@@ -83,12 +83,20 @@ function renameFunction(filePath, fileName, fileSitePath, renameFileButton) {
         .then(response => response.json())
         .then(data => {
             console.log(data.status);
-            console.log('HERE!');
-            const test = new mxNotify();
+            const test = new mxNotify(data.status);
             const text = document.createElement('h3');
-            text.textContent = 'Директория переименована!';
+            if (data.status === 'success') {
+                text.textContent = 'Директория переименована!';
+            }
+            else {
+                text.textContent = 'Нельзя переименовывать вложенные директории';
+            }
             test.AddPopupContent(text);
+            console.log(data);
             renameFileModal.DoCloseModal();
+            init.updateCenterPanel();
+            init.updateFolderName();
+            init.updateLeftPanel();
         });
     }
     // Переименование

@@ -70,14 +70,18 @@ function mkdir (fs, dirPath) {
 }
 
 async function rename(fs, oldPath, newPath) {
-    try {
-        await fs.access(newPath, fs.constants.F_OK);
-        return { status: 'error' }; 
-    } catch (error) {
-        await fs.rename(oldPath, newPath, (err) => { console.log(err) });
-        return { status: 'success' }; 
-    }
+    return new Promise((resolve, reject) => {
+        fs.rename(oldPath, newPath, (err) => { 
+            if (err) {
+                reject({ status: 'error' });
+            } 
+            else {
+                resolve({ status: 'success' }); 
+            }
+        });
+    });
 }
+
 
 async function removeDir(fs, path, options = {}) {
     return new Promise((resolve, reject) => {

@@ -35,6 +35,11 @@ async function checkToken(req, res, next) {
     next();
 }
 
+function isPartOfString(substring, fullString) {
+    // Проверяем, начинается ли строка fullString с substring
+    return fullString.startsWith(substring);
+}
+
 async function uploadFile(req, res, next) {
     try {
         const fileData = files.upload(req.body);
@@ -127,7 +132,7 @@ app.get('/admin-pane1', (req, res) => {
 
 // app.get('*', (req, res) => {
 //     if (req.session.username === undefined) {
-//         res.sendFile(path.join(__dirname, 'views/login.html'));
+//         res.sendFile(path.join(__dirname, 'public', 'views', 'login.html'));
 //     }
 // })
 
@@ -164,7 +169,7 @@ app.post('/get-dir-info', async (req, res) => {
             obj['name'] = file;
             obj['type'] = type;
             obj['path'] = path.relative(path.join(__dirname, main_dir), filePath).replaceAll(/\\/g, '/');
-            Object.assign(obj,  await database.getStatus(main_dir + '/' + obj['path']));
+            Object.assign(obj, await database.getStatus(main_dir + '/' + obj['path']));
             if (type === 'file') {
                 obj['filetype'] = defineFileType(file);
             }
@@ -359,10 +364,17 @@ app.get('/get-positions', (req, res) => {
 })
 
 app.post('/renameDir', async (req,res) => {
-   const oldPath = path.join(__dirname, req.body.oldName);
-   const newPath = path.join(path.dirname(oldPath), req.body.newName);
-   const result = await files.rename(fs, oldPath, newPath);
-   res.json({ result });
+   try {
+    const oldPath = path.join(__dirname, req.body.oldName);
+    const newPath = path.join(path.dirname(oldPath), req.body.newName);
+    const result = await files.rename(fs, oldPath, newPath);
+    await database.updatePath(oldPath, newPath); // update all paths in this directory
+    console.log(result);
+    res.json(result);
+   }
+   catch (err) {
+    res.json(err);
+   }
 })
 
 app.post('/get-properties', async (req, res) => {

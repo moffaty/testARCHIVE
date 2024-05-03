@@ -576,6 +576,33 @@ class classDB {
         })
     }
 
+    updatePath(dirPath, newPath) {
+        return new Promise((resolve, reject) => {
+            const connection = this.connectToMySQL(this.databaseFiles);
+            const sitePath = '/' + this.pathToUnix(path.relative(__dirname, dirPath));
+            const newSitePath = '/' + this.pathToUnix(path.relative(__dirname, newPath));
+    
+            const query = `
+                UPDATE filesInfo 
+                SET path = REPLACE(path, ?, ?) 
+                WHERE path LIKE ?;
+            `;
+            const values = [sitePath, newSitePath, sitePath + '%'];
+            connection.query(query, values, (error, results) => {
+                if (error) {
+                    console.error("Error updating paths:", error);
+                    reject(error);
+                    return;
+                }
+                dbLogs("Paths updated successfully.");
+                resolve(results);
+            });
+    
+            connection.end();
+        });
+    }
+    
+
 }
 
 
