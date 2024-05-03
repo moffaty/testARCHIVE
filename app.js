@@ -122,7 +122,7 @@ app.use(bodyParser.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.get('/admin-pane1', (req, res) => {
-    res.sendFile(path.join(__dirname, 'admin-panel.html'));
+    res.sendFile(path.join(__dirname, 'public', 'views', 'admin-panel.html'));
 })
 
 // app.get('*', (req, res) => {
@@ -178,29 +178,34 @@ app.post('/get-dir-info', async (req, res) => {
 });
 
 // login
-app.post('/login',(req,res)=>{
+app.post('/login', (req,res)=>{
     try {
         const username = req.body.username;
         const password = req.body.password;
-        const loginResult = database.login(username, password);
         loginLog(username, req.socket.remoteAddress);
-        if (loginResult === true) {
-            // Если пользователь аутентифицирован, генерируем токен
-            const token = jwt.sign({ username }, secret, { expiresIn: '0.5h' });
-            // Сохраняем токен в куках браузера
-            res.cookie('token', secret, { httpOnly: true, maxAge: 3600000, secure: true, sameSite: 'none'});
-            // addToLog("authlogs.csv", [  ]);
-            res.setHeader('Set-Cookie', [
-                `token=${token}; HttpOnly; Max-Age=3600; Path=/`,
-                `name=${username}; HttpOnly; Max-Age=3600; Path=/`
-            ]);
-            req.session.username = {
-                username: username
-            };
-            res.json({ status: 'success' });
+        if (username === database.admin.username && password === database.admin.password) {
+            res.json({ status: 'success', redirect: '/admin-pane1' });
         }
         else {
-            res.json({ status: 'error' });
+            const loginResult = database.login(username, password);
+            if (loginResult === true) {
+                // Если пользователь аутентифицирован, генерируем токен
+                const token = jwt.sign({ username }, secret, { expiresIn: '0.5h' });
+                // Сохраняем токен в куках браузера
+                res.cookie('token', secret, { httpOnly: true, maxAge: 3600000, secure: true, sameSite: 'none'});
+                // addToLog("authlogs.csv", [  ]);
+                res.setHeader('Set-Cookie', [
+                    `token=${token}; HttpOnly; Max-Age=3600; Path=/`,
+                    `name=${username}; HttpOnly; Max-Age=3600; Path=/`
+                ]);
+                req.session.username = {
+                    username: username
+                };
+                res.json({ status: 'success', redirect: '/' });
+            }
+            else {
+                res.json({ status: 'error' });
+            }
         }
     }
     catch (err) {
@@ -355,7 +360,7 @@ app.get('/create-table-:tableName', async (req, res) => {
             result
         });
     } catch (error) {
-        console.error(`Error creating ${tableName} table:`, error);
+        serverLogs(`Error creating ${tableName} table:`, error);
         res.status(500).json({ success: false, response: `Error creating ${tableName} table` });
     }
 })

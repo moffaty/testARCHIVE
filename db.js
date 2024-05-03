@@ -19,6 +19,8 @@ class classDB {
         this.tableFiles = 'filesInfo';
         this.tableUsers = 'auth';
 
+        this.admin = { username: 'admin', password: 'pass' };
+
         this.connection = this.connectToMySQL();
     }
 
@@ -43,7 +45,7 @@ class classDB {
             });
             connection.connect((err) => {
                 if (err) { 
-                    console.dir(err); 
+                    dbLogs(err); 
                     if (res) {
                         res.json({ response:'Error connection to DB' }); 
                         return null;
@@ -151,18 +153,41 @@ class classDB {
     async createUsersTable() {
         try {
             const connection = this.connectToMySQL(this.databaseUsers);
-            const sql = `
-            CREATE TABLE IF NOT EXISTS auth (
-                username varchar(255) NOT NULL,
-                password varchar(255) NOT NULL,
-                position varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL DEFAULT 'user',
-                PRIMARY KEY (username)
-            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+            
+            // Проверяем существование записей с именами admin, user, red
+            const checkNames= `SELECT username FROM auth WHERE username IN ('admin', 'user', 'red')`;
+            const [results] = await connection.promise().query(checkNames);
+            const isExist = results.length > 0;
+
+            if (isExist) {
+                connection.end();
+                dbLogs('users are exist')
+                return { status: 'success', response: 'Users already exist!' };
+            }
+    
+            // Создаем таблицу, если она не существует
+            const createTableSql = `
+                CREATE TABLE IF NOT EXISTS auth (
+                    username varchar(255) NOT NULL,
+                    password varchar(255) NOT NULL,
+                    position varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL DEFAULT 'user',
+                    PRIMARY KEY (username)
+                )
             `;
-            connection.execute(sql);
+            await connection.execute(createTableSql);
+    
+            // Вставляем данные, если пользователи еще не существуют
+            const insertAdminSql = `INSERT INTO auth(username, password, position) VALUES('admin', 'pass', 'admin')`;
+            await connection.execute(insertAdminSql);
+            const insertUserSql = `INSERT INTO auth(username, password, position) VALUES('user', 'pass', 'user')`;
+            await connection.execute(insertUserSql);
+            const insertRedSql = `INSERT INTO auth(username, password, position) VALUES('red', 'pass', 'red')`;
+            await connection.execute(insertRedSql);
+    
+            connection.end();
+            dbLogs('users table is created!');
             return { status: 'success', response: 'Created!' };
-        }
-        catch (err) {
+        } catch (err) {
             dbLogs(err);
             return { status: 'error', response: 'error' };
         }
@@ -193,6 +218,7 @@ class classDB {
               );
             `;
             connection.execute(sql);
+            dbLogs('files table is created!');
             return { status: 'success', response: 'Created!' };
         }
         catch (err) {
@@ -271,6 +297,7 @@ class classDB {
                     if (error) {
                         return reject (error);
                     }
+                    dbLogs(`${databaseName} is created or exists`);
                     return resolve(result);
                 });
             }
