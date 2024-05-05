@@ -128,8 +128,8 @@ allFiles.forEach(button => {
 
         const menu = new mxContextMenu({id:'menu',className:'menu','tag':'div'});
         if (button.classList.contains('file')){
-            const buttonlist = ['properties', 'share', 'moveToTrash'];
-            const buttontext = ['Свойства', 'Поделиться документом', 'Удалить'];
+            const buttonlist = ['properties', 'concat','share', 'moveToTrash'];
+            const buttontext = ['Свойства', 'Объеденить документ','Поделиться документом', 'Удалить'];
             const elements = menu.SetItems(buttonlist, buttontext);
             elements['moveToTrash'].setAttribute('fetch', '/moveToTrash');
         } else {
@@ -638,92 +638,92 @@ allFiles.forEach(button => {
                             //     </div>
                             //     <button id="addUnit" class="modalButton">Добавить в сборочные единицы</button><br>
                             // </div>
-                            // propertiesModal.querySelector("#listOfAssembleys").addEventListener('click', event => {
-                            //     if (event.target.matches('.assembleys')) {
-                            //         event.preventDefault();
-                            //         const href = event.target.href;
-                            //         const filename = href.split('/').pop();
-                            //         localStorage.setItem('selected', decodeURIComponent(filename));
-                            //         window.location.href = event.target.getAttribute('data-relocation');
-                            //     }
-                            //     if (event.target.matches('.delAssembley')){
-                            //         const mainPath = getCurrentPath();
-                            //         const selectedUnit = event.target.getAttribute('data-db');
-                            //         fetch('/del-from-units', {
-                            //             method: 'POST',
-                            //             headers: { 'Content-Type': 'application/json' },
-                            //             body: JSON.stringify({ mainPath, selectedUnit })
-                            //         })
-                            //         .then(async response => {
-                            //             await response;
-                            //             await checkNewList();
-                            //         })
-                            //         .then(data => {})
-                            //     }
-                            // });
-                            // propertiesModal.querySelector("#assembleyUnits").querySelector("#addUnit").addEventListener('click', event => {
-                            //     if(isAddFormOpen === true){
-                            //         return;
-                            //     }
-                            //     isAddFormOpen = true;
-                            //     fetch(`/get-all-units?path=${fileSitePath}`, {
-                            //         method: 'GET'
-                            //     })
-                            //     .then(response => response.json())
-                            //     .then(data => {
-                            //         const selectOfAssembleyUnits = (data) => {
-                            //             if (data) {
-                            //                 result = `<form id="addAssembley" style="margin:0;">
-                            //                 <select id="selectUnit">`;
-                            //                 data.forEach(element => {
-                            //                     result += `<option value="${element.id}">${element.filename}</option>`;
-                            //                 })
-                            //                 result += ` </select>
-                            //                 <button class="modalButton">Добавить</button>
-                            //                             </form>`;
-                            //                 return result;
-                            //             }
-                            //             else {
-                            //                 return "Нет загруженных файлов, помимо текущего!"
-                            //             }
-                            //         }
-                            //         const addAssemlbeyUnitForm = new mxModalView({id:'addAssembleyForm',tag:'div',parentID:'propertiesModal'});
-                            //         console.log(selectOfAssembleyUnits(data));
-                            //         addAssemlbeyUnitForm.SetContent(selectOfAssembleyUnits(data));
-                            //         addAssemlbeyUnitForm.SetStyles({
-                            //             left: "15%",
-                            //             top: "12%", 
-                            //             width: "20vw",
-                            //             zIndex: 9999
-                            //         })
-                            //         const submutAddAssembleyUnit = () => {
-                            //             const selectElement = document.getElementById("selectUnit");
-                            //             const selectedUnit = selectElement.value;
-                            //             const selectedOption = selectElement.options[selectElement.selectedIndex];
-                            //             const optionText = selectedOption.textContent;
-                            //             const fileName = optionText;
-                            //             const mainPath = fileSitePath;
-                            //             fetch('/add-to-units', {
-                            //                 method: 'POST',
-                            //                 headers: { 'Content-Type': 'application/json' },
-                            //                 body: JSON.stringify({ mainPath, fileName, selectedUnit })
-                            //             })
-                            //             .then(async response => {
-                            //                 await response.json();
-                            //                 await checkNewList();
-                            //             })
-                            //             .then(async data => {
-                            //             })
-                            //             .catch(error => {
-                            //                 console.error('Ошибка:',error);
-                            //             })
-                            //         }
-                            //         addAssemlbeyUnitForm.SetListenerOnSubmit(submutAddAssembleyUnit,'addAssembley');
-                            //     })
-                            //     .catch(error => {
-                            //         console.error('Ошибка при обновлении данных:', error);
-                            //     });
-                            // });
+                            propertiesModal.querySelector("#listOfAssembleys").addEventListener('click', event => {
+                                if (event.target.matches('.assembleys')) {
+                                    event.preventDefault();
+                                    const href = event.target.href;
+                                    const filename = href.split('/').pop();
+                                    localStorage.setItem('selected', decodeURIComponent(filename));
+                                    window.location.href = event.target.getAttribute('data-relocation');
+                                }
+                                if (event.target.matches('.delAssembley')){
+                                    const mainPath = getCurrentPath();
+                                    const selectedUnit = event.target.getAttribute('data-db');
+                                    fetch('/del-from-units', {
+                                        method: 'POST',
+                                        headers: { 'Content-Type': 'application/json' },
+                                        body: JSON.stringify({ mainPath, selectedUnit })
+                                    })
+                                    .then(async response => {
+                                        await response;
+                                        await checkNewList();
+                                    })
+                                    .then(data => {})
+                                }
+                            });
+                            propertiesModal.querySelector("#assembleyUnits").querySelector("#addUnit").addEventListener('click', event => {
+                                if(isAddFormOpen === true){
+                                    return;
+                                }
+                                isAddFormOpen = true;
+                                fetch(`/get-all-units?path=${fileSitePath}`, {
+                                    method: 'GET'
+                                })
+                                .then(response => response.json())
+                                .then(data => {
+                                    const selectOfAssembleyUnits = (data) => {
+                                        if (data) {
+                                            result = `<form id="addAssembley" style="margin:0;">
+                                            <select id="selectUnit">`;
+                                            data.forEach(element => {
+                                                result += `<option value="${element.id}">${element.filename}</option>`;
+                                            })
+                                            result += ` </select>
+                                            <button class="modalButton">Добавить</button>
+                                                        </form>`;
+                                            return result;
+                                        }
+                                        else {
+                                            return "Нет загруженных файлов, помимо текущего!"
+                                        }
+                                    }
+                                    const addAssemlbeyUnitForm = new mxModalView({id:'addAssembleyForm',tag:'div',parentID:'propertiesModal'});
+                                    console.log(selectOfAssembleyUnits(data));
+                                    addAssemlbeyUnitForm.SetContent(selectOfAssembleyUnits(data));
+                                    addAssemlbeyUnitForm.SetStyles({
+                                        left: "15%",
+                                        top: "12%", 
+                                        width: "20vw",
+                                        zIndex: 9999
+                                    })
+                                    const submutAddAssembleyUnit = () => {
+                                        const selectElement = document.getElementById("selectUnit");
+                                        const selectedUnit = selectElement.value;
+                                        const selectedOption = selectElement.options[selectElement.selectedIndex];
+                                        const optionText = selectedOption.textContent;
+                                        const fileName = optionText;
+                                        const mainPath = fileSitePath;
+                                        fetch('/add-to-units', {
+                                            method: 'POST',
+                                            headers: { 'Content-Type': 'application/json' },
+                                            body: JSON.stringify({ mainPath, fileName, selectedUnit })
+                                        })
+                                        .then(async response => {
+                                            await response.json();
+                                            await checkNewList();
+                                        })
+                                        .then(async data => {
+                                        })
+                                        .catch(error => {
+                                            console.error('Ошибка:',error);
+                                        })
+                                    }
+                                    addAssemlbeyUnitForm.SetListenerOnSubmit(submutAddAssembleyUnit,'addAssembley');
+                                })
+                                .catch(error => {
+                                    console.error('Ошибка при обновлении данных:', error);
+                                });
+                            });
                             
                             const propdocumentCategoryBDInput = propertiesModal.querySelector('#propdocumentCategoryBD');
                             const propdecimalNumberBDInput = propertiesModal.querySelector('#propdecimalNumberBD');
