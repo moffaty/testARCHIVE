@@ -82,17 +82,6 @@ class classDB {
         try {
             const connection = this.connectToMySQL(this.databaseUsers);
             
-            // Проверяем существование записей с именами admin, user, red
-            const checkNames= `SELECT username FROM ${this.tableUsers} WHERE username IN ('admin', 'user', 'red')`;
-            const [results] = await connection.promise().query(checkNames);
-            const isExist = results.length > 0;
-
-            if (isExist) {
-                connection.end();
-                dbLogs('users are exist')
-                return { status: 'success', response: 'Users already exist!' };
-            }
-    
             // Создаем таблицу, если она не существует
             const createTableSql = `
                 CREATE TABLE IF NOT EXISTS ${this.tableUsers} (
@@ -103,7 +92,18 @@ class classDB {
                 )
             `;
             await connection.execute(createTableSql);
-    
+
+            // Проверяем существование записей с именами admin, user, red
+            const checkNames= `SELECT username FROM ${this.tableUsers} WHERE username IN ('admin', 'user', 'red')`;
+            const [results] = await connection.promise().query(checkNames);
+            const isExist = results.length > 0;
+
+            if (isExist) {
+                connection.end();
+                dbLogs('users are exist')
+                return { status: 'success', response: 'Users already exist!' };
+            }
+
             // Вставляем данные, если пользователи еще не существуют
             const insertAdminSql = `INSERT INTO ${this.tableUsers}(username, password, position) VALUES('admin', 'pass', 'admin')`;
             await connection.execute(insertAdminSql);
