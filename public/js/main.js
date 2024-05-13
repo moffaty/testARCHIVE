@@ -249,6 +249,7 @@ class main {
                 } 
                 this.fillList(panels._getCenterDir(), data);
                 prop(); // properties.js
+                linkToPreview(); // previewFile.js
                 return resolve(data);
             } catch (error) {
                 console.error("Error fetching directory information:", error);

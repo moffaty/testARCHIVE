@@ -139,10 +139,22 @@ app.get('/admin-pane1', (req, res) => {
 app.get('/', (req, res) => {
     if (req.session.username) {
         res.sendFile(path.join(__dirname, 'public', 'views', 'index.html'));
-    } else {
-        res.sendFile(path.join(__dirname, 'public', 'views', 'index.html'));
+    } 
+    else {
+        res.sendFile(path.join(__dirname, 'public', 'views', 'login.html'));
     }
 })
+
+app.get('/main_dir/*', (req, res) => {
+    // Получаем адрес из параметра запроса
+    const address = req.params[0];
+
+    // Формируем путь к файлу на основе полученного адреса
+    const filePath = path.join(__dirname, 'main_dir', address);
+
+    // Отправляем файл
+    res.sendFile(filePath);
+});
 
 app.get('/get-main-dir', (req, res) => {
     res.json({ path: main_dir });
@@ -203,9 +215,8 @@ app.post('/login', async (req,res)=>{
                     `token=${token}; HttpOnly; Max-Age=3600; Path=/`,
                     `name=${username}; HttpOnly; Max-Age=3600; Path=/`
                 ]);
-                req.session.username = {
-                    username: username
-                };
+                req.session.username = username;
+                req.session.position = 'red';
                 res.json({ status: 'success', redirect: '/' });
             }
             else {
@@ -314,7 +325,9 @@ app.post('/edit-user', async (req, res) => {
 })
 
 app.get('/get-info-of-registration', (req, res) => {
-    res.json({ username: req.session.username, position: req.session.position });
+    const username = req.session.username;
+    const position = req.session.position;
+    res.json({ username, position });
 })
 
 

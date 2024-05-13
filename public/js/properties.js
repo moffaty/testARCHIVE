@@ -598,6 +598,8 @@ allFiles.forEach(button => {
                                         <button class="modalButton" style="position: absolute; right: 5px;" id="close-properties" style="margin-top:3%">Закрыть</button>
                                     </div>
                             </div>
+                            `);
+                            /* 
                             <div id="assembleyUnits" class="modal-content">
                                 <h4>Сборочные единицы <img src="/images/info.png" width=20px height=20px title="Изделия что входят в исходное"></h4>
                                 <div style="height: 32vh; overflow:auto">
@@ -607,13 +609,13 @@ allFiles.forEach(button => {
                                 </div>
                                 <button id="addUnit" class="modalButton">Добавить в сборочные единицы</button><br>
                             </div>
-                            <div style="height: 37vh; left: 85%;" id="listOfOldVersions" class="modal-content">
+                             <div style="height: 37vh; left: 85%;" id="listOfOldVersions" class="modal-content">
                                 <h4> Предыдущие версии файла <img src="/images/info.png" width=20px height=20px title="Что ранее использовались вместо его"></h4>
                                 <ul class="w3-ul" id="OldVersions">
                                     <td>${viewOfOldVersion(id)}</td>
                                 </ul>
                             </div>
-                            `);
+                            */
                             document.querySelector('.modal-content').className = '';
                             document.querySelector('.input-with-addon input').value = fileNameBD;
                             let mask, isAddFormOpen = false;    
