@@ -383,7 +383,7 @@ app.post('/renameDir', async (req,res) => {
     const newPath = path.join(path.dirname(oldPath), req.body.newName);
     const result = await files.rename(fs, oldPath, newPath);
     await database.updatePath(oldPath, newPath); // update all paths in this directory
-    console.log(result);
+    serverLogs(result);
     res.json(result);
    }
    catch (err) {

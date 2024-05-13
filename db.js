@@ -326,12 +326,11 @@ class classDB {
     login(username, password) {
         return new Promise((resolve, reject) => {
             const connection = this.connectToMySQL(this.databaseUsers);
-            console.log(`SELECT * FROM auth WHERE username="${username}" AND password="${password}";`);
             connection.query(`SELECT * FROM auth WHERE username="${username}" AND password="${password}";`,
                 (err, results, fields) => {
                     try {
-                        console.log(results);
                         const authData = results ? results[0] : '';
+                        console.log(results);
                         if (authData && authData.username === username && authData.password === password){
                             resolve(true);
                         } 
@@ -369,7 +368,7 @@ class classDB {
             const query = 'SELECT * FROM auth WHERE username = ?';
             connection.query(query, username, (error, result) => {
                 if (error) {
-                    console.log(error);
+                    dbLogs(error);
                     reject({ status: 'error' });
                 } 
                 resolve({ status: 'success', response: result })
@@ -488,7 +487,6 @@ class classDB {
                 path = '${newSitePath}'
             WHERE path = '${this.pathToUnix(path.join(data.fileSitePath, data.fileNameBD))}';
             `;
-            console.log(query);
             connection.query(query, (err, result) => {
                 if (err) {
                     reject({status: 'error', response: err.message});
