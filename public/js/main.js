@@ -153,22 +153,27 @@ class main {
     // }
 
     addMouseDownEvent(el, parent = this.leftPanel) {
-        el.addEventListener('mousedown', (e) => {
+        el.addEventListener('click', (e) => {
             e.preventDefault();
-            this.getDirIncludes(this.main_dir + '/' + el.dataset.path)
+            const path = this.main_dir + '/' + el.dataset.path;
+            this.getDirIncludes(path)
                 .then(data => {
                     if (data.length === 0) {
                         return;
                     }
-                    if (el.nextElementSibling && el.nextElementSibling.tagName === 'UL') {
+    
+                    const nextElementSibling = el.nextElementSibling;
+    
+                    if (nextElementSibling && nextElementSibling.tagName === 'UL') {
+                        // If the next sibling is already a <ul>, remove it
+                        nextElementSibling.remove();
                         return;
                     }
     
                     const newlist = document.createElement('ul');
                     newlist.classList.add('dir');
                     this.fillList(newlist, data);
-                    
-                    parent.insertBefore(newlist, el.nextElementSibling);
+                    parent.insertBefore(newlist, nextElementSibling);
     
                     newlist.querySelectorAll('li').forEach(li => {
                         li.addEventListener('click', e => {
@@ -180,7 +185,7 @@ class main {
                         })
                     });
     
-                    currentPath = currentPath.substring(0, currentPath.lastIndexOf('/')); // обрезаем добавленный слеш
+                    this.currentPath = currentPath.substring(0, currentPath.lastIndexOf('/'));
                 });
         });
     }
