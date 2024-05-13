@@ -87,7 +87,7 @@ class classDB {
                 CREATE TABLE IF NOT EXISTS ${this.tableUsers} (
                     username varchar(255) NOT NULL,
                     password varchar(255) NOT NULL,
-                    position varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL DEFAULT 'user',
+                    position varchar(255) CHARACTER SET utf8mb4 NOT NULL DEFAULT 'user',
                     PRIMARY KEY (username)
                 )
             `;
@@ -137,7 +137,7 @@ class classDB {
                 documentCategory varchar(128) DEFAULT NULL,
                 dirNumber int DEFAULT NULL,
                 publish_date timestamp(6) NULL DEFAULT CURRENT_TIMESTAMP(6),
-                notes text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+                notes text CHARACTER SET utf8mb4,
                 path text,
                 status varchar(128) NOT NULL DEFAULT 'В разработке',
                 assembley_units json DEFAULT NULL,

@@ -4,6 +4,7 @@ const fs = require('fs');
 const path = require('path');
 const app = express();
 const jwt = require('jsonwebtoken');
+const nodemailer = require('nodemailer');
 const session = require('express-session');
 const multer = require('multer');
 const bodyParser = require('body-parser');
@@ -494,6 +495,42 @@ app.get('/search', async (req, res) => {
     catch (error) {
         res.json(error);
     }
+});
+
+// обработчик для маршрута /send email-message
+app.post('/send', (req, res) => {
+    const server_send = async (req, res) => {
+        // Проверяем токен на валидность
+        const { name, message } = req.body;
+        const transporter = nodemailer.createTransport({
+            host: 'smtp.gmail.com', // измените настройки SMTP в соответствии с вашим почтовым провайдером
+            port: 465,
+            secure: true,
+            auth: {
+            user: 'moffatyapathy@gmail.com',
+            pass: 'nwswjotddsqhwiil' 
+            }});
+
+            const mailOptions = {
+                from: '"Sender" sender@example.com',
+                to: 'moffatyapathy@gmail.com',
+                subject: 'Новое обращение по работе электронного архива',
+                html: `<h1>Имя отправителя: ${name}</h1><h2>Обращение: ${message}</h2>`
+            };
+
+            transporter.sendMail(mailOptions, (error, info) => {
+                if (error) {
+                    serverLogs(error);
+                    res.redirect('/')
+                } 
+                else {
+                    serverLogs('Email sent: ' + info.response);
+                    isEmailSended = 1;
+                    res.redirect('/')
+                }
+        });
+    } 
+    server_send(req, res);
 });
 
 // main

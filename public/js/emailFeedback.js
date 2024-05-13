@@ -15,4 +15,7 @@ emailFeedbackForm.SetContent(`
     </div>  `);
     // Устанавливаем фокус на первый инпут формы
     emailFeedbackForm.querySelector('input[type="text"]').focus();
+    document.querySelector('#contact-form').addEventListener('submit', e => {
+        alert('Ваше письмо отправлено! Спасибо!');
+    })
 });
