@@ -61,7 +61,7 @@ async function uploadFile(req, res, next) {
 const personalPositions = ['admin', 'editor', 'user'];
 
 // PORT
-const PORT = 3100;
+const PORT = 3000;
 
 // SERVER (look into startServer)
 // need to stop server
