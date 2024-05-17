@@ -329,14 +329,18 @@ class classDB {
             connection.query(`SELECT * FROM auth WHERE username="${username}" AND password="${password}";`,
                 (err, results, fields) => {
                     try {
+                        const obj = {};
                         const authData = results ? results[0] : '';
-                        console.log(results);
                         if (authData && authData.username === username && authData.password === password){
-                            resolve(true);
+                            obj.username = authData.username;
+                            obj.password = authData.password;
+                            obj.position = authData.position;
+                            obj.status = true;
                         } 
                         else {
-                            resolve(false);
+                            obj.status = false;
                         }
+                        resolve(obj);
                     } 
                     catch(err){
                         reject(err.message);

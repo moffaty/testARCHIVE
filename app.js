@@ -139,7 +139,13 @@ app.get('/admin-pane1', (req, res) => {
 
 app.get('/', (req, res) => {
     if (req.session.username) {
-        res.sendFile(path.join(__dirname, 'public', 'views', 'index.html'));
+        console.log(req.session.position);
+        if (req.session.position === 'red' || req.session.position === 'admin') {
+            res.sendFile(path.join(__dirname, 'public', 'views', 'index.html'));
+        }
+        else {
+            res.sendFile(path.join(__dirname, 'public', 'views', 'user.html'));
+        }
     } 
     else {
         res.sendFile(path.join(__dirname, 'public', 'views', 'login.html'));
@@ -206,7 +212,7 @@ app.post('/login', async (req,res)=>{
         }
         else {
             const loginResult = await database.login(username, password);
-            if (loginResult === true) {
+            if (loginResult.status === true) {
                 // Если пользователь аутентифицирован, генерируем токен
                 const token = jwt.sign({ username }, secret, { expiresIn: '0.5h' });
                 // Сохраняем токен в куках браузера
@@ -217,7 +223,7 @@ app.post('/login', async (req,res)=>{
                     `name=${username}; HttpOnly; Max-Age=3600; Path=/`
                 ]);
                 req.session.username = username;
-                req.session.position = 'red';
+                req.session.position = loginResult.position;
                 res.json({ status: 'success', redirect: '/' });
             }
             else {
