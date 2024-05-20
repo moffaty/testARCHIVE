@@ -139,7 +139,6 @@ app.get('/admin-pane1', (req, res) => {
 
 app.get('/', (req, res) => {
     if (req.session.username) {
-        console.log(req.session.position);
         if (req.session.position === 'red' || req.session.position === 'admin') {
             res.sendFile(path.join(__dirname, 'public', 'views', 'index.html'));
         }
@@ -449,7 +448,7 @@ app.post('/move', async (req, res) => {
         res.json(result);
     }
     catch (err) {
-        console.log(err);
+        serverLogs(err);
         res.json(err);
     }
 })

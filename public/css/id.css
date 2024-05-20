@@ -95,3 +95,15 @@
 #centerTopH {
     user-select: none;
 }
+
+#fileName {
+    text-overflow: ellipsis;
+    margin-top: 0.625em;
+    padding-right: 3rem;
+}
+
+#propfileNameBD {
+    text-overflow: ellipsis;
+    margin-top: 0.625em;
+    padding-right: 2.5rem;
+}
