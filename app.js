@@ -434,6 +434,26 @@ app.post('/upload', upload.single('file'), uploadFile, async (req, res) => {
     }
 });
 
+app.post('/move', async (req, res) => {
+    try {
+        const oldPath = req.body.oldPath;
+        const newPath = req.body.newPath;
+        const currentPath = req.body.currentPath;
+        const oldPathSystem = path.join(__dirname, main_dir, oldPath);
+        const newPathSystem = path.join(__dirname, main_dir, newPath);
+        const oldPathSite = main_dir + '/' + oldPath;
+        const newPathSite = main_dir + (newPath.startsWith('/') ? newPath : '/' + newPath);
+        console.log(oldPathSite, newPathSite, newPath.startsWith('/'));
+        const moveFile = await files.move(fs, oldPathSystem, newPathSystem);
+        const result = await database.moveFile(oldPathSite, newPathSite);
+        res.json(result);
+    }
+    catch (err) {
+        console.log(err);
+        res.json(err);
+    }
+})
+
 app.post('/add', async (req, res) => {
     const dirName = req.body.dirName;
     const dirPath = req.body.path;

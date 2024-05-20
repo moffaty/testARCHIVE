@@ -168,6 +168,22 @@ class classDB {
                 }
                 return resolve ({ status: 'success', response: 'Файл успешно удален из базы данных' });
             })
+            connection.end();
+        })
+    }
+
+    moveFile(oldSitePath, newSitePath) {
+        return new Promise((resolve, reject) => {
+            const connection = this.connectToMySQL(this.databaseFiles);
+            const sql = `UPDATE ${this.tableFiles} SET path = ? WHERE path = ?;`
+            dbLogs(sql, newSitePath, oldSitePath);
+            connection.query(sql, [newSitePath, oldSitePath], (error, results) => {
+                if (error) {
+                    return reject ({ status: 'error', response: 'Не удалось переместить файл' });
+                }
+                return resolve ({ status: 'success', response: 'Файл успешно перемещен в базе данных' });
+            })
+            connection.end();
         })
     }
 
@@ -184,6 +200,7 @@ class classDB {
                     dbLogs(`${databaseName} is created or exists`);
                     return resolve(result);
                 });
+                
             }
             catch (err) {
                 return reject('error');

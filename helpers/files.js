@@ -103,7 +103,7 @@ async function move (fs, oldPath, newPath) {
     return new Promise((resolve, reject) => {
         fs.rename(oldPath, newPath, (err) => {
             if (err) {
-                return reject('Ошибка при перемещении файла:', err);
+                return reject(err);
             } else {
                 return resolve('Файл успешно перемещен!');
             }
