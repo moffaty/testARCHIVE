@@ -301,9 +301,15 @@ class main {
 
     updateFolderName() {
         const path = localStorage.getItem('currentPath');
-        this.header.textContent = this.getLastDir(path === '' ? this.main_dir : path);
-        if ('/' + this.header.textContent == this.main_dir) {
+        if (path) {
+            this.header.textContent = this.getLastDir(path === '' ? this.main_dir : path);
+            if ('/' + this.header.textContent == this.main_dir) {
+                this.header.textContent = 'Корневая директория';
+            }
+        }
+        else {
             this.header.textContent = 'Корневая директория';
+            this.setCurrentPath(this.main_dir);
         }
     }
 
