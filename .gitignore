@@ -1,3 +1,4 @@
 node_modules
 logs
-main_dir
+main_dir/*
+db1.json
