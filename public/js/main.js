@@ -200,9 +200,7 @@ class main {
             try {
                 this.getDirIncludes(this.main_dir + '/' + this.currentPath)
                 .then(data => {
-                    this.clearListItems(this.centerPanel);
-                    this.fillList(this.centerPanel, data);
-                    prop();
+                    this.updateCenterPanel();
                 })
                 .catch(error => {
                     console.error(error);
@@ -234,7 +232,6 @@ class main {
                 if (data.length === 0) {
                     return resolve();
                 } 
-                console.log(panels._getLeftPanel())
                 this.fillList(panels._getLeftPanel(), data, true);
                 return resolve(data);
             } catch (error) {
@@ -244,14 +241,20 @@ class main {
         });
     }
 
+    updateCountFiles(data) {
+        this.centerPanel.dataset.after = 'Количество файлов в директории: ' + data.length;
+    }
+
     fillCenterPanel() {
         return new Promise(async (resolve, reject) => {
             try {
+                console.log('filled');
                 const path = localStorage.getItem('currentPath');
                 const data = await this.getDirIncludes(path);
                 if (data.length === 0) {
                     return resolve();
                 } 
+                this.updateCountFiles(data);
                 this.fillList(panels._getCenterDir(), data);
                 prop(); // properties.js
                 linkToPreview(); // previewFile.js
@@ -333,9 +336,8 @@ document.getElementById('backButton').addEventListener('click', (event) => {
     init.setCurrentPath(currentPath);
     init.getDirIncludes(currentPath)
     .then(data => {
+        init.updateCenterPanel();
         init.updateFolderName();
-        init.clearListItems(init.centerPanel);
-        init.fillCenterPanel();
     })
 })
 
