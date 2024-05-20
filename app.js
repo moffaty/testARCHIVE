@@ -57,6 +57,21 @@ async function uploadFile(req, res, next) {
     }
 }
 
+async function uploadFiles(req, res, next) {
+    try {
+        // const fileData = files.upload(req.body);
+        // const result = await database.uploadFile(fileData);
+        const oldPath = path.join(__dirname, req.file.path);
+        const newPath = path.join(path.dirname(oldPath), req.body.fileName);
+        const rename = await files.rename(fs, oldPath, newPath);
+        const move = await files.move(fs, newPath, path.join(__dirname, req.body.path));
+        // req.result = result;
+    }
+    catch (error) {
+        return error;
+    }
+}
+
 // list of personals positions in bd 
 const personalPositions = ['admin', 'editor', 'user'];
 
@@ -158,8 +173,15 @@ app.get('/main_dir/*', (req, res) => {
     // Формируем путь к файлу на основе полученного адреса
     const filePath = path.join(__dirname, 'main_dir', address);
 
+    // Устанавливаем заголовок Content-Type для PDF-файлов
+    res.set('Content-Type', 'application/pdf');
+
     // Отправляем файл
-    res.sendFile(filePath);
+    res.sendFile(filePath, (err) => {
+        if (err) {
+            res.status(err.status).end();
+        }
+    });
 });
 
 app.get('/get-main-dir', (req, res) => {
@@ -432,6 +454,16 @@ app.post('/upload', upload.single('file'), uploadFile, async (req, res) => {
         res.json(error);
     }
 });
+
+app.post('/upload-many', upload.array('files', 20), uploadFiles, async (req, res, err) => {
+    if (err) {
+        console.log('error');
+        console.log(err);
+    }
+    let file = req.files;
+    res.end();
+    console.log(req.files);
+})
 
 app.post('/move', async (req, res) => {
     try {

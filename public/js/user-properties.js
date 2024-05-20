@@ -574,11 +574,11 @@ allFiles.forEach(button => {
                             // ${createInputRow('Имя документа', 'propfileNameBD', fileNameBD)}
                             const propertiesModal = new mxModalView({id:'propertiesModal',className:'modal',tag:'div'});
                             propertiesModal.SetContent(`
-                            <div class="modal-content" id="propertiesModalContent" style="max-height:95%; padding-top: 10;">
+                            <div class="modal-content" id="propertiesModalContent">
                                     <table>
                                         <tr><td>Имя документа</td>
-                                        <td><div class="input-with-addon"><input disabled type="text" name="propfileNameBD" id="propfileNameBD" placeholder="Имя документа" style="margin-top: 0.625em;">
-                                        <tr><td>Статус</td><td>${generateStatusSelect(statusBD)}</td></tr>
+                                        <td><div class="input-with-addon"><input type="text" name="propfileNameBD" id="propfileNameBD" placeholder="Имя документа">
+                                        <span class="addonText">${fileNameBD.substring(1 + fileNameBD.lastIndexOf('.'))}</span></div></td></tr>
                                         <tr><td>Категория документа</td><td>${generateCategorySelect(documentCategoryBD)}</td></tr>
                                         ${createInputRow('Децимальный номер', 'propdecimalNumberBD', decimalNumberBD)}
                                         ${createInputRow('Название проекта', 'propnameProjectBD', nameProjectBD)}

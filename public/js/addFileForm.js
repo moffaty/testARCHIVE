@@ -16,6 +16,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const inputs = [ // styles: "cursor: pointer; opacity:0; overflow: hidden; position: absolute; top:0;right: 5; width: 19.7vh; margin-top:1.25em;"
             { name: 'fileLabel', element: 'label', styles: 'width:100%; margin: 0', classNames: 'modalButton', required: true }, 
             { name: 'file', type: 'file', value: 'Выберите файл', styles: 'display:none;', classNames: 'modalButton' },
+            { name: 'files', type: 'file', value: 'Выберите файлы', styles: 'display:none;', classNames: 'modalButton' },
             { name: 'fileName', value: 'Имя документа', required: true  }, 
             { name: 'documentCategoryBD', element: 'select',  options: ['Спецификация', 'Документация', 'Эскиз', 'Не указано'] },
             { name: 'decimalNumberBD', value: 'Децимальный номер', required: false  }, 
@@ -50,9 +51,54 @@ document.addEventListener('DOMContentLoaded', () => {
         cancelButton.textContent = 'Отмена';
         cancelButton.classList.add('modalButton');
         cancelButton.style.marginRight = 0;
+        // const manyFiles = document.createElement('a');
+        // manyFiles.textContent = 'Загрузить несколько документов';
+        // manyFiles.style.opacity = '60%';
+        // manyFiles.style.cursor = 'pointer';
+        const files = form.elements['files'];
+        files.multiple = true;
+        // Обработчик события для клика по кнопке выбора нескольких файлов
+        // manyFiles.addEventListener('click', async e => {
+        //     // Принудительно кликаем на элемент input type=file, чтобы открыть диалог выбора файлов
+        //     files.click();
+        //     // Обработчик события для события изменения в поле выбора файлов
+        //     files.addEventListener('change', async e => {
+        //         const formData = new FormData(); // Создаем объект FormData для передачи файлов на сервер
+        //         const filesList = e.target.files; // Получаем список выбранных пользователем файлов
+        //         // Добавляем каждый файл в объект FormData
+        //         for (let i = 0; i < filesList.length; i++) {
+        //             formData.append('files', filesList[i]);
+        //         }
+        //         // Добавляем путь и имя файла в FormData
+        //         formData.append('path', getCurrentPath() + '/' + fileNameAdd.value);
+        //         console.log(formData);
+        //         // Выполняем запрос на сервер
+        //         try {
+        //             const response = await fetch('/upload-many', {
+        //                 method: 'POST',
+        //                 body: formData
+        //             });
+        //             if (response.ok) {
+        //                 const data = await response.json();
+        //                 console.log(data);
+        //                 const notify = new mxNotify(data.status, data.response);
+        //                 modal.DoCloseModal();
+        //                 init.updatePanels();
+        //             } else {
+        //                 // Обработка ошибки, если сервер вернул ошибку
+        //                 console.error('Ошибка загрузки файла:', response.status, response.statusText);
+        //             }
+        //         } catch (error) {
+        //             // Обработка ошибки сети или других проблем
+        //             console.error('Произошла ошибка:', error);
+        //         }
+        //     });
+        // });
+
         const buttonWrapper = document.createElement('div');
         buttonWrapper.classList.add('button-wrapper');
         buttonWrapper.appendChild(submitButton);
+        // buttonWrapper.appendChild(manyFiles);
         buttonWrapper.appendChild(cancelButton);
         const inputWithAddon = document.createElement('div');
         inputWithAddon.className = 'input-with-addon';
@@ -88,7 +134,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 modal.DoCloseModal();
                 init.updatePanels();
             } 
-            // TODO: закрыть форму - вызывать обновление списка
         });
         modal.SetStyles({ width: '40%', maxHeight: '100%', paddingBottom: 8 });
         const decimalNumberBDInput = modal.querySelector('#decimalNumberBD');

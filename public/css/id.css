@@ -107,3 +107,8 @@
     margin-top: 0.625em;
     padding-right: 2.5rem;
 }
+
+#propertiesModalContent {
+    max-height: 100%;
+    padding-top: 10;
+}

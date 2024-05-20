@@ -23,6 +23,7 @@
     justify-content: space-between;
     margin-top: 3%;
     width: 100%;
+    align-items: center;
 }
 form button[type="submit"], #labelFile {
   background-color: rgb(124 172 208);
