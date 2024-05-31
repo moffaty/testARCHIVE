@@ -22,7 +22,7 @@ function updatePreview(filePath, title) {
 
 function linkToPreview() {
     // Получаем ссылки на все файлы в списке
-    const fileLinks = document.querySelectorAll('.file a');
+    const fileLinks = init.centerPanel.querySelectorAll('.file a');
     console.log(fileLinks);
     // Перебираем все ссылки и добавляем обработчик события на клик
     fileLinks.forEach(link => {

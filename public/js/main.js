@@ -232,7 +232,7 @@ class main {
                 if (data.length === 0) {
                     return resolve();
                 } 
-                this.fillList(panels._getLeftPanel(), data, true);
+                this.fillList(panels._getLeftPanel(), data, false);
                 return resolve(data);
             } catch (error) {
                 console.error("Error fetching directory information:", error);
